@@ -1,0 +1,281 @@
+/* =========================
+   DASHBOARD LAYOUT
+========================= */
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* =========================
+   HEADER
+========================= */
+.dashboard-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.dashboard-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* =========================
+   KPI CARDS
+========================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.kpi-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* MAIN KPI NUMBER */
+.kpi-main {
+  font-size: 30px;
+  font-weight: 800;
+  margin-top: 6px;
+  display: block;
+  color: #111827;
+}
+
+/* WARNING CARD */
+.kpi-card.warning .kpi-main {
+  color: #b91c1c;
+}
+
+/* CLICKABLE KPI */
+.kpi-card.clickable {
+  cursor: pointer;
+}
+
+.kpi-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* DIVIDER */
+.kpi-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 14px 0 10px;
+}
+
+/* ACTIVE / INACTIVE ROW */
+.kpi-sub {
+  display: flex;
+  gap: 10px;
+}
+
+/* KPI PILLS */
+.kpi-pill {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kpi-pill b {
+  font-size: 13px;
+}
+
+/* ACTIVE */
+.kpi-pill.active {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+/* INACTIVE */
+.kpi-pill.inactive {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+.dashboard-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: #111827;
+}
+
+/* =========================
+   QUICK ACTIONS
+========================= */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.action-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: #8b0000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.action-card:hover {
+  background-color: #fdf2f2;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   RECENT ACTIVITY
+========================= */
+.activity-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.activity-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activity-card li {
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.activity-card li:last-child {
+  border-bottom: none;
+}
+
+/* =========================
+   MODAL (TRAINING HOURS)
+========================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal {
+  background: white;
+  width: 420px;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.modal-header button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #374151;
+}
+
+/* HOURS LIST */
+.hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* CURRENT MONTH HIGHLIGHT */
+.hours-row.current {
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+  font-weight: 700;
+  color: #065f46;
+}
+/* TRAINING CALENDAR */
+.calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calendar-row {
+  display: flex;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  align-items: center;
+}
+
+.calendar-date {
+  min-width: 90px;
+  font-weight: 700;
+  color: #8b0000;
+}
+
+.calendar-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.calendar-info span {
+  font-size: 12px;
+  color: #6b7280;
+}

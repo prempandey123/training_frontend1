@@ -1,0 +1,167 @@
+.designation-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* HEADER */
+.designation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.designation-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #8b0000;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* FORM */
+.designation-form {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  max-width: 700px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* SKILL DROPDOWN */
+.skill-dropdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.skill-option {
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.skill-option.selected {
+  background: #8b0000;
+  color: white;
+}
+
+/* ACTIONS */
+.form-actions {
+  text-align: right;
+}
+
+.save-btn {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background-color: #6f0000;
+}
+/* TABLE */
+.designation-table-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.designation-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.designation-table th {
+  text-align: left;
+  padding: 14px;
+  font-size: 13px;
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.designation-table td {
+  padding: 14px;
+  font-size: 14px;
+  color: #111827;
+  border-top: 1px solid #e5e7eb;
+}
+
+.designation-name {
+  font-weight: 600;
+}
+
+/* SKILL TAGS */
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* STATUS */
+.status.active {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.status.inactive {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* ACTION */
+.action-btn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.action-btn:hover {
+  background-color: #f3f4f6;
+}

@@ -1,0 +1,164 @@
+.skill-matrix-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* HEADER */
+.skill-matrix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-matrix-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ACTIONS */
+.skill-matrix-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* TABLE CONTAINER */
+.matrix-container {
+  background: white;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* TABLE */
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.matrix-table th {
+  padding: 12px;
+  background: #f9fafb;
+  font-size: 13px;
+  text-align: center;
+  color: #374151;
+}
+
+.matrix-table td {
+  padding: 10px;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* EMPLOYEE */
+.emp-name {
+  text-align: left;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* TOTAL SCORE */
+.total-score {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* SKILL LEVEL BADGES */
+.level {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 0 - Red */
+.level-0 {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* 1 - Yellow */
+.level-1 {
+  background: #facc15;
+  color: #000000;
+}
+
+/* 2 - Orange */
+.level-2 {
+  background: #f97316;
+  color: #ffffff;
+}
+
+/* 3 - Light Green */
+.level-3 {
+  background: #86efac;
+  color: #064e3b;
+}
+
+/* 4 - Green */
+.level-4 {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+/* CIRCLE GRAPH */
+.circle-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.circle-wrapper svg {
+  transform: rotate(-90deg);
+}
+
+.circle-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* LEGEND */
+.legend {
+  display: flex;
+  gap: 22px;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* BUTTONS */
+.primary-btn {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background-color: #6f0000;
+}
+
+.secondary-btn {
+  background-color: white;
+  color: #8b0000;
+  border: 1px solid #8b0000;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background-color: #fdf2f2;
+}

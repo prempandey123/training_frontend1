@@ -1,0 +1,23 @@
+.dept-select {
+  position: relative;
+}
+
+.dept-dropdown {
+  position: absolute;
+  top: 100%;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.dept-option {
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.dept-option:hover {
+  background: #f2f2f2;
+}

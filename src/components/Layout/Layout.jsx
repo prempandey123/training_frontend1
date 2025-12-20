@@ -1,0 +1,18 @@
+import Sidebar from '../Sidebar/Sidebar';
+import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
+import './layout.css';
+
+export default function Layout({ children }) {
+  return (
+    <div className="layout">
+      <Sidebar />
+
+      <div className="main-content">
+        <Header />
+        <div className="page-content">{children}</div>
+        <Footer />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,196 @@
+.training-page {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* HEADER */
+.training-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.training-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* SECTION */
+.training-section {
+  margin-bottom: 32px;
+}
+
+.training-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* TABLE */
+.training-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.training-table th {
+  background: #f9fafb;
+  padding: 12px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.training-table td {
+  padding: 12px;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.training-name {
+  font-weight: 600;
+}
+
+/* BUTTONS */
+.primary-btn {
+  padding: 10px 16px;
+  background: #8b0000;
+  color: white;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-btn.full {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.secondary-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  cursor: pointer;
+}
+
+/* STATUS */
+.status.completed {
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* PEOPLE COUNT */
+.people-count {
+  color: #8b0000;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  width: 420px;
+}
+
+.modal.large {
+  width: 650px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+/* FORM */
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* ATTENDANCE SUMMARY */
+.attendance-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.badge {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge b {
+  font-size: 16px;
+}
+
+.badge.attended {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.badge.absent {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ATTENDANCE STATUS */
+.attendance-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.attendance-status.green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.attendance-status.red {
+  background: #fee2e2;
+  color: #991b1b;
+}
