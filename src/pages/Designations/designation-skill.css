@@ -1,0 +1,66 @@
+.ds-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ds-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ds-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.ds-card h4 {
+  margin-bottom: 14px;
+}
+
+.ds-form {
+  display: flex;
+  gap: 12px;
+}
+
+.ds-form select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.ds-form button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ds-table th,
+.ds-table td {
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid #b91c1c;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.no-data {
+  color: #6b7280;
+}

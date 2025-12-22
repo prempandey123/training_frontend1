@@ -6,7 +6,7 @@ import axios from 'axios';
 export default function UserList() {
   const navigate = useNavigate();
 
-  const maxScore = 20; // 5 skills × level 4
+  const maxScore = 20; // future use (skill matrix)
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function UserList() {
     const fetchUsers = async () => {
       try {
         const res = await axios.get('http://localhost:3000/users');
-        setEmployees(res.data);
+        setEmployees(res.data); // 🔥 axios unwrap
       } catch (err) {
         console.error(err);
         setError('Failed to load employees');
@@ -34,7 +34,6 @@ export default function UserList() {
 
   return (
     <div className="user-list-page">
-
       {/* HEADER */}
       <div className="user-list-header">
         <h2>Employee Master</h2>
@@ -62,9 +61,9 @@ export default function UserList() {
                 <th>Employee ID</th>
                 <th>Mobile</th>
                 <th>Department</th>
+                <th>Designation</th>
                 <th>Role</th>
                 <th>Biometric</th>
-                <th>Completion</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -80,7 +79,7 @@ export default function UserList() {
               )}
 
               {employees.map((emp) => {
-                const percentage = getPercentage(emp.score);
+                const percentage = getPercentage(emp.score || 0);
 
                 return (
                   <tr key={emp.id}>
@@ -88,7 +87,12 @@ export default function UserList() {
                     <td>{emp.email}</td>
                     <td>{emp.employeeId}</td>
                     <td>{emp.mobile}</td>
-                    <td>{emp.department}</td>
+
+                    {/* 🔥 FIX: department is object */}
+                    <td>{emp.department?.name || '-'}</td>
+
+                    {/* 🔥 FIX: designation is object */}
+                    <td>{emp.designation?.designationName || '-'}</td>
 
                     <td>
                       <span className={`role ${emp.role.toLowerCase()}`}>
@@ -96,45 +100,13 @@ export default function UserList() {
                       </span>
                     </td>
 
-                    {/* BIOMETRIC */}
+                    {/* BIOMETRIC (safe) */}
                     <td>
                       {emp.biometricLinked ? (
                         <span className="biometric linked">Linked</span>
                       ) : (
-                        <button className="biometric-btn">
-                          Add Biometric
-                        </button>
+                        <span className="biometric not-linked">Not Linked</span>
                       )}
-                    </td>
-
-                    {/* COMPLETION */}
-                    <td>
-                      <div className="circle-wrapper">
-                        <svg width="40" height="40">
-                          <circle
-                            cx="20"
-                            cy="20"
-                            r="16"
-                            stroke="#e5e7eb"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <circle
-                            cx="20"
-                            cy="20"
-                            r="16"
-                            stroke="#16a34a"
-                            strokeWidth="4"
-                            fill="none"
-                            strokeDasharray="100"
-                            strokeDashoffset={100 - percentage}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <span className="circle-text">
-                          {percentage}%
-                        </span>
-                      </div>
                     </td>
 
                     {/* STATUS */}

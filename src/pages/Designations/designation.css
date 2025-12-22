@@ -1,3 +1,7 @@
+/* =========================
+   DESIGNATION – COMMON
+   ========================= */
+
 .designation-page {
   display: flex;
   flex-direction: column;
@@ -25,9 +29,12 @@
   cursor: pointer;
 }
 
-/* FORM */
+/* =========================
+   FORM (ADD DESIGNATION)
+   ========================= */
+
 .designation-form {
-  background: white;
+  background: #ffffff;
   padding: 24px;
   border-radius: 10px;
   max-width: 700px;
@@ -35,10 +42,10 @@
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
-label {
+.form-group label {
   display: block;
   font-size: 13px;
   font-weight: 600;
@@ -46,7 +53,7 @@ label {
   color: #374151;
 }
 
-input {
+.form-group input {
   width: 100%;
   padding: 10px;
   border: 1px solid #d1d5db;
@@ -54,50 +61,41 @@ input {
   font-size: 14px;
 }
 
-/* SKILL DROPDOWN */
-.skill-dropdown {
+.form-group input:focus {
+  outline: none;
+  border-color: #8b0000;
+}
+
+/* DEPARTMENT SELECTOR */
+.department-selector {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   border: 1px solid #d1d5db;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #fafafa;
 }
 
-.skill-option {
-  padding: 8px 12px;
-  border-radius: 16px;
+.department-option {
+  padding: 8px 14px;
+  border-radius: 18px;
   background: #f3f4f6;
   font-size: 13px;
   cursor: pointer;
 }
 
-.skill-option.selected {
+.department-option.selected {
   background: #8b0000;
-  color: white;
+  color: #ffffff;
 }
 
-/* ACTIONS */
-.form-actions {
-  text-align: right;
-}
+/* =========================
+   TABLE (LISTING)
+   ========================= */
 
-.save-btn {
-  background-color: #8b0000;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.save-btn:hover {
-  background-color: #6f0000;
-}
-/* TABLE */
 .designation-table-container {
-  background: white;
+  background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   overflow-x: auto;
@@ -109,11 +107,11 @@ input {
 }
 
 .designation-table th {
-  text-align: left;
   padding: 14px;
   font-size: 13px;
   color: #6b7280;
   background-color: #f9fafb;
+  text-align: left;
 }
 
 .designation-table td {
@@ -127,41 +125,61 @@ input {
   font-weight: 600;
 }
 
-/* SKILL TAGS */
-.skill-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.skill-tag {
+/* DEPARTMENT TAG */
+.dept-tag {
   background: #f3f4f6;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
+  margin-right: 6px;
+  display: inline-block;
 }
 
-/* STATUS */
-.status.active {
-  color: #15803d;
-  font-weight: 600;
+/* =========================
+   ACTION BUTTONS
+   ========================= */
+
+.save-btn {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-.status.inactive {
-  color: #b91c1c;
-  font-weight: 600;
-}
-
-/* ACTION */
-.action-btn {
-  background: transparent;
-  border: 1px solid #d1d5db;
+.map-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
   padding: 6px 12px;
   border-radius: 6px;
-  cursor: pointer;
   font-size: 13px;
+  cursor: pointer;
+  margin-right: 8px;
 }
 
-.action-btn:hover {
-  background-color: #f3f4f6;
+.map-btn:hover {
+  background-color: #1e40af;
+}
+
+.delete-btn {
+  background-color: transparent;
+  color: #b91c1c;
+  border: 1px solid #b91c1c;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+/* EMPTY / LOADING */
+.no-data {
+  font-size: 14px;
+  color: #6b7280;
 }

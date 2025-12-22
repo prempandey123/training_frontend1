@@ -12,16 +12,17 @@ import CreateUser from './pages/Users/CreateUser';
 import AddDesignation from './pages/Designations/AddDesignation';
 import DesignationList from './pages/Designations/DesignationList';
 import SkillList from './pages/Skills/SkillList';
-import AddSkill from './pages/Skills/AddSkill';
+import CreateSkill from './pages/Skills/AddSkill';
 import AddTraining from './pages/Training/AddTraining';
 import MyProfile from './pages/Profile/MyProfile';
 import Attendance from './pages/Attendance/Attendance';
 import TrainingCalendar from './pages/Calendar/TrainingCalendar';
 import EditSkill from './pages/Skills/EditSkill';
 import EditUser from './pages/Users/EditUser';
-import EditDesignation from './pages/Designations/EditDesignation';
+import EditDesignation from './pages/Designations/MapDesignationSkills';
 import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
+import MapDesignationSkills from './pages/Designations/MapDesignationSkills';
 
 function App() {
   return (
@@ -45,7 +46,7 @@ function App() {
               <Route path="/designations" element={<DesignationList />} />
               <Route path="/designations/add" element={<AddDesignation />} />
               <Route path="/skills" element={<SkillList />} />
-              <Route path="/skills/add" element={<AddSkill />} />
+              <Route path="/skills/add" element={<CreateSkill />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/my-profile" element={<MyProfile />} />
               <Route path="/attendance" element={<Attendance />} />
@@ -55,6 +56,8 @@ function App() {
               <Route path="/designations/edit/:id" element={<EditDesignation />} />
               <Route path="/departments" element={<DepartmentList />} />
               <Route path="/departments/add" element={<AddDepartment />} />
+              <Route path="/designations/:id/map-skills" element={<MapDesignationSkills />} />
+
 
 
               

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDesignations } from '../../api/designationApi';
+import { getDesignations, deleteDesignation } from '../../api/designationApi';
 import './designation.css';
 
 export default function DesignationList() {
@@ -10,17 +10,32 @@ export default function DesignationList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDesignations();
+    loadDesignations();
   }, []);
 
-  const fetchDesignations = async () => {
+  const loadDesignations = async () => {
     try {
-      const res = await getDesignations();
-      setDesignations(res.data);
-    } catch (error) {
+      const data = await getDesignations(); // already res.data
+      setDesignations(Array.isArray(data) ? data : []);
+    } catch {
       alert('Failed to load designations');
+      setDesignations([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this designation?')) {
+      return;
+    }
+
+    try {
+      await deleteDesignation(id);
+      alert('Designation deleted');
+      loadDesignations();
+    } catch {
+      alert('Failed to delete designation');
     }
   };
 
@@ -28,7 +43,7 @@ export default function DesignationList() {
     <div className="designation-page">
       {/* HEADER */}
       <div className="designation-header">
-        <h2>Designation Master</h2>
+        <h2>Designation Management</h2>
 
         <button
           className="save-btn"
@@ -41,17 +56,17 @@ export default function DesignationList() {
       {/* TABLE */}
       <div className="designation-table-container">
         {loading ? (
-          <p>Loading designations...</p>
+          <p className="no-data">Loading designations...</p>
         ) : designations.length === 0 ? (
-          <p>No designations found</p>
+          <p className="no-data">No designations found</p>
         ) : (
           <table className="designation-table">
             <thead>
               <tr>
                 <th>Designation Name</th>
-                <th>Skills Mapped</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>Departments</th>
+                <th>Mapped Skills</th>
+                <th width="240">Action</th>
               </tr>
             </thead>
 
@@ -62,30 +77,36 @@ export default function DesignationList() {
                     {d.designationName}
                   </td>
 
+                  {/* DEPARTMENTS */}
                   <td>
-                    <div className="skill-tags">
-                      {d.skills.map((skill) => (
-                        <span key={skill} className="skill-tag">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                    {(d.departments || []).map((dept) => (
+                      <span key={dept.id} className="dept-tag">
+                        {dept.name}
+                      </span>
+                    ))}
                   </td>
 
-                  <td>
-                    <span className="status active">
-                      Active
-                    </span>
+                  {/* MAPPED SKILLS (PLACEHOLDER FOR NOW) */}
+                  <td className="mapped-skill-placeholder">
+                    _
                   </td>
 
+                  {/* ACTIONS */}
                   <td>
                     <button
-                      className="action-btn"
+                      className="map-btn"
                       onClick={() =>
-                        navigate(`/designations/edit/${d.id}`)
+                        navigate(`/designations/${d.id}/map-skills`)
                       }
                     >
-                      Edit
+                      Map Skills
+                    </button>
+
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(d.id)}
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>

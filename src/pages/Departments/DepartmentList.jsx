@@ -19,11 +19,12 @@ export default function DepartmentList() {
   const fetchDepartments = async () => {
     try {
       setLoading(true);
-      const res = await getDepartments();
-      setDepartments(res.data);
+      const data = await getDepartments(); // ✅ already res.data
+      setDepartments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
       alert('Failed to load departments');
+      setDepartments([]);
     } finally {
       setLoading(false);
     }
@@ -36,7 +37,7 @@ export default function DepartmentList() {
 
     try {
       await deleteDepartment(id);
-      fetchDepartments(); // refresh list
+      fetchDepartments();
     } catch {
       alert('Failed to delete department');
     }

@@ -7,77 +7,42 @@ export default function EditSkill() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: '',
-    department: '',
-    isCommon: false,
-  });
-
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // 🔹 LOAD SKILL DETAILS
   useEffect(() => {
-    const fetchSkill = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:3000/skills/${id}`,
-        );
-
-        setForm({
-          name: res.data.name,
-          department: res.data.department || '',
-          isCommon: res.data.isCommon,
-        });
-      } catch (err) {
-        console.error(err);
-        alert('Failed to load skill');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSkill();
+    axios.get(`http://localhost:3000/skills/${id}`)
+      .then(res => setName(res.data.name))
+      .catch(() => alert('Skill not found'))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setForm({
-      ...form,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
-  // 🔹 UPDATE SKILL
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    if (!name.trim()) {
+      setError('Skill name is required');
+      return;
+    }
 
     try {
-      await axios.put(
-        `http://localhost:3000/skills/${id}`,
-        {
-          name: form.name,
-          department: form.isCommon ? null : form.department,
-          isCommon: form.isCommon,
-        },
-      );
-
-      alert('Skill updated successfully');
+      await axios.put(`http://localhost:3000/skills/${id}`, {
+        name: name.trim(), // 🔥 ONLY allowed field
+      });
+      alert('Skill updated');
       navigate('/skills');
     } catch (err) {
-      console.error(err);
-      alert('Failed to update skill');
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 
-  if (loading) {
-    return <p className="loading-text">Loading skill...</p>;
-  }
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="skill-page">
-
-      {/* HEADER */}
       <div className="skill-header">
         <h2>Edit Skill</h2>
         <button className="back-btn" onClick={() => navigate('/skills')}>
@@ -85,61 +50,13 @@ export default function EditSkill() {
         </button>
       </div>
 
-      {/* FORM */}
-      <form className="skill-form" onSubmit={handleSubmit}>
-
-        <div className="form-group">
-          <label>Skill Name *</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              name="isCommon"
-              checked={form.isCommon}
-              onChange={handleChange}
-            />
-            Common Skill (Applicable to all departments)
-          </label>
-        </div>
-
-        {!form.isCommon && (
-          <div className="form-group">
-            <label>Department</label>
-            <select
-              name="department"
-              value={form.department}
-              onChange={handleChange}
-            >
-              <option value="">Select Department</option>
-              <option>IT</option>
-              <option>Production</option>
-              <option>HRS & Pickling</option>
-              <option>Quality</option>
-            </select>
-          </div>
-        )}
+      <form className="skill-card" onSubmit={handleSubmit}>
+        <label>Skill Name *</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} />
+        {error && <p className="error-text">{error}</p>}
 
         <div className="form-actions">
-          <button type="submit" className="primary-btn">
-            Update Skill
-          </button>
-
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={() => navigate('/skills')}
-          >
-            Cancel
-          </button>
+          <button className="primary-btn">Update</button>
         </div>
       </form>
     </div>

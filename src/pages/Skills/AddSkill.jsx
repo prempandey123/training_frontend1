@@ -1,49 +1,40 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { createSkill } from '../../api/skill.api';
 import './skill.css';
 
-export default function AddSkill() {
+export default function CreateSkill() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    name: '',
-    department: '',
-    isCommon: false,
-  });
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setForm({
-      ...form,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    const payload = {
-      name: form.name,
-      isCommon: form.isCommon,
-      department: form.isCommon ? null : form.department || null,
-    };
+    const payload = { name: name.trim() };
+
+    if (!payload.name) {
+      setError('Skill name is required');
+      return;
+    }
 
     try {
-      await axios.post('http://localhost:3000/skills', payload);
-      alert('Skill added successfully');
+      setLoading(true);
+      await createSkill(payload);
+      alert('Skill created successfully');
       navigate('/skills');
     } catch (err) {
-      console.error(err);
-      alert('Failed to add skill');
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="skill-page">
-
-      {/* HEADER */}
       <div className="skill-header">
         <h2>Add Skill</h2>
         <button className="back-btn" onClick={() => navigate('/skills')}>
@@ -51,53 +42,21 @@ export default function AddSkill() {
         </button>
       </div>
 
-      {/* FORM */}
-      <form className="skill-form" onSubmit={handleSubmit}>
-
-        <div className="form-group">
+      <form className="skill-card" onSubmit={handleSubmit}>
+        <div className="form-section">
           <label>Skill Name *</label>
           <input
-            name="name"
-            placeholder="e.g. HRS Operation"
-            value={form.name}
-            onChange={handleChange}
-            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. SAP MM"
+            disabled={loading}
           />
+          {error && <p className="error-text">{error}</p>}
         </div>
-
-        <div className="form-group checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              name="isCommon"
-              checked={form.isCommon}
-              onChange={handleChange}
-            />
-            Common Skill (Applicable to all departments)
-          </label>
-        </div>
-
-        {!form.isCommon && (
-          <div className="form-group">
-            <label>Department</label>
-            <select
-              name="department"
-              value={form.department}
-              onChange={handleChange}
-            >
-              <option value="">Select Department</option>
-              <option>IT</option>
-              <option>Production</option>
-              <option>HRS & Pickling</option>
-              <option>Quality</option>
-              <option>Maintenance</option>
-            </select>
-          </div>
-        )}
 
         <div className="form-actions">
-          <button type="submit" className="primary-btn">
-            Save Skill
+          <button className="primary-btn" disabled={loading}>
+            {loading ? 'Saving...' : 'Save Skill'}
           </button>
         </div>
       </form>

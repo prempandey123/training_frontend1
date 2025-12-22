@@ -1,49 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUser } from '../../api/user.api';
-import DepartmentSelect from '../../components/Departments/DepartmentSelect';
+import { getDepartments } from '../../api/departmentApi';
+import { getDesignations } from '../../api/designationApi';
 import './createUser.css';
 
 export default function CreateUser() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     employeeId: '',
     mobile: '',
-    department: '',
+    departmentId: '',
+    designationId: '',
     role: 'EMPLOYEE',
-    biometricLinked: false,
-    isActive: true,
+    dateOfJoining: '',
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  // 🔹 Load dropdown data
+  useEffect(() => {
+    async function loadMasterData() {
+      const deptData = await getDepartments();
+      const desigData = await getDesignations();
+      setDepartments(deptData);
+      setDesignations(desigData);
+    }
+    loadMasterData();
+  }, []);
 
-    setForm({
-      ...form,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+  // 🔥 IMPORTANT FIX: convert IDs to number
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'departmentId' || name === 'designationId') {
+      setForm({ ...form, [name]: value ? Number(value) : '' });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.department) {
-      alert('Please select a department');
+    if (!form.departmentId || !form.designationId) {
+      alert('Please select department and designation');
       return;
     }
 
     setLoading(true);
-
     try {
-      await createUser(form); // 🔥 BACKEND CALL (UNCHANGED)
-      alert('Employee added successfully');
+      await createUser(form); // 👈 backend now gets number IDs
+      alert('Employee created successfully');
       navigate('/users');
     } catch (error) {
-      console.error(error);
       alert(
         error?.response?.data?.message ||
           'Error while creating employee'
@@ -58,20 +73,16 @@ export default function CreateUser() {
       {/* HEADER */}
       <div className="create-user-header">
         <h2>Add Employee</h2>
-        <button
-          className="back-btn"
-          onClick={() => navigate('/users')}
-        >
+        <button className="back-btn" onClick={() => navigate('/users')}>
           ← Back
         </button>
       </div>
 
-      {/* FORM CARD */}
+      {/* FORM */}
       <form className="create-user-card" onSubmit={handleSubmit}>
         {/* BASIC INFO */}
         <div className="form-section">
           <h3>Basic Information</h3>
-
           <div className="form-grid">
             <div>
               <label>Name *</label>
@@ -116,21 +127,42 @@ export default function CreateUser() {
           </div>
         </div>
 
-        {/* ORGANIZATION INFO */}
+        {/* ORG INFO */}
         <div className="form-section">
           <h3>Organization Details</h3>
-
           <div className="form-grid">
             <div>
               <label>Department *</label>
+              <select
+                name="departmentId"
+                value={form.departmentId}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* 🔥 SMART SEARCH DEPARTMENT */}
-              <DepartmentSelect
-                value={form.department}
-                onChange={(value) =>
-                  setForm({ ...form, department: value })
-                }
-              />
+            <div>
+              <label>Designation *</label>
+              <select
+                name="designationId"
+                value={form.designationId}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Designation</option>
+                {designations.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.designationName}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -141,36 +173,22 @@ export default function CreateUser() {
                 onChange={handleChange}
               >
                 <option value="EMPLOYEE">Employee</option>
+                <option value="HOD">HOD</option>
+                <option value="HRD">HR</option>
                 <option value="ADMIN">Admin</option>
               </select>
             </div>
-          </div>
-        </div>
 
-        {/* SYSTEM SETTINGS */}
-        <div className="form-section">
-          <h3>System Settings</h3>
-
-          <div className="toggle-grid">
-            <label>
+            <div>
+              <label>Date of Joining *</label>
               <input
-                type="checkbox"
-                name="biometricLinked"
-                checked={form.biometricLinked}
+                type="date"
+                name="dateOfJoining"
+                value={form.dateOfJoining}
                 onChange={handleChange}
+                required
               />
-              Biometric Linked
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={form.isActive}
-                onChange={handleChange}
-              />
-              Active Employee
-            </label>
+            </div>
           </div>
         </div>
 

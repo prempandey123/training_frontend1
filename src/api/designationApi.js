@@ -2,20 +2,32 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:3000/designations';
 
-export const getDesignations = () =>
-  axios.get(BASE_URL);
+export const getDesignations = async () => {
+  const res = await axios.get(BASE_URL);
+  return res.data; // 🔥 IMPORTANT
+};
 
-export const getDesignationById = (id) =>
-  axios.get(`${BASE_URL}/${id}`);
+export const getDesignationById = async (id) => {
+  const res = await axios.get(`${BASE_URL}/${id}`);
+  return res.data;
+};
 
-export const createDesignation = (data) =>
-  axios.post(BASE_URL, data);
+export const createDesignation = async (data) => {
+  const res = await axios.post(BASE_URL, data);
+  return res.data;
+};
 
-export const updateDesignation = (id, data) =>
-  axios.put(`${BASE_URL}/${id}`, data);
+export const updateDesignation = async (id, data) => {
+  const res = await axios.put(`${BASE_URL}/${id}`, data);
+  return res.data;
+};
 
-export const toggleDesignationStatus = (id) =>
-  axios.patch(`${BASE_URL}/${id}/toggle-status`);
+export const toggleDesignationStatus = async (id) => {
+  const res = await axios.patch(`${BASE_URL}/${id}/toggle-status`);
+  return res.data;
+};
 
-export const deleteDesignation = (id) =>
-  axios.delete(`${BASE_URL}/${id}`);
+export const deleteDesignation = async (id) => {
+  const res = await axios.delete(`${BASE_URL}/${id}`);
+  return res.data;
+};

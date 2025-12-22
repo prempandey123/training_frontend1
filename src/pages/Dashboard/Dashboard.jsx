@@ -38,7 +38,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-page">
-
       {/* PAGE TITLE */}
       <div className="dashboard-header">
         <h2>Dashboard</h2>
@@ -47,12 +46,11 @@ export default function Dashboard() {
 
       {/* KPI CARDS */}
       <div className="kpi-grid">
-
-        {/* TOTAL USERS → EMPLOYEE MASTER */}
+        {/* TOTAL USERS */}
         <div
           className="kpi-card clickable"
           onClick={() => navigate('/users')}
-          title="Open Employee Master"
+          title="Open User Master"
         >
           <h3>Total Users</h3>
           <span className="kpi-main">{userStats.total}</span>
@@ -89,19 +87,16 @@ export default function Dashboard() {
           <span className="kpi-main">View</span>
           <p className="kpi-hint">Open calendar view</p>
         </div>
-
       </div>
 
-      {/* DEPARTMENTS */}
-<div
-  className="kpi-card clickable"
-  onClick={() => navigate('/departments')}
->
-  
-  <span className="kpi-main">Departments</span>
-  <p className="kpi-hint">Manage department master</p>
-</div>
-
+      {/* DEPARTMENTS CARD */}
+      <div
+        className="kpi-card clickable"
+        onClick={() => navigate('/departments')}
+      >
+        <span className="kpi-main">Departments</span>
+        <p className="kpi-hint">Manage department master</p>
+      </div>
 
       {/* QUICK ACTIONS */}
       <div className="dashboard-section">
@@ -110,30 +105,30 @@ export default function Dashboard() {
         <div className="action-grid">
           <div
             className="action-card"
-            onClick={() => navigate('/users/create')}
+            onClick={() => navigate('/users')}
           >
-            + Create User
+            User Master
+          </div>
+
+          <div
+            className="action-card"
+            onClick={() => navigate('/departments')}
+          >
+            Department Master
           </div>
 
           <div
             className="action-card"
             onClick={() => navigate('/designations')}
           >
-            + Add Designation
+            Designation Master
           </div>
 
           <div
             className="action-card"
-            onClick={() => navigate('/skill-matrix')}
+            onClick={() => navigate('/skills')}
           >
-            Manage Skill Matrix
-          </div>
-
-          <div
-            className="action-card"
-            onClick={() => navigate('/reports')}
-          >
-            View Reports
+            Skill Master
           </div>
         </div>
       </div>
@@ -175,7 +170,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

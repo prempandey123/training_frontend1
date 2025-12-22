@@ -1,56 +1,67 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createDesignation } from '../../api/designationApi';
-import { getSkills } from '../../api/skillApi';
+import { getDepartments } from '../../api/departmentApi';
 import './designation.css';
 
 export default function AddDesignation() {
   const navigate = useNavigate();
 
   const [designationName, setDesignationName] = useState('');
-  const [skills, setSkills] = useState([]);
-  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchSkills();
+    fetchDepartments();
   }, []);
 
-  const fetchSkills = async () => {
+  const fetchDepartments = async () => {
     try {
-      const res = await getSkills();
-      setSkills(res.data);
+      const data = await getDepartments(); // already array
+      setDepartments(Array.isArray(data) ? data : []);
     } catch {
-      alert('Failed to load skills');
+      alert('Failed to load departments');
+      setDepartments([]);
     }
   };
 
-  const toggleSkill = (skillName) => {
-    setSelectedSkills((prev) =>
-      prev.includes(skillName)
-        ? prev.filter((s) => s !== skillName)
-        : [...prev, skillName],
+  const toggleDepartment = (deptId) => {
+    setSelectedDepartmentIds((prev) =>
+      prev.includes(deptId)
+        ? prev.filter((id) => id !== deptId)
+        : [...prev, deptId],
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedSkills.length) {
-      alert('Select at least one skill');
+    if (!designationName.trim()) {
+      alert('Designation name is required');
+      return;
+    }
+
+    if (selectedDepartmentIds.length === 0) {
+      alert('Select at least one department');
       return;
     }
 
     try {
       setLoading(true);
+
       await createDesignation({
-        designationName,
-        skills: selectedSkills,
+        designationName: designationName.trim(),
+        departmentIds: selectedDepartmentIds, // 🔥 EXACT DTO MATCH
       });
+
       alert('Designation added successfully');
       navigate('/designations');
-    } catch {
-      alert('Something went wrong');
+    } catch (err) {
+      alert(
+        err?.response?.data?.message ||
+          'Failed to create designation'
+      );
     } finally {
       setLoading(false);
     }
@@ -58,40 +69,56 @@ export default function AddDesignation() {
 
   return (
     <div className="designation-page">
+      {/* HEADER */}
       <div className="designation-header">
         <h2>Add Designation</h2>
+        <button
+          className="back-btn"
+          onClick={() => navigate('/designations')}
+        >
+          ← Back
+        </button>
       </div>
 
+      {/* FORM */}
       <form className="designation-form" onSubmit={handleSubmit}>
+        {/* DESIGNATION NAME */}
         <div className="form-group">
           <label>Designation Name *</label>
           <input
             value={designationName}
             onChange={(e) => setDesignationName(e.target.value)}
+            placeholder="e.g. Senior Operator"
             required
           />
         </div>
 
+        {/* DEPARTMENTS */}
         <div className="form-group">
-          <label>Select Skills *</label>
+          <label>Applicable Departments *</label>
 
-          <div className="skill-dropdown">
-            {skills.map((skill) => (
-              <div
-                key={skill.id}
-                className={`skill-option ${
-                  selectedSkills.includes(skill.name)
-                    ? 'selected'
-                    : ''
-                }`}
-                onClick={() => toggleSkill(skill.name)}
-              >
-                {skill.name}
-              </div>
-            ))}
+          <div className="department-selector">
+            {departments.length === 0 ? (
+              <p className="no-data">No departments available</p>
+            ) : (
+              departments.map((dept) => (
+                <div
+                  key={dept.id}
+                  className={`department-option ${
+                    selectedDepartmentIds.includes(dept.id)
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() => toggleDepartment(dept.id)}
+                >
+                  {dept.name}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
+        {/* ACTION */}
         <button className="save-btn" disabled={loading}>
           {loading ? 'Saving...' : 'Save Designation'}
         </button>
