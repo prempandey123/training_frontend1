@@ -1,9 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import {
-  getDepartments,
-  deleteDepartment,
-} from '../../api/departmentApi';
+import { useEffect, useMemo, useState } from 'react';
+import { getDepartments, deleteDepartment } from '../../api/departmentApi';
 import './department.css';
 
 export default function DepartmentList() {
@@ -11,6 +8,9 @@ export default function DepartmentList() {
 
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // UI extras
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     fetchDepartments();
@@ -31,9 +31,7 @@ export default function DepartmentList() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this department?')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this department?')) return;
 
     try {
       await deleteDepartment(id);
@@ -43,38 +41,86 @@ export default function DepartmentList() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return departments;
+    return departments.filter((d) => (d?.name || '').toLowerCase().includes(q));
+  }, [departments, query]);
 
   return (
     <div className="department-page">
-      {/* HEADER */}
-      <div className="department-header">
-        <h2>Department Master</h2>
+      {/* TOP BAR */}
+      <div className="department-topbar">
+        <div>
+          <h2 className="department-title">Department Master</h2>
+          <p className="department-subtitle">Create, view and manage departments</p>
+        </div>
 
-        <button
-          className="save-btn"
-          onClick={() => navigate('/departments/add')}
-        >
+        <button className="btn-primary" onClick={() => navigate('/departments/add')}>
           + Add New Department
         </button>
       </div>
 
-      {/* LIST */}
-      {departments.length === 0 ? (
-        <p>No departments found</p>
-      ) : (
-        <div className="department-list">
-          {departments.map((dept) => (
-            <div key={dept.id} className="department-card">
-              <span>{dept.name}</span>
+      {/* TOOLBAR */}
+      <div className="department-toolbar">
+        <div className="search-wrap">
+          <span className="search-icon">⌕</span>
+          <input
+            className="search-input"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search department..."
+          />
+        </div>
 
-              <button
-                className="delete-btn"
-                onClick={() => handleDelete(dept.id)}
-                title="Delete department"
-              >
-                ✕
-              </button>
+        <div className="department-meta">
+          <span className="meta-chip">
+            Total: <b>{departments.length}</b>
+          </span>
+          <span className="meta-chip">
+            Showing: <b>{filtered.length}</b>
+          </span>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      {loading ? (
+        <div className="state-card">
+          <div className="loader"></div>
+          <p>Loading departments...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="state-card">
+          <p className="empty-title">No departments found</p>
+          <p className="empty-sub">Try changing search or add a new department.</p>
+          <button className="btn-outline" onClick={() => navigate('/departments/add')}>
+            + Add Department
+          </button>
+        </div>
+      ) : (
+        <div className="department-grid">
+          {filtered.map((dept) => (
+            <div key={dept.id} className="department-card">
+              <div className="dept-badge" aria-hidden="true">
+                {(dept?.name || '?').trim().charAt(0).toUpperCase()}
+              </div>
+
+              <div className="dept-body">
+                <div className="dept-name" title={dept.name}>
+                  {dept.name}
+                </div>
+                <div className="dept-id">ID: {dept.id}</div>
+              </div>
+
+              <div className="dept-actions">
+                <button
+                  className="icon-btn danger"
+                  onClick={() => handleDelete(dept.id)}
+                  title="Delete department"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
         </div>

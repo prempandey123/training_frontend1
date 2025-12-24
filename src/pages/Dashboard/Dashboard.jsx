@@ -5,17 +5,15 @@ import './dashboard.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
   const [showHours, setShowHours] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  // 🔹 User stats from backend
   const [userStats, setUserStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
   });
 
-  // 🔹 Dummy month-wise training hours (backend later)
   const trainingHours = [
     { month: 'September 2025', hours: 180 },
     { month: 'August 2025', hours: 220 },
@@ -24,51 +22,58 @@ export default function Dashboard() {
     { month: 'May 2025', hours: 110 },
   ];
 
-  // 🔹 Fetch user counts
   useEffect(() => {
+    setLoadingStats(true);
+
     api
       .get('/users/stats/count')
       .then((res) => {
-        setUserStats(res.data);
+        const data = res?.data || {};
+        setUserStats({
+          total: Number(data.total || 0),
+          active: Number(data.active || 0),
+          inactive: Number(data.inactive || 0),
+        });
       })
       .catch((err) => {
-        console.error('Failed to load user stats', err);
-      });
+        console.error('Failed to load user stats', err?.response?.status, err?.response?.data);
+        setUserStats({ total: 0, active: 0, inactive: 0 });
+      })
+      .finally(() => setLoadingStats(false));
   }, []);
 
   return (
     <div className="dashboard-page">
-      {/* PAGE TITLE */}
       <div className="dashboard-header">
         <h2>Dashboard</h2>
         <p>Overview of training, competency & skill matrix</p>
       </div>
 
-      {/* KPI CARDS */}
       <div className="kpi-grid">
-        {/* TOTAL USERS */}
         <div
           className="kpi-card clickable"
           onClick={() => navigate('/users')}
           title="Open User Master"
         >
           <h3>Total Users</h3>
-          <span className="kpi-main">{userStats.total}</span>
+
+          <span className="kpi-main">
+            {loadingStats ? '...' : userStats.total}
+          </span>
 
           <div className="kpi-divider"></div>
 
           <div className="kpi-sub">
             <div className="kpi-pill active">
-              Active <b>{userStats.active}</b>
+              Active <b>{loadingStats ? '...' : userStats.active}</b>
             </div>
 
             <div className="kpi-pill inactive">
-              Inactive <b>{userStats.inactive}</b>
+              Inactive <b>{loadingStats ? '...' : userStats.inactive}</b>
             </div>
           </div>
         </div>
 
-        {/* TOTAL TRAINING HOURS */}
         <div
           className="kpi-card clickable"
           onClick={() => setShowHours(true)}
@@ -78,7 +83,6 @@ export default function Dashboard() {
           <p className="kpi-hint">Click to view month-wise</p>
         </div>
 
-        {/* TRAINING CALENDAR */}
         <div
           className="kpi-card clickable"
           onClick={() => navigate('/calendar')}
@@ -89,7 +93,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* DEPARTMENTS CARD */}
       <div
         className="kpi-card clickable"
         onClick={() => navigate('/departments')}
@@ -98,42 +101,28 @@ export default function Dashboard() {
         <p className="kpi-hint">Manage department master</p>
       </div>
 
-      {/* QUICK ACTIONS */}
       <div className="dashboard-section">
         <h3>Quick Actions</h3>
 
         <div className="action-grid">
-          <div
-            className="action-card"
-            onClick={() => navigate('/users')}
-          >
+          <div className="action-card" onClick={() => navigate('/users')}>
             User Master
           </div>
 
-          <div
-            className="action-card"
-            onClick={() => navigate('/departments')}
-          >
+          <div className="action-card" onClick={() => navigate('/departments')}>
             Department Master
           </div>
 
-          <div
-            className="action-card"
-            onClick={() => navigate('/designations')}
-          >
+          <div className="action-card" onClick={() => navigate('/designations')}>
             Designation Master
           </div>
 
-          <div
-            className="action-card"
-            onClick={() => navigate('/skills')}
-          >
+          <div className="action-card" onClick={() => navigate('/skills')}>
             Skill Master
           </div>
         </div>
       </div>
 
-      {/* RECENT ACTIVITY */}
       <div className="dashboard-section">
         <h3>Recent Activity</h3>
 
@@ -147,7 +136,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* TRAINING HOURS MODAL */}
       {showHours && (
         <div className="modal-overlay">
           <div className="modal">

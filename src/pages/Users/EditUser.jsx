@@ -23,6 +23,7 @@ export default function EditUser() {
     role: 'EMPLOYEE',
     isActive: true,
     dateOfJoining: '',
+    password: '',
   });
 
   // 🔹 Load user + dropdowns
@@ -84,6 +85,11 @@ export default function EditUser() {
       isActive: form.isActive,
       dateOfJoining: form.dateOfJoining,
     };
+
+    if (form.password?.trim()) {
+      payload.password = form.password;
+    }
+
 
     try {
       await updateUser(id, payload);

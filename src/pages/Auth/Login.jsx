@@ -11,18 +11,19 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e) => {
+    const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
 
-    // 🔐 Hardcoded credentials
-    if (
-      email === 'admin@herosteels.com' &&
-      password === 'admin123'
-    ) {
-      login(); // mark user as logged in
-      navigate('/app/dashboard');
-    } else {
-      setError('Invalid email or password');
+    try {
+      await login(email.trim(), password);
+      navigate('/');
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Login failed';
+      setError(msg);
     }
   };
 

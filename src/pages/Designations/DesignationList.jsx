@@ -39,16 +39,35 @@ export default function DesignationList() {
     }
   };
 
+  // ✅ mapped skills normalize helper
+  const getMappedSkills = (d) => {
+    // Case 1: backend returns designationSkills: [{ skill: {name}, requiredLevel }]
+    if (Array.isArray(d.designationSkills)) {
+      return d.designationSkills
+        .map((ds) => {
+          const name = ds?.skill?.name;
+          const level = ds?.requiredLevel ?? ds?.required_level;
+          if (!name) return null;
+          return level !== undefined ? `${name} (L${level})` : name;
+        })
+        .filter(Boolean);
+    }
+
+    // Case 2: backend returns skills: [{name}]
+    if (Array.isArray(d.skills)) {
+      return d.skills.map((s) => s?.name).filter(Boolean);
+    }
+
+    return [];
+  };
+
   return (
     <div className="designation-page">
       {/* HEADER */}
       <div className="designation-header">
         <h2>Designation Management</h2>
 
-        <button
-          className="save-btn"
-          onClick={() => navigate('/designations/add')}
-        >
+        <button className="save-btn" onClick={() => navigate('/designations/add')}>
           + Add Designation
         </button>
       </div>
@@ -71,46 +90,65 @@ export default function DesignationList() {
             </thead>
 
             <tbody>
-              {designations.map((d) => (
-                <tr key={d.id}>
-                  <td className="designation-name">
-                    {d.designationName}
-                  </td>
+              {designations.map((d) => {
+                const mappedSkills = getMappedSkills(d);
 
-                  {/* DEPARTMENTS */}
-                  <td>
-                    {(d.departments || []).map((dept) => (
-                      <span key={dept.id} className="dept-tag">
-                        {dept.name}
-                      </span>
-                    ))}
-                  </td>
+                return (
+                  <tr key={d.id}>
+                    <td className="designation-name">{d.designationName}</td>
 
-                  {/* MAPPED SKILLS (PLACEHOLDER FOR NOW) */}
-                  <td className="mapped-skill-placeholder">
-                    _
-                  </td>
+                    {/* DEPARTMENTS */}
+                    <td>
+                      {(d.departments || []).map((dept) => (
+                        <span key={dept.id} className="dept-tag">
+                          {dept.name}
+                        </span>
+                      ))}
+                    </td>
 
-                  {/* ACTIONS */}
-                  <td>
-                    <button
-                      className="map-btn"
-                      onClick={() =>
-                        navigate(`/designations/${d.id}/map-skills`)
-                      }
-                    >
-                      Map Skills
-                    </button>
+                    {/* ✅ MAPPED SKILLS */}
+                    <td>
+                      {mappedSkills.length === 0 ? (
+                        <span className="mapped-skill-placeholder">No skills</span>
+                      ) : (
+                        <div className="mapped-skill-wrap">
+                          <div className="mapped-skill-count">
+                            {mappedSkills.length} mapped
+                          </div>
 
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(d.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                          <div className="mapped-skill-tags">
+                            {mappedSkills.slice(0, 6).map((name) => (
+                              <span key={name} className="skill-tag">
+                                {name}
+                              </span>
+                            ))}
+
+                            {mappedSkills.length > 6 && (
+                              <span className="skill-tag more-tag">
+                                +{mappedSkills.length - 6} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* ACTIONS */}
+                    <td>
+                      <button
+                        className="map-btn"
+                        onClick={() => navigate(`/designations/${d.id}/map-skills`)}
+                      >
+                        Map Skills
+                      </button>
+
+                      <button className="delete-btn" onClick={() => handleDelete(d.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

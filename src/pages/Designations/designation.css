@@ -183,3 +183,32 @@
   font-size: 14px;
   color: #6b7280;
 }
+.mapped-skill-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mapped-skill-count {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.mapped-skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.more-tag {
+  opacity: 0.8;
+}

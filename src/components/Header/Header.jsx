@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './header.css';
+import { getAuthUser, logout } from '../../utils/auth';
 import logo from '../../assets/hero-steels-logo.png';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const user = {
-    name: 'Prem Pandey',
-    designation: 'IT Executive',
-    department: 'IT',
+    const [user, setUser] = useState({ name: 'User', designation: '', department: '' });
+
+  useEffect(() => {
+    const u = getAuthUser();
+    if (u?.email) {
+      setUser((prev) => ({ ...prev, name: u.email }));
+    }
+  }, []);
+
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -53,7 +63,7 @@ export default function Header() {
 
               <div className="profile-divider"></div>
 
-              <button className="logout-btn">Logout</button>
+              <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           )}
         </div>

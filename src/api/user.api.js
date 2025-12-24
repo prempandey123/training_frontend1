@@ -1,12 +1,10 @@
-import axios from 'axios';
-
-const BASE_URL = 'http://localhost:3000/users';
-
+import api from './api';
+const BASE_URL = '/users';
 /**
  * CREATE USER
  */
 export const createUser = async (data) => {
-  const res = await axios.post(BASE_URL, data);
+  const res = await api.post(BASE_URL, data);
   return res.data;
 };
 
@@ -14,7 +12,7 @@ export const createUser = async (data) => {
  * GET ALL USERS
  */
 export const getUsers = async () => {
-  const res = await axios.get(BASE_URL);
+  const res = await api.get(BASE_URL);
   return res.data;
 };
 
@@ -22,7 +20,7 @@ export const getUsers = async () => {
  * GET USER BY ID
  */
 export const getUserById = async (id) => {
-  const res = await axios.get(`${BASE_URL}/${id}`);
+  const res = await api.get(`${BASE_URL}/${id}`);
   return res.data;
 };
 
@@ -30,7 +28,7 @@ export const getUserById = async (id) => {
  * UPDATE USER
  */
 export const updateUser = async (id, data) => {
-  const res = await axios.put(`${BASE_URL}/${id}`, data);
+  const res = await api.put(`${BASE_URL}/${id}`, data);
   return res.data;
 };
 
@@ -38,6 +36,6 @@ export const updateUser = async (id, data) => {
  * DELETE USER
  */
 export const deleteUser = async (id) => {
-  const res = await axios.delete(`${BASE_URL}/${id}`);
+  const res = await api.delete(`${BASE_URL}/${id}`);
   return res.data;
 };

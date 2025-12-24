@@ -21,6 +21,7 @@ export default function CreateUser() {
     designationId: '',
     role: 'EMPLOYEE',
     dateOfJoining: '',
+    password: '',
   });
 
   // 🔹 Load dropdown data
@@ -124,6 +125,19 @@ export default function CreateUser() {
                 required
               />
             </div>
+
+            <div>
+              <label>Password *</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter password"
+              />
+            </div>
+
           </div>
         </div>
 

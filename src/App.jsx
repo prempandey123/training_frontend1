@@ -1,6 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout/Layout';
+import { isAuthenticated } from './utils/auth';
 
 import Login from './pages/Auth/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -35,7 +36,8 @@ function App() {
       <Route
         path="/*"
         element={
-          <Layout>
+          isAuthenticated() ? (
+            <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/users" element={<UserList />} />
@@ -63,6 +65,9 @@ function App() {
               
             </Routes>
           </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
 
