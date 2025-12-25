@@ -1,7 +1,47 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import api from '../../api/api';
 import './dashboard.css';
+
+function parseTimeRangeToHours(timeRange) {
+  // Supports: "10:00 - 12:00", "10:00-12:00"
+  if (!timeRange || typeof timeRange !== 'string') return 0;
+
+  const parts = timeRange.split('-').map((s) => s.trim()).filter(Boolean);
+  if (parts.length < 2) return 0;
+
+  const [startStr, endStr] = parts;
+
+  const toMinutes = (hhmm) => {
+    const m = String(hhmm).match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  };
+
+  const startMin = toMinutes(startStr);
+  const endMin = toMinutes(endStr);
+  if (startMin == null || endMin == null) return 0;
+
+  const diff = endMin - startMin;
+  if (diff <= 0) return 0;
+
+  return diff / 60;
+}
+
+function getMonthLabel(dateStr) {
+  // dateStr: "YYYY-MM-DD"
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return 'Unknown';
+  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function yyyymm(dateStr) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return 'unknown';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -14,13 +54,10 @@ export default function Dashboard() {
     inactive: 0,
   });
 
-  const trainingHours = [
-    { month: 'September 2025', hours: 180 },
-    { month: 'August 2025', hours: 220 },
-    { month: 'July 2025', hours: 160 },
-    { month: 'June 2025', hours: 140 },
-    { month: 'May 2025', hours: 110 },
-  ];
+  // NEW: trainings stats from backend
+  const [loadingTraining, setLoadingTraining] = useState(true);
+  const [totalUpcomingHours, setTotalUpcomingHours] = useState(0);
+  const [monthWiseHours, setMonthWiseHours] = useState([]); // [{ month, hours }]
 
   useEffect(() => {
     setLoadingStats(true);
@@ -41,6 +78,81 @@ export default function Dashboard() {
       })
       .finally(() => setLoadingStats(false));
   }, []);
+
+  // NEW: Load trainings and compute:
+  // 1) Total upcoming hours (sum of durations)
+  // 2) Month-wise hours (sum of durations by month)
+  useEffect(() => {
+    setLoadingTraining(true);
+
+    api
+      .get('/trainings') // backend has GET /trainings
+      .then((res) => {
+        const list = Array.isArray(res?.data) ? res.data : [];
+
+        // Today start (local)
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+        let upcomingTotal = 0;
+
+        const monthMap = new Map(); // key yyyy-mm -> {monthLabel, hours}
+
+        for (const t of list) {
+          const date = t?.date;   // "YYYY-MM-DD"
+          const time = t?.time;   // "HH:mm - HH:mm"
+          if (!date) continue;
+
+          // Determine start datetime for "upcoming"
+          // If time missing/invalid, treat as date-only at 00:00
+          let startDt = new Date(date);
+          if (time && typeof time === 'string') {
+            const startPart = time.split('-')[0]?.trim();
+            const m = String(startPart || '').match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+            if (m) {
+              startDt = new Date(`${date}T${String(m[1]).padStart(2, '0')}:${m[2]}:00`);
+            }
+          }
+
+          const hours = parseTimeRangeToHours(time);
+
+          // Month-wise: include all trainings (past + future)
+          const key = yyyymm(date);
+          const label = getMonthLabel(date);
+          const prev = monthMap.get(key) || { month: label, hours: 0 };
+          monthMap.set(key, { month: label, hours: prev.hours + hours });
+
+          // Upcoming: include only future/ongoing by date-time
+          if (!Number.isNaN(startDt.getTime()) && startDt >= todayStart) {
+            upcomingTotal += hours;
+          }
+        }
+
+        // Sort month-wise by yyyy-mm desc
+        const sorted = [...monthMap.entries()]
+          .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+          .map(([, v]) => ({
+            month: v.month,
+            hours: Math.round(v.hours * 10) / 10, // 1 decimal
+          }));
+
+        setTotalUpcomingHours(Math.round(upcomingTotal * 10) / 10);
+        setMonthWiseHours(sorted);
+      })
+      .catch((err) => {
+        console.error('Failed to load trainings', err?.response?.status, err?.response?.data);
+        setTotalUpcomingHours(0);
+        setMonthWiseHours([]);
+      })
+      .finally(() => setLoadingTraining(false));
+  }, []);
+
+  const totalHoursLabel = useMemo(() => {
+    if (loadingTraining) return '...';
+    // Show like "1240 hrs" or "12.5 hrs"
+    const val = totalUpcomingHours;
+    return `${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)} hrs`;
+  }, [loadingTraining, totalUpcomingHours]);
 
   return (
     <div className="dashboard-page">
@@ -79,8 +191,11 @@ export default function Dashboard() {
           onClick={() => setShowHours(true)}
         >
           <h3>Total Training Hours</h3>
-          <span className="kpi-main">1,240 hrs</span>
-          <p className="kpi-hint">Click to view month-wise</p>
+          <span className="kpi-main">{totalHoursLabel}</span>
+          <p className="kpi-hint">
+            Click to view month-wise
+            {loadingTraining ? '' : ' (based on backend trainings)'}
+          </p>
         </div>
 
         <div
@@ -93,6 +208,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* SAME: Departments card */}
       <div
         className="kpi-card clickable"
         onClick={() => navigate('/departments')}
@@ -101,6 +217,7 @@ export default function Dashboard() {
         <p className="kpi-hint">Manage department master</p>
       </div>
 
+      {/* SAME: Quick Actions */}
       <div className="dashboard-section">
         <h3>Quick Actions</h3>
 
@@ -123,6 +240,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* SAME: Recent Activity */}
       <div className="dashboard-section">
         <h3>Recent Activity</h3>
 
@@ -136,6 +254,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Modal: Month-wise hours from backend */}
       {showHours && (
         <div className="modal-overlay">
           <div className="modal">
@@ -145,15 +264,27 @@ export default function Dashboard() {
             </div>
 
             <div className="hours-list">
-              {trainingHours.map((item, index) => (
-                <div
-                  key={item.month}
-                  className={`hours-row ${index === 0 ? 'current' : ''}`}
-                >
-                  <span>{item.month}</span>
-                  <b>{item.hours} hrs</b>
+              {loadingTraining ? (
+                <div className="hours-row current">
+                  <span>Loading...</span>
+                  <b>...</b>
                 </div>
-              ))}
+              ) : monthWiseHours.length === 0 ? (
+                <div className="hours-row current">
+                  <span>No trainings found</span>
+                  <b>0 hrs</b>
+                </div>
+              ) : (
+                monthWiseHours.map((item, index) => (
+                  <div
+                    key={`${item.month}-${index}`}
+                    className={`hours-row ${index === 0 ? 'current' : ''}`}
+                  >
+                    <span>{item.month}</span>
+                    <b>{item.hours % 1 === 0 ? item.hours.toFixed(0) : item.hours.toFixed(1)} hrs</b>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

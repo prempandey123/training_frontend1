@@ -1,56 +1,89 @@
+import { useEffect, useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+import api from '../../api/api';
 import './trainingCalendar.css';
 
 export default function TrainingCalendar() {
-  const events = [
-    {
-      title: 'Safety Induction',
-      start: '2025-12-20',
-      extendedProps: {
-        department: 'Production',
-        trainer: 'Mr. Sharma',
-      },
-    },
-    {
-      title: 'HRS Operation',
-      start: '2025-12-22',
-      extendedProps: {
-        department: 'HRS & Pickling',
-        trainer: 'Mr. Verma',
-      },
-    },
-    {
-      title: 'Quality Awareness',
-      start: '2025-12-25',
-      extendedProps: {
-        department: 'Quality',
-        trainer: 'Mr. Singh',
-      },
-    },
-  ];
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+
+    async function load() {
+      setLoading(true);
+      setErr('');
+
+      try {
+        // Backend: GET /trainings/calendar  (tumhare backend me hai)
+        const res = await api.get('/trainings/calendar');
+        const list = Array.isArray(res?.data) ? res.data : [];
+
+        // FullCalendar expects: [{ title, start, end?, extendedProps? }]
+        // Backend already calendar-friendly shape de raha hai
+        const normalized = list
+          .filter((e) => e && typeof e === 'object' && e.title && e.start)
+          .map((e) => ({
+            id: String(e.id ?? ''),
+            title: String(e.title ?? ''),
+            start: e.start, // "YYYY-MM-DD" OR "YYYY-MM-DDTHH:mm:00"
+            end: e.end || undefined,
+            extendedProps: e.extendedProps || {},
+          }));
+
+        if (alive) setEvents(normalized);
+      } catch (e) {
+        console.error('Failed to load calendar events', e?.response?.status, e?.response?.data);
+        if (alive) {
+          setErr('Calendar data load nahi hua. Backend/URL check karo.');
+          setEvents([]);
+        }
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const headerToolbar = useMemo(
+    () => ({
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay',
+    }),
+    []
+  );
 
   return (
     <div className="calendar-page">
       <h2>Training Calendar</h2>
 
+      {loading && <div className="calendar-note">Loading...</div>}
+      {!!err && <div className="calendar-error">{err}</div>}
+
+      {/* IMPORTANT: plugins array me actual plugin functions hi do */}
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay',
-        }}
+        headerToolbar={headerToolbar}
         events={events}
         eventClick={(info) => {
+          const p = info?.event?.extendedProps || {};
           alert(
             `Training: ${info.event.title}
-Department: ${info.event.extendedProps.department}
-Trainer: ${info.event.extendedProps.trainer}`
+Department: ${p.department || '-'}
+Trainer: ${p.trainer || '-'}
+Status: ${p.status || '-'}
+Time: ${p.time || '-'}`
           );
         }}
         height="auto"
