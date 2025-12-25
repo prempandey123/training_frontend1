@@ -18,6 +18,8 @@ import AddTraining from './pages/Training/AddTraining';
 import MyProfile from './pages/Profile/MyProfile';
 import Attendance from './pages/Attendance/Attendance';
 import TrainingCalendar from './pages/Calendar/TrainingCalendar';
+import SkillGap from './pages/SkillGap/SkillGap';
+import TrainingRequirements from './pages/TrainingRequirements/TrainingRequirements';
 import EditSkill from './pages/Skills/EditSkill';
 import EditUser from './pages/Users/EditUser';
 import EditDesignation from './pages/Designations/MapDesignationSkills';
@@ -53,6 +55,8 @@ function App() {
               <Route path="/my-profile" element={<MyProfile />} />
               <Route path="/attendance" element={<Attendance />} />
               <Route path="/calendar" element={<TrainingCalendar />} />
+              <Route path="/skill-gap" element={<SkillGap />} />
+              <Route path="/training-requirements" element={<TrainingRequirements />} />
               <Route path="/skills/edit/:id" element={<EditSkill />} />
               <Route path="/users/edit/:id" element={<EditUser />} />
               <Route path="/designations/edit/:id" element={<EditDesignation />} />

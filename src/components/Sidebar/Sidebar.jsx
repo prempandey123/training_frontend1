@@ -45,8 +45,26 @@ export default function Sidebar() {
         </li>
 
         <li>
+          <NavLink to="/skill-gap">
+            Skill Gap
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/training-requirements">
+            Training Requirements
+          </NavLink>
+        </li>
+
+        <li>
           <NavLink to="/reports">
             Reports
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/calendar">
+            Training Calendar
           </NavLink>
         </li>
       </ul>

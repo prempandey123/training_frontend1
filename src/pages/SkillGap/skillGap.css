@@ -1,0 +1,95 @@
+.skill-gap-page {
+  padding: 20px;
+}
+
+.gap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.gap-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.gap-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.filter-item label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.filter-item select {
+  width: 320px;
+  max-width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gap-table th,
+.gap-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.gap-table th {
+  text-align: left;
+  background: #f7f7f7;
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  border: 1px solid #ddd;
+}
+
+.pill.high {
+  border-color: #ffb3b3;
+}
+
+.pill.medium {
+  border-color: #ffe1a3;
+}
+
+.pill.low {
+  border-color: #b8e4c9;
+}
+
+.primary-btn,
+.secondary-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-weight: 600;
+}
+
+.primary-btn {
+  border-color: #111;
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

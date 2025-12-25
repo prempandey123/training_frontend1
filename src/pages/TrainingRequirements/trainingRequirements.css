@@ -1,0 +1,74 @@
+.training-req-page {
+  padding: 20px;
+}
+
+.req-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.req-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.req-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.req-table th,
+.req-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.req-table th {
+  text-align: left;
+  background: #f7f7f7;
+}
+
+.req-table select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  border: 1px solid #ddd;
+}
+
+.pill.high {
+  border-color: #ffb3b3;
+}
+
+.pill.medium {
+  border-color: #ffe1a3;
+}
+
+.pill.low {
+  border-color: #b8e4c9;
+}
+
+.secondary-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-weight: 600;
+}
