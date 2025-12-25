@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useEffect } from 'react';
+import { getTrainings } from '../../api/trainingApi';
 import './training.css';
 
 export default function Training() {
@@ -11,35 +13,26 @@ export default function Training() {
 
   const today = new Date();
 
-  const trainings = [
-    {
-      id: 1,
-      topic: 'Safety Induction',
-      department: 'Production',
-      trainer: 'Mr. Sharma',
-      date: '2025-12-20',
-      time: '10:00 - 12:00',
-      status: 'ACTIVE',
-      attendees: [
-        { empId: 'HSL101', name: 'Amit Singh', dept: 'Production', status: 'ATTENDED' },
-        { empId: 'HSL102', name: 'Rahul Kumar', dept: 'Production', status: 'ABSENT' },
-      ],
-    },
-    {
-      id: 2,
-      topic: 'HRS Operation',
-      department: 'HRS & Pickling',
-      trainer: 'Mr. Verma',
-      date: '2025-11-10',
-      time: '09:00 - 12:00',
-      status: 'COMPLETED',
-      attendees: [
-        { empId: 'HSL201', name: 'Rohit Kumar', dept: 'HRS', status: 'ATTENDED' },
-        { empId: 'HSL202', name: 'Vikas Sharma', dept: 'HRS', status: 'ATTENDED' },
-        { empId: 'HSL203', name: 'Ankit Singh', dept: 'HRS', status: 'ABSENT' },
-      ],
-    },
-  ];
+  const [trainings, setTrainings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadTrainings = async () => {
+    try {
+      const data = await getTrainings();
+      setTrainings(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to load trainings');
+      setTrainings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTrainings();
+  }, []);
+
 
   const upcomingTrainings = trainings.filter(
     (t) => new Date(t.date) >= today
@@ -87,7 +80,11 @@ export default function Training() {
           </thead>
 
           <tbody>
-            {upcomingTrainings.map((t) => (
+            {loading ? (
+              <tr><td colSpan="7" className="no-data">Loading trainings...</td></tr>
+            ) : upcomingTrainings.length === 0 ? (
+              <tr><td colSpan="7" className="no-data">No upcoming trainings</td></tr>
+            ) : upcomingTrainings.map((t) => (
               <tr key={t.id}>
                 <td className="training-name">{t.topic}</td>
                 <td>{new Date(t.date).toLocaleDateString()}</td>
@@ -128,7 +125,11 @@ export default function Training() {
           </thead>
 
           <tbody>
-            {previousTrainings.map((t) => (
+            {loading ? (
+              <tr><td colSpan="7" className="no-data">Loading trainings...</td></tr>
+            ) : previousTrainings.length === 0 ? (
+              <tr><td colSpan="7" className="no-data">No previous trainings</td></tr>
+            ) : previousTrainings.map((t) => (
               <tr key={t.id}>
                 <td className="training-name">{t.topic}</td>
                 <td>{new Date(t.date).toLocaleDateString()}</td>

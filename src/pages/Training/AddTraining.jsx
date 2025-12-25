@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './training.css';
+import { createTraining } from '../../api/trainingApi';
 
 export default function AddTraining() {
   const navigate = useNavigate();
@@ -32,23 +33,18 @@ export default function AddTraining() {
     { id: 'HSL104', name: 'Rohit Sharma', dept: 'Quality', skills: { 'Quality Inspection': 2 } },
   ];
 
-  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  // ✅ store only employee IDs to avoid object includes issue
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
   const [employeeSearch, setEmployeeSearch] = useState('');
 
   /* HELPERS */
   const toggleMulti = (value, list, setter) => {
-    setter(
-      list.includes(value)
-        ? list.filter((v) => v !== value)
-        : [...list, value]
-    );
+    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
   /* DERIVED DATA */
   const availableSkills = [
-    ...new Set(
-      selectedDepartments.flatMap((d) => skillMaster[d] || [])
-    ),
+    ...new Set(selectedDepartments.flatMap((d) => skillMaster[d] || [])),
   ];
 
   const skillGapEmployees = employees.filter(
@@ -63,8 +59,18 @@ export default function AddTraining() {
       e.id.toLowerCase().includes(employeeSearch.toLowerCase())
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ backend expects: assignedEmployees: [{ empId, name, dept }]
+    const assignedEmployees = selectedEmployeeIds
+      .map((id) => employees.find((emp) => emp.id === id))
+      .filter(Boolean)
+      .map((emp) => ({
+        empId: emp.id,
+        name: emp.name,
+        dept: emp.dept,
+      }));
 
     const payload = {
       topic,
@@ -72,18 +78,22 @@ export default function AddTraining() {
       trainingTime: `${fromTime} - ${toTime}`,
       departments: selectedDepartments,
       skills: selectedSkills,
-      assignedEmployees: selectedEmployees,
+      assignedEmployees, // ✅ clean data
       status,
     };
 
-    console.log('FINAL PAYLOAD 👉', payload);
-    alert('Training assigned successfully (demo)');
-    navigate('/training');
+    try {
+      await createTraining(payload);
+      alert('Training assigned');
+      navigate('/training');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to assign training');
+    }
   };
 
   return (
     <div className="training-page">
-
       <div className="training-header">
         <h2>Assign Training (Skill Gap Based)</h2>
         <button className="back-btn" onClick={() => navigate('/training')}>
@@ -92,7 +102,6 @@ export default function AddTraining() {
       </div>
 
       <form className="training-form" onSubmit={handleSubmit}>
-
         {/* TOPIC */}
         <div className="form-group">
           <label>Training Topic *</label>
@@ -103,15 +112,30 @@ export default function AddTraining() {
         <div className="form-row">
           <div className="form-group">
             <label>Date *</label>
-            <input type="date" value={trainingDate} onChange={(e) => setTrainingDate(e.target.value)} required />
+            <input
+              type="date"
+              value={trainingDate}
+              onChange={(e) => setTrainingDate(e.target.value)}
+              required
+            />
           </div>
           <div className="form-group">
             <label>From *</label>
-            <input type="time" value={fromTime} onChange={(e) => setFromTime(e.target.value)} required />
+            <input
+              type="time"
+              value={fromTime}
+              onChange={(e) => setFromTime(e.target.value)}
+              required
+            />
           </div>
           <div className="form-group">
             <label>To *</label>
-            <input type="time" value={toTime} onChange={(e) => setToTime(e.target.value)} required />
+            <input
+              type="time"
+              value={toTime}
+              onChange={(e) => setToTime(e.target.value)}
+              required
+            />
           </div>
         </div>
 
@@ -123,6 +147,7 @@ export default function AddTraining() {
               <label key={d} className="checkbox-item">
                 <input
                   type="checkbox"
+                  checked={selectedDepartments.includes(d)}
                   onChange={() => toggleMulti(d, selectedDepartments, setSelectedDepartments)}
                 />
                 {d}
@@ -139,7 +164,9 @@ export default function AddTraining() {
               <label key={s} className="checkbox-item">
                 <input
                   type="checkbox"
+                  checked={selectedSkills.includes(s)}
                   onChange={() => toggleMulti(s, selectedSkills, setSelectedSkills)}
+                  disabled={!selectedDepartments.length}
                 />
                 {s}
               </label>
@@ -156,16 +183,19 @@ export default function AddTraining() {
             placeholder="Search employee"
             value={employeeSearch}
             onChange={(e) => setEmployeeSearch(e.target.value)}
+            disabled={!selectedSkills.length}
           />
 
           <div className="employee-list">
-            {filteredEmployees.map((e) => (
-              <label key={e.id} className="employee-row">
+            {filteredEmployees.map((emp) => (
+              <label key={emp.id} className="employee-row">
                 <input
                   type="checkbox"
-                  onChange={() => toggleMulti(e, selectedEmployees, setSelectedEmployees)}
+                  checked={selectedEmployeeIds.includes(emp.id)}
+                  onChange={() => toggleMulti(emp.id, selectedEmployeeIds, setSelectedEmployeeIds)}
+                  disabled={!selectedSkills.length}
                 />
-                {e.name} ({e.id}) — {e.dept}
+                {emp.name} ({emp.id}) — {emp.dept}
               </label>
             ))}
           </div>
@@ -184,7 +214,6 @@ export default function AddTraining() {
         <button type="submit" className="primary-btn">
           Assign Training
         </button>
-
       </form>
     </div>
   );
