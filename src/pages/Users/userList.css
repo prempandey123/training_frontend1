@@ -7,79 +7,145 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .user-list-header h2 {
   font-size: 22px;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  color: #0f172a;
+  margin: 0;
 }
 
+.user-list-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Primary actions */
 .create-btn {
   background: linear-gradient(135deg, var(--accent-strong), var(--accent));
   color: var(--accent-ink);
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 14px 28px rgba(246, 201, 69, 0.22);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
 .create-btn:hover {
-  filter: brightness(0.98);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(246, 201, 69, 0.28);
+  filter: saturate(1.02);
+}
+
+/* Search */
+.search-input {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  font-size: 14px;
+  min-width: 240px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.search-input::placeholder {
+  color: rgba(100, 116, 139, 0.85);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: rgba(246, 201, 69, 0.85);
+  box-shadow: var(--ring);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 /* Table */
 .table-container {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: var(--shadow-md);
   overflow-x: auto;
 }
 
 .user-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .user-table th {
   text-align: left;
   padding: 14px;
-  font-size: 13px;
-  color: #6b7280;
-  background-color: #f9fafb;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.35px;
+  color: rgba(100, 116, 139, 0.95);
+  text-transform: uppercase;
+  background:
+    linear-gradient(180deg, rgba(249, 250, 251, 1), rgba(244, 246, 248, 1));
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .user-table td {
   padding: 14px;
   font-size: 14px;
-  color: #111827;
-  border-top: 1px solid #e5e7eb;
+  color: #0f172a;
+  border-top: 1px solid rgba(226, 232, 240, 1);
+  background: transparent;
+}
+
+.user-table tr:hover td {
+  background: rgba(246, 201, 69, 0.06);
 }
 
 /* Role badges */
 .role {
-  padding: 4px 10px;
-  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.04);
 }
 
 .role.admin {
-  background-color: #fdecea;
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.18);
   color: #b91c1c;
 }
 
 .role.employee {
-  background-color: #e0f2fe;
+  background-color: rgba(2, 132, 199, 0.10);
+  border-color: rgba(2, 132, 199, 0.18);
   color: #0369a1;
 }
 
 /* Status */
 .status {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 900;
+  letter-spacing: 0.2px;
 }
 
 .status.active {
@@ -92,22 +158,26 @@
 
 /* Action */
 .action-btn {
-  background: transparent;
-  border: 1px solid #d1d5db;
-  padding: 6px 10px;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  padding: 8px 12px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 800;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
 }
 
 .action-btn:hover {
-  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  background-color: rgba(15, 23, 42, 0.04);
+  border-color: rgba(246, 201, 69, 0.55);
 }
 
 /* BIOMETRIC */
 .biometric {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 900;
 }
 
 .biometric.linked {
@@ -117,19 +187,25 @@
 .biometric.not-linked {
   color: #b91c1c;
 }
+
 /* BIOMETRIC BUTTON */
 .biometric-btn {
-  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
-  color: var(--accent-ink);
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
+  background: transparent;
+  border: 1px dashed rgba(246, 201, 69, 0.9);
+  color: rgba(15, 23, 42, 0.92);
+  padding: 8px 12px;
   font-size: 12px;
+  font-weight: 900;
+  border-radius: 12px;
   cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 .biometric-btn:hover {
-  filter: brightness(0.98);
+  transform: translateY(-1px);
+  background: rgba(246, 201, 69, 0.16);
+  border-color: rgba(246, 201, 69, 1);
+  color: #0b0f14;
 }
 
 /* COMPLETION CIRCLE */
@@ -149,48 +225,13 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 900;
   color: #16a34a;
 }
 
-.biometric-btn {
-  background: transparent;
-  border: 1px dashed #f1c40f;
-  color: #f1c40f;
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.biometric-btn:hover {
-  background: #f1c40f;
-  color: #000;
-}
-.user-list-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.search-input {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 6px;
-  border: 1px solid #444;
-  background: #111;
-  color: #fff;
-  font-size: 13px;
-  min-width: 240px;
-}
-
-.search-input::placeholder {
-  color: #888;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #f1c40f;
-  box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.15);
+@media (max-width: 720px) {
+  .search-input {
+    min-width: 180px;
+    width: 100%;
+  }
 }

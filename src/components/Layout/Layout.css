@@ -17,6 +17,28 @@
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  position: relative;
+}
+
+/* One consistent modern background across ALL pages (no DOM/logic changes) */
+.page-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 18px;
+  background:
+    radial-gradient(900px 520px at 12% 10%, rgba(246, 201, 69, 0.16), transparent 58%),
+    radial-gradient(760px 520px at 96% 8%, rgba(15, 23, 42, 0.06), transparent 58%),
+    radial-gradient(900px 520px at 22% 104%, rgba(255, 183, 3, 0.10), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.00));
+  filter: saturate(1.08);
+  opacity: 0.95;
+}
+
+.page-content > * {
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 920px) {

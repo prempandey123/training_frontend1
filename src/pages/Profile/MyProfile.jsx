@@ -192,7 +192,12 @@ export default function MyProfile() {
 
         {/* ACTIONS */}
         <div className="profile-actions">
-          <button className="secondary-btn">Edit Profile</button>
+          <button
+            className="secondary-btn"
+            onClick={() => navigate(`/users/edit/${authUser?.id}`)}
+          >
+            Edit Profile
+          </button>
           <button className="primary-btn" onClick={() => setShowPasswordModal(true)}>
             Change Password
           </button>

@@ -27,9 +27,15 @@
 
   --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 12px 34px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 26px 70px rgba(15, 23, 42, 0.16);
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 18px;
+
+  /* Fancy helpers */
+  --ring: 0 0 0 4px rgba(246, 201, 69, 0.22);
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.55);
 }
 
 /* ----------------------
@@ -50,6 +56,39 @@ body {
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
   background: var(--surface-2);
+}
+
+/* Global “mesh” background layer (subtle, across all pages) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -60px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 10% 8%, rgba(246, 201, 69, 0.22), transparent 58%),
+    radial-gradient(760px 520px at 96% 10%, rgba(15, 23, 42, 0.08), transparent 58%),
+    radial-gradient(900px 520px at 22% 104%, rgba(255, 183, 3, 0.14), transparent 55%),
+    radial-gradient(760px 520px at 92% 96%, rgba(59, 130, 246, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(249, 250, 251, 1), rgba(243, 244, 246, 1));
+  filter: saturate(1.05);
+  animation: meshFloat 16s ease-in-out infinite;
+}
+
+@keyframes meshFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
 }
 
 a {
@@ -89,6 +128,13 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(15, 23, 42, 0.14);
 }
 
 .card-header {
@@ -115,6 +161,28 @@ textarea {
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease,
     border-color 0.12s ease;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* A tiny “sheen” highlight on hover */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-120%);
+  transition: transform 400ms ease;
+  pointer-events: none;
+}
+
+.btn:hover::after {
+  transform: translateX(120%);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .btn:active {
@@ -159,7 +227,13 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: rgba(246, 201, 69, 0.9);
-  box-shadow: 0 0 0 4px rgba(246, 201, 69, 0.22);
+  box-shadow: var(--ring);
+}
+
+/* Better placeholder contrast */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(100, 116, 139, 0.8);
 }
 
 label {
@@ -195,6 +269,42 @@ th {
 
 tr:hover td {
   background: rgba(246, 201, 69, 0.06);
+}
+
+/* Make “table containers” look premium without touching markup */
+.table-container,
+.attendance-table-container,
+.designation-table-container,
+.report-list-container,
+.matrix-container {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+/* Page wrappers – subtle glow + depth across pages */
+[class$="-page"] {
+  position: relative;
+}
+
+[class$="-page"]::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 22px;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 360px at 14% 6%, rgba(246, 201, 69, 0.18), transparent 60%),
+    radial-gradient(700px 360px at 92% 10%, rgba(15, 23, 42, 0.06), transparent 60%);
+  opacity: 0.9;
+  z-index: 0;
+}
+
+[class$="-page"] > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Scrollbar (webkit) */

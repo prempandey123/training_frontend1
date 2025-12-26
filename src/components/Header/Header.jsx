@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './header.css';
 import { getAuthUser, logout } from '../../utils/auth';
@@ -6,6 +6,7 @@ import logo from '../../assets/hero-steels-logo.png';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const wrapperRef = useRef(null);
   const navigate = useNavigate();
 
     const [user, setUser] = useState({ name: 'User', designation: '', department: '' });
@@ -16,6 +17,18 @@ export default function Header() {
       setUser((prev) => ({ ...prev, name: u.email }));
     }
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!open) return;
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
 
 
   const handleLogout = () => {
@@ -50,20 +63,31 @@ export default function Header() {
 
         {/* PROFILE */}
         <div
+          ref={wrapperRef}
           className="profile-wrapper"
           onClick={() => setOpen(!open)}
         >
           <span className="user-name">Admin ▾</span>
 
           {open && (
-            <div className="profile-dropdown">
+            <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
               <div className="profile-name">{user.name}</div>
               <div className="profile-detail">{user.designation}</div>
               <div className="profile-detail">{user.department}</div>
 
               <div className="profile-divider"></div>
 
-              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+              <button
+                className="logout-btn"
+                onClick={(e) => {
+                  // prevent wrapper toggle interfering with click
+                  e.stopPropagation();
+                  setOpen(false);
+                  handleLogout();
+                }}
+              >
+                Logout
+              </button>
             </div>
           )}
         </div>

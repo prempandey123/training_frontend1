@@ -84,3 +84,32 @@
     display: none;
   }
 }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebar-menu {
+  flex: 1;
+}
+
+.sidebar-logout {
+  padding: 14px 20px;
+  margin: 15px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffcc00, #ff9900);
+  color: #000;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-logout:hover {
+  background: linear-gradient(135deg, #ffd633, #ffb300);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+}
+
