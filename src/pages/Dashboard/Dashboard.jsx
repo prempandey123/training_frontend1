@@ -163,7 +163,7 @@ export default function Dashboard() {
 
       <div className="kpi-grid">
         <div
-          className="kpi-card clickable"
+          className="kpi-card kpi-users clickable"
           onClick={() => navigate('/users')}
           title="Open User Master"
         >
@@ -187,7 +187,7 @@ export default function Dashboard() {
         </div>
 
         <div
-          className="kpi-card clickable"
+          className="kpi-card kpi-hours clickable"
           onClick={() => setShowHours(true)}
         >
           <h3>Total Training Hours</h3>
@@ -200,42 +200,33 @@ export default function Dashboard() {
 
         {/* NEW: Org-level cards (do not change any existing logic) */}
         <div
-          className="kpi-card clickable"
+          className="kpi-card kpi-skill clickable"
           onClick={() => navigate('/skill-matrix')}
           title="Open Organization Skill Matrix"
         >
           <h3>Skill Matrix (Organization)</h3>
-          <span className="kpi-main">View</span>
+          <span className="kpi-action">View <span aria-hidden>→</span></span>
           <p className="kpi-hint">Open skill matrix module</p>
         </div>
 
         <div
-          className="kpi-card clickable"
+          className="kpi-card kpi-req clickable"
           onClick={() => navigate('/training-requirements')}
           title="Open Organization Training Requirements"
         >
           <h3>Training Requirements (Organization)</h3>
-          <span className="kpi-main">View</span>
+          <span className="kpi-action">View <span aria-hidden>→</span></span>
           <p className="kpi-hint">Open training requirements module</p>
         </div>
 
         <div
-          className="kpi-card clickable"
+          className="kpi-card kpi-cal clickable"
           onClick={() => navigate('/calendar')}
         >
           <h3>Training Calendar</h3>
-          <span className="kpi-main">View</span>
+          <span className="kpi-action">View <span aria-hidden>→</span></span>
           <p className="kpi-hint">Open calendar view</p>
         </div>
-      </div>
-
-      {/* SAME: Departments card */}
-      <div
-        className="kpi-card clickable"
-        onClick={() => navigate('/departments')}
-      >
-        <span className="kpi-main">Departments</span>
-        <p className="kpi-hint">Manage department master</p>
       </div>
 
       {/* SAME: Quick Actions */}

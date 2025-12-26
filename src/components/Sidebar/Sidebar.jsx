@@ -28,6 +28,11 @@ export default function Sidebar() {
         <NavLink to="/users/update-password" className="sidebar-link">
   Update User Password
 </NavLink>
+<li>
+          <NavLink to="/calendar">
+            Training Calendar
+          </NavLink>
+        </li>
 
         <li>
           <NavLink to="/training">
@@ -66,11 +71,7 @@ export default function Sidebar() {
           </NavLink>
         </li>
 
-        <li>
-          <NavLink to="/calendar">
-            Training Calendar
-          </NavLink>
-        </li>
+        
       </ul>
     </div>
   );
