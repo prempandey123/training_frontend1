@@ -1,8 +1,29 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { getTrainings } from '../../api/trainingApi';
+import { useEffect, useMemo, useState } from 'react';
+import { getTrainings, updateTraining } from '../../api/trainingApi';
 import './training.css';
+
+const formatDate = (d) => {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return d;
+  return dt.toLocaleDateString();
+};
+
+const normalizeTimeRange = (from, to) => {
+  const f = (from || '').trim();
+  const t = (to || '').trim();
+  if (!f || !t) return '';
+  return `${f} - ${t}`;
+};
+
+const statusMeta = (status) => {
+  const s = (status || '').toUpperCase();
+  if (s === 'COMPLETED') return { label: 'Completed', cls: 'completed' };
+  if (s === 'ACTIVE') return { label: 'Active', cls: 'active' };
+  if (s === 'POSTPONED') return { label: 'Postponed', cls: 'postponed' };
+  return { label: 'Pending', cls: 'pending' };
+};
 
 export default function Training() {
   const navigate = useNavigate();
@@ -11,10 +32,15 @@ export default function Training() {
   const [showPostponeModal, setShowPostponeModal] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState(null);
 
-  const today = new Date();
-
   const [trainings, setTrainings] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Postpone form state
+  const [postponeReason, setPostponeReason] = useState('');
+  const [postponeDate, setPostponeDate] = useState('');
+  const [postponeFrom, setPostponeFrom] = useState('');
+  const [postponeTo, setPostponeTo] = useState('');
+  const [postponeSaving, setPostponeSaving] = useState(false);
 
   const loadTrainings = async () => {
     try {
@@ -33,12 +59,16 @@ export default function Training() {
     loadTrainings();
   }, []);
 
+  const today = useMemo(() => new Date(), []);
 
-  const upcomingTrainings = trainings.filter(
-    (t) => new Date(t.date) >= today
+  const upcomingTrainings = useMemo(
+    () => trainings.filter((t) => new Date(t.date) >= today),
+    [trainings, today],
   );
-  const previousTrainings = trainings.filter(
-    (t) => new Date(t.date) < today
+
+  const previousTrainings = useMemo(
+    () => trainings.filter((t) => new Date(t.date) < today),
+    [trainings, today],
   );
 
   const openAttendees = (training) => {
@@ -48,15 +78,83 @@ export default function Training() {
 
   const openPostpone = (training) => {
     setSelectedTraining(training);
+
+    // Prefill with current values so edit is smooth
+    setPostponeReason(training?.postponeReason || '');
+    setPostponeDate(training?.date || '');
+
+    const parts = String(training?.time || '')
+      .split('-')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    setPostponeFrom(parts[0] || '');
+    setPostponeTo(parts[1] || '');
+
     setShowPostponeModal(true);
+  };
+
+  const closePostpone = () => {
+    setShowPostponeModal(false);
+    setSelectedTraining(null);
+    setPostponeReason('');
+    setPostponeDate('');
+    setPostponeFrom('');
+    setPostponeTo('');
+    setPostponeSaving(false);
+  };
+
+  const submitPostpone = async () => {
+    const reason = (postponeReason || '').trim();
+    const date = (postponeDate || '').trim();
+    const time = normalizeTimeRange(postponeFrom, postponeTo);
+
+    if (!selectedTraining?.id) return;
+    if (!reason) return alert('Please enter reason');
+    if (!date) return alert('Please select new date');
+    if (!time) return alert('Please select From & To time');
+
+    try {
+      setPostponeSaving(true);
+      await updateTraining(selectedTraining.id, {
+        status: 'POSTPONED',
+        trainingDate: date,
+        trainingTime: time,
+        postponeReason: reason,
+      });
+      await loadTrainings();
+      closePostpone();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to postpone training');
+    } finally {
+      setPostponeSaving(false);
+    }
+  };
+
+  const renderStatus = (t) => {
+    const meta = statusMeta(t?.status);
+    const reason = (t?.postponeReason || '').trim();
+    const tooltip = meta.cls === 'postponed' && reason ? `Reason: ${reason}` : '';
+
+    return (
+      <span
+        className={`status-pill ${meta.cls}`}
+        title={tooltip}
+        data-tooltip={tooltip}
+      >
+        {meta.label}
+      </span>
+    );
   };
 
   return (
     <div className="training-page">
-
       {/* HEADER */}
       <div className="training-header">
-        <h2>Training Management</h2>
+        <div>
+          <h2>Training Management</h2>
+          <div className="muted small">Plan, postpone and track attendance.</div>
+        </div>
         <button className="primary-btn" onClick={() => navigate('/training/add')}>
           + Add Training
         </button>
@@ -64,9 +162,12 @@ export default function Training() {
 
       {/* UPCOMING TRAININGS */}
       <div className="training-section">
-        <h3>Upcoming Trainings</h3>
+        <div className="section-head">
+          <h3>Upcoming Trainings</h3>
+          <div className="muted small">Includes postponed sessions with the new date &amp; time.</div>
+        </div>
 
-        <table className="training-table">
+        <table className="training-table pretty">
           <thead>
             <tr>
               <th>Topic</th>
@@ -75,28 +176,30 @@ export default function Training() {
               <th>Department</th>
               <th>Trainer</th>
               <th>Participants</th>
-              <th>Action</th>
+              <th>Status</th>
+              <th className="th-right">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="8" className="no-data">Loading trainings...</td></tr>
             ) : upcomingTrainings.length === 0 ? (
-              <tr><td colSpan="7" className="no-data">No upcoming trainings</td></tr>
+              <tr><td colSpan="8" className="no-data">No upcoming trainings</td></tr>
             ) : upcomingTrainings.map((t) => (
-              <tr key={t.id}>
+              <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
-                <td>{new Date(t.date).toLocaleDateString()}</td>
-                <td>{t.time}</td>
-                <td>{t.department}</td>
-                <td>{t.trainer}</td>
+                <td>{formatDate(t.date)}</td>
+                <td>{t.time || '—'}</td>
+                <td>{t.department || '—'}</td>
+                <td>{t.trainer || '—'}</td>
                 <td>
-                  <span className="people-count" onClick={() => openAttendees(t)}>
-                    {t.attendees.length}
+                  <span className="people-count" onClick={() => openAttendees(t)} title="View attendance">
+                    {Array.isArray(t.attendees) ? t.attendees.length : 0}
                   </span>
                 </td>
-                <td>
+                <td>{renderStatus(t)}</td>
+                <td className="td-right">
                   <button className="secondary-btn" onClick={() => openPostpone(t)}>
                     Postpone
                   </button>
@@ -109,14 +212,17 @@ export default function Training() {
 
       {/* PREVIOUS TRAININGS */}
       <div className="training-section">
-        <h3>Previous Trainings</h3>
+        <div className="section-head">
+          <h3>Previous Trainings</h3>
+          <div className="muted small">Old sessions (completed/active/pending/postponed).</div>
+        </div>
 
-        <table className="training-table">
+        <table className="training-table pretty">
           <thead>
             <tr>
               <th>Topic</th>
               <th>Date</th>
-              <th>Time</th> {/* ✅ ADDED */}
+              <th>Time</th>
               <th>Department</th>
               <th>Trainer</th>
               <th>Participants</th>
@@ -130,20 +236,18 @@ export default function Training() {
             ) : previousTrainings.length === 0 ? (
               <tr><td colSpan="7" className="no-data">No previous trainings</td></tr>
             ) : previousTrainings.map((t) => (
-              <tr key={t.id}>
+              <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
-                <td>{new Date(t.date).toLocaleDateString()}</td>
-                <td>{t.time}</td> {/* ✅ ADDED */}
-                <td>{t.department}</td>
-                <td>{t.trainer}</td>
+                <td>{formatDate(t.date)}</td>
+                <td>{t.time || '—'}</td>
+                <td>{t.department || '—'}</td>
+                <td>{t.trainer || '—'}</td>
                 <td>
-                  <span className="people-count" onClick={() => openAttendees(t)}>
-                    {t.attendees.length}
+                  <span className="people-count" onClick={() => openAttendees(t)} title="View attendance">
+                    {Array.isArray(t.attendees) ? t.attendees.length : 0}
                   </span>
                 </td>
-                <td>
-                  <span className="status completed">Completed</span>
-                </td>
+                <td>{renderStatus(t)}</td>
               </tr>
             ))}
           </tbody>
@@ -206,36 +310,50 @@ export default function Training() {
       )}
 
       {/* POSTPONE MODAL */}
-      {showPostponeModal && (
+      {showPostponeModal && selectedTraining && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
               <h3>Postpone Training</h3>
-              <button onClick={() => setShowPostponeModal(false)}>✕</button>
+              <button onClick={closePostpone}>✕</button>
+            </div>
+
+            <div className="postpone-meta">
+              <div className="muted small"><b>Topic:</b> {selectedTraining.topic}</div>
+              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {selectedTraining.time || '—'}</div>
             </div>
 
             <div className="form-group">
               <label>Reason *</label>
-              <textarea rows="3" placeholder="Reason for postponement"></textarea>
+              <textarea
+                rows="3"
+                placeholder="Reason for postponement"
+                value={postponeReason}
+                onChange={(e) => setPostponeReason(e.target.value)}
+              />
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label>New Date *</label>
-                <input type="date" />
+                <input type="date" value={postponeDate} onChange={(e) => setPostponeDate(e.target.value)} />
               </div>
               <div className="form-group">
                 <label>From *</label>
-                <input type="time" />
+                <input type="time" value={postponeFrom} onChange={(e) => setPostponeFrom(e.target.value)} />
               </div>
               <div className="form-group">
                 <label>To *</label>
-                <input type="time" />
+                <input type="time" value={postponeTo} onChange={(e) => setPostponeTo(e.target.value)} />
               </div>
             </div>
 
-            <button className="primary-btn full">
-              Reschedule Training
+            <button
+              className="primary-btn full"
+              onClick={submitPostpone}
+              disabled={postponeSaving}
+            >
+              {postponeSaving ? 'Rescheduling…' : 'Reschedule Training'}
             </button>
           </div>
         </div>

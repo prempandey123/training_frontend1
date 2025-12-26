@@ -16,6 +16,7 @@ export default function AddTraining() {
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [status, setStatus] = useState('PENDING');
+  const [trainer, setTrainer] = useState('');
 
   /* SKILL SEARCH */
   const [skillQuery, setSkillQuery] = useState('');
@@ -205,6 +206,7 @@ export default function AddTraining() {
       skills: selectedSkill?.name ? [selectedSkill.name] : [],
       assignedEmployees,
       status,
+      trainer: (trainer || "").trim() || undefined,
     };
 
     try {
@@ -238,6 +240,16 @@ export default function AddTraining() {
             <div className="form-group">
               <label>Training Topic *</label>
               <input value={topic} onChange={(e) => setTopic(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label>Trainer name (optional)</label>
+              <input
+                value={trainer}
+                onChange={(e) => setTrainer(e.target.value)}
+                placeholder="e.g. Mr. Sharma"
+              />
+              <div className="helper">You can keep this blank.</div>
             </div>
 
             <div className="form-row">
@@ -481,9 +493,19 @@ export default function AddTraining() {
                   </div>
                 )}
               </div>
-              <button type="submit" className="primary-btn" disabled={!selectedSkill || !assignedUserIds.length}>
-                Assign Training
-              </button>
+              <div className="assign-actions">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => showToast("Mail feature backend me baad me add hoga.", "info")}
+                  disabled={!assignedUserIds.length}
+                >
+                  Send mail to participants
+                </button>
+                <button type="submit" className="primary-btn" disabled={!selectedSkill || !assignedUserIds.length}>
+                  Assign Training
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -586,3 +586,111 @@ input.mini {
   background: #991b1b;
 }
 
+
+/* ------------------------------ */
+/* TRAINING LIST (polish) */
+/* ------------------------------ */
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.training-table.pretty thead th {
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.training-table.pretty tbody tr.row-hover:hover {
+  background: linear-gradient(90deg, #ffffff, #f8fafc);
+}
+
+.th-right,
+.td-right {
+  text-align: right;
+}
+
+/* Status pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  position: relative;
+}
+
+.status-pill.pending {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.status-pill.active {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
+}
+
+.status-pill.completed {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #065f46;
+}
+
+.status-pill.postponed {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+/* Tooltip (hover reason) */
+.status-pill.postponed[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  background: #111827;
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  z-index: 2000;
+}
+
+.status-pill.postponed[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #111827;
+}
+
+.postpone-meta {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed #e5e7eb;
+  background: #fcfcfd;
+}
+
+.assign-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
