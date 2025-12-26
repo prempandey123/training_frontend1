@@ -198,6 +198,27 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* NEW: Org-level cards (do not change any existing logic) */}
+        <div
+          className="kpi-card clickable"
+          onClick={() => navigate('/skill-matrix')}
+          title="Open Organization Skill Matrix"
+        >
+          <h3>Skill Matrix (Organization)</h3>
+          <span className="kpi-main">View</span>
+          <p className="kpi-hint">Open skill matrix module</p>
+        </div>
+
+        <div
+          className="kpi-card clickable"
+          onClick={() => navigate('/training-requirements')}
+          title="Open Organization Training Requirements"
+        >
+          <h3>Training Requirements (Organization)</h3>
+          <span className="kpi-main">View</span>
+          <p className="kpi-hint">Open training requirements module</p>
+        </div>
+
         <div
           className="kpi-card clickable"
           onClick={() => navigate('/calendar')}
