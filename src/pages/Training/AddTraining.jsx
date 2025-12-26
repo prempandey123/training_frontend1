@@ -37,6 +37,19 @@ export default function AddTraining() {
   /* ASSIGNED EMPLOYEES */
   const [assignedUserIds, setAssignedUserIds] = useState([]); // store ids for checkbox safety
 
+  /* TOAST (tiny, local) */
+  const [toast, setToast] = useState(null); // {type:'info'|'success'|'error', msg:string}
+
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+  };
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2400);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const assignedUsers = useMemo(() => {
     const byId = new Map();
     [...gapUsers, ...manualResults].forEach((u) => {
@@ -47,10 +60,23 @@ export default function AddTraining() {
     return assignedUserIds.map((id) => byId.get(id)).filter(Boolean);
   }, [assignedUserIds, gapUsers, manualResults]);
 
-  const toggleAssigned = (userId) => {
-    setAssignedUserIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
-    );
+  const addAssigned = (userId) => {
+    setAssignedUserIds((prev) => {
+      if (prev.includes(userId)) {
+        showToast('Already added.', 'info');
+        return prev;
+      }
+      return [...prev, userId];
+    });
+  };
+
+  const handlePickFromList = (userId, nextChecked) => {
+    // Make lists "add only" to avoid accidental un-assign. Remove via chips.
+    if (nextChecked) {
+      addAssigned(userId);
+      return;
+    }
+    showToast('Remove from the selected chips to unassign.', 'info');
   };
 
   const removeAssigned = (userId) => {
@@ -358,7 +384,7 @@ export default function AddTraining() {
                       <input
                         type="checkbox"
                         checked={assignedUserIds.includes(u.userId)}
-                        onChange={() => toggleAssigned(u.userId)}
+                        onChange={(e) => handlePickFromList(u.userId, e.target.checked)}
                       />
                       <div className="emp-main">
                         <div className="emp-title">
@@ -413,7 +439,7 @@ export default function AddTraining() {
                       <input
                         type="checkbox"
                         checked={assignedUserIds.includes(u.userId)}
-                        onChange={() => toggleAssigned(u.userId)}
+                        onChange={(e) => handlePickFromList(u.userId, e.target.checked)}
                       />
                       <div className="emp-main">
                         <div className="emp-title">
@@ -438,6 +464,22 @@ export default function AddTraining() {
               <div>
                 <div className="muted small">Selected employees</div>
                 <div className="big">{assignedUserIds.length}</div>
+                {!!assignedUsers.length && (
+                  <div className="mini-preview" aria-label="Selected employees preview">
+                    {assignedUsers.slice(0, 4).map((u) => {
+                      const id = u?.userId ?? u?.id;
+                      const label = `${u.name}${u.employeeId ? ` (${u.employeeId})` : ''}`;
+                      return (
+                        <span key={id} className="preview-pill" title={label}>
+                          {u.name}
+                        </span>
+                      );
+                    })}
+                    {assignedUsers.length > 4 && (
+                      <span className="preview-more">+{assignedUsers.length - 4} more</span>
+                    )}
+                  </div>
+                )}
               </div>
               <button type="submit" className="primary-btn" disabled={!selectedSkill || !assignedUserIds.length}>
                 Assign Training
@@ -446,6 +488,13 @@ export default function AddTraining() {
           </div>
         </div>
       </form>
+
+      {/* TOAST */}
+      {toast && (
+        <div className="toast-wrap" role="status" aria-live="polite">
+          <div className={`toast ${toast.type}`}>{toast.msg}</div>
+        </div>
+      )}
     </div>
   );
 }
