@@ -13,6 +13,14 @@ export const getSkills = async () => {
   return res.data;
 };
 
+// ✅ Typeahead search
+export const searchSkills = async (q) => {
+  const query = (q || '').trim();
+  if (!query) return [];
+  const res = await api.get(`${BASE_URL}/search`, { params: { q: query } });
+  return res.data;
+};
+
 export const deleteSkill = async (id) => {
   const res = await api.delete(`${BASE_URL}/${id}`);
   return res.data;

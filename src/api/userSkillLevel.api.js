@@ -9,3 +9,11 @@ export async function getUserSkillLevels(userId) {
   const { data } = await api.get(`/user-skill-levels/user/${userId}`);
   return data;
 }
+
+// ✅ For training assignment: users under a certain level for a skill
+export async function getUsersUnderSkillLevel(skillId, maxLevel = 3) {
+  const { data } = await api.get(`/user-skill-levels/skill/${skillId}`, {
+    params: { maxLevel },
+  });
+  return data;
+}

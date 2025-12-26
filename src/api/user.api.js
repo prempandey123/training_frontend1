@@ -17,6 +17,17 @@ export const getUsers = async () => {
 };
 
 /**
+ * ✅ Search users by name / employeeId / email
+ * GET /users/search?q=HSL101
+ */
+export const searchUsers = async (q) => {
+  const query = (q || '').trim();
+  if (!query) return [];
+  const res = await api.get(`${BASE_URL}/search`, { params: { q: query } });
+  return res.data;
+};
+
+/**
  * GET USER BY ID
  */
 export const getUserById = async (id) => {
