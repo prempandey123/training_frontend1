@@ -23,3 +23,9 @@ export const deleteTraining = async (id) => {
   const res = await axios.delete(`${API_BASE}/trainings/${id}`);
   return res.data;
 };
+
+// Placeholder: biometric device sync (backend will be wired later)
+export const getTrainingBiometric = async (id) => {
+  const res = await axios.get(`${API_BASE}/trainings/${id}/biometric`);
+  return res.data;
+};
