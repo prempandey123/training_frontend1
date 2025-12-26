@@ -53,6 +53,14 @@ export default function AddTraining() {
     );
   };
 
+  const removeAssigned = (userId) => {
+    setAssignedUserIds((prev) => prev.filter((id) => id !== userId));
+  };
+
+  const clearSelection = () => {
+    setAssignedUserIds([]);
+  };
+
   /* SKILL TYPEAHEAD (debounced) */
   useEffect(() => {
     const q = (skillQuery || '').trim();
@@ -259,8 +267,40 @@ export default function AddTraining() {
           <div className="card">
             <div className="card-head">
               <h3>Pick skill & employees</h3>
-              <span className="muted">Clear selection</span>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={clearSelection}
+                disabled={!assignedUserIds.length}
+                title="Remove all selected employees"
+              >
+                Clear selection
+              </button>
             </div>
+
+            {/* SELECTED CHIPS */}
+            {!!assignedUsers.length && (
+              <div className="selected-chips" aria-label="Selected employees">
+                {assignedUsers.map((u) => {
+                  const id = u?.userId ?? u?.id;
+                  const label = `${u.name}${u.employeeId ? ` (${u.employeeId})` : ''}`;
+                  return (
+                    <span key={id} className="chip" title={label}>
+                      <span className="chip-text">{u.name}</span>
+                      {u.employeeId && <span className="chip-code">{u.employeeId}</span>}
+                      <button
+                        type="button"
+                        className="chip-x"
+                        onClick={() => removeAssigned(id)}
+                        aria-label={`Remove ${label}`}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
             {/* SKILL SEARCH */}
             <div className="form-group">

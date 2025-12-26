@@ -258,6 +258,79 @@
   font-weight: 800;
 }
 
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.link-btn:hover {
+  background: #f3f4f6;
+}
+
+.link-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-bottom: 14px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.chip-text {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-code {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 900;
+}
+
+.chip-x {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.chip-x:hover {
+  opacity: 1;
+}
+
 .muted {
   color: #6b7280;
 }
