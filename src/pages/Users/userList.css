@@ -153,3 +153,44 @@
   color: #16a34a;
 }
 
+.biometric-btn {
+  background: transparent;
+  border: 1px dashed #f1c40f;
+  color: #f1c40f;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.biometric-btn:hover {
+  background: #f1c40f;
+  color: #000;
+}
+.user-list-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  min-width: 240px;
+}
+
+.search-input::placeholder {
+  color: #888;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #f1c40f;
+  box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.15);
+}

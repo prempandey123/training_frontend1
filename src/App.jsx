@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout/Layout';
-import { isAuthenticated } from './utils/auth';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import Login from './pages/Auth/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -22,61 +22,58 @@ import SkillGap from './pages/SkillGap/SkillGap';
 import TrainingRequirements from './pages/TrainingRequirements/TrainingRequirements';
 import EditSkill from './pages/Skills/EditSkill';
 import EditUser from './pages/Users/EditUser';
-import EditDesignation from './pages/Designations/MapDesignationSkills';
+import MapDesignationSkills from './pages/Designations/MapDesignationSkills';
 import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
-import MapDesignationSkills from './pages/Designations/MapDesignationSkills';
+import UpdateUserPassword from './pages/UpdateUserPassword/UpdateUserPassword';
 
-function App() {
+export default function App() {
   return (
     <Routes>
-
-      {/* LOGIN ROUTE (future use) */}
+      {/* Public */}
       <Route path="/login" element={<Login />} />
 
-      {/* APP ROUTES */}
+      {/* Protected app */}
       <Route
-        path="/*"
         element={
-          isAuthenticated() ? (
-            <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/users" element={<UserList />} />
-              <Route path="/users/create" element={<CreateUser />} />
-              <Route path="/training" element={<Training />} />
-              <Route path="/training/add" element={<AddTraining />} />
-              <Route path="/skill-matrix" element={<SkillMatrix />} />
-              <Route path="/designations" element={<DesignationList />} />
-              <Route path="/designations/add" element={<AddDesignation />} />
-              <Route path="/skills" element={<SkillList />} />
-              <Route path="/skills/add" element={<CreateSkill />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/my-profile" element={<MyProfile />} />
-              <Route path="/attendance" element={<Attendance />} />
-              <Route path="/calendar" element={<TrainingCalendar />} />
-              <Route path="/skill-gap" element={<SkillGap />} />
-              <Route path="/training-requirements" element={<TrainingRequirements />} />
-              <Route path="/skills/edit/:id" element={<EditSkill />} />
-              <Route path="/users/edit/:id" element={<EditUser />} />
-              <Route path="/designations/edit/:id" element={<EditDesignation />} />
-              <Route path="/departments" element={<DepartmentList />} />
-              <Route path="/departments/add" element={<AddDepartment />} />
-              <Route path="/designations/:id/map-skills" element={<MapDesignationSkills />} />
-
-
-
-              
-            </Routes>
-          </Layout>
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Dashboard />} />
 
+        <Route path="users" element={<UserList />} />
+        <Route path="users/create" element={<CreateUser />} />
+        <Route path="users/edit/:id" element={<EditUser />} />
+
+        <Route path="departments" element={<DepartmentList />} />
+        <Route path="departments/add" element={<AddDepartment />} />
+
+        <Route path="designations" element={<DesignationList />} />
+        <Route path="designations/add" element={<AddDesignation />} />
+        <Route path="designations/:id/map-skills" element={<MapDesignationSkills />} />
+
+        <Route path="skills" element={<SkillList />} />
+        <Route path="skills/add" element={<CreateSkill />} />
+        <Route path="skills/edit/:id" element={<EditSkill />} />
+
+        <Route path="training" element={<Training />} />
+        <Route path="training/add" element={<AddTraining />} />
+
+        <Route path="skill-matrix" element={<SkillMatrix />} />
+        <Route path="skill-gap" element={<SkillGap />} />
+        <Route path="training-requirements" element={<TrainingRequirements />} />
+
+        <Route path="calendar" element={<TrainingCalendar />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="my-profile" element={<MyProfile />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="/users/update-password" element={<UpdateUserPassword />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
-
-export default App;

@@ -1,6 +1,7 @@
 import Sidebar from '../Sidebar/Sidebar';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
+import { Outlet } from 'react-router-dom';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -10,7 +11,7 @@ export default function Layout({ children }) {
 
       <div className="main-content">
         <Header />
-        <div className="page-content">{children}</div>
+        <div className="page-content">{children ?? <Outlet />}</div>
         <Footer />
       </div>
     </div>

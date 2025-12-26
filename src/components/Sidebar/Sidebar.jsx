@@ -25,6 +25,10 @@ export default function Sidebar() {
           </NavLink>
         </li>
 
+        <NavLink to="/users/update-password" className="sidebar-link">
+  Update User Password
+</NavLink>
+
         <li>
           <NavLink to="/training">
             Training

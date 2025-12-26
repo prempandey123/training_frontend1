@@ -11,16 +11,23 @@ export default function UserList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
-  const getPercentage = (score = 0) =>
-    Math.round((score / maxScore) * 100);
+  const formatDate = (date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   // 🔹 FETCH USERS FROM BACKEND
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get('http://localhost:3000/users');
-        setEmployees(res.data); // 🔥 axios unwrap
+        setEmployees(res.data);
       } catch (err) {
         console.error(err);
         setError('Failed to load employees');
@@ -32,18 +39,42 @@ export default function UserList() {
     fetchUsers();
   }, []);
 
+  // 🔍 SEARCH FILTER (Name / Employee ID)
+  const filteredEmployees = employees.filter((emp) => {
+    const q = search.toLowerCase();
+    return (
+      emp.name?.toLowerCase().includes(q) ||
+      emp.employeeId?.toLowerCase().includes(q)
+    );
+  });
+
+  const handleAddBiometric = (userId) => {
+    // FUTURE: biometric device integration
+    alert(`Biometric device not connected yet (User ID: ${userId})`);
+  };
+
   return (
     <div className="user-list-page">
       {/* HEADER */}
       <div className="user-list-header">
         <h2>Employee Master</h2>
 
-        <button
-          className="create-btn"
-          onClick={() => navigate('/users/create')}
-        >
-          + Add Employee
-        </button>
+        <div className="user-list-actions">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by name or employee ID"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <button
+            className="create-btn"
+            onClick={() => navigate('/users/create')}
+          >
+            + Add Employee
+          </button>
+        </div>
       </div>
 
       {/* STATES */}
@@ -62,6 +93,7 @@ export default function UserList() {
                 <th>Mobile</th>
                 <th>Department</th>
                 <th>Designation</th>
+                <th>Date of Joining</th>
                 <th>Role</th>
                 <th>Biometric</th>
                 <th>Status</th>
@@ -70,72 +102,74 @@ export default function UserList() {
             </thead>
 
             <tbody>
-              {employees.length === 0 && (
+              {filteredEmployees.length === 0 && (
                 <tr>
-                  <td colSpan="10" style={{ textAlign: 'center' }}>
-                    No employees found
+                  <td colSpan="11" style={{ textAlign: 'center' }}>
+                    No matching employees found
                   </td>
                 </tr>
               )}
 
-              {employees.map((emp) => {
-                const percentage = getPercentage(emp.score || 0);
+              {filteredEmployees.map((emp) => (
+                <tr key={emp.id}>
+                  <td>{emp.name}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.employeeId}</td>
+                  <td>{emp.mobile}</td>
 
-                return (
-                  <tr key={emp.id}>
-                    <td>{emp.name}</td>
-                    <td>{emp.email}</td>
-                    <td>{emp.employeeId}</td>
-                    <td>{emp.mobile}</td>
+                  <td>{emp.department?.name || '-'}</td>
+                  <td>{emp.designation?.designationName || '-'}</td>
 
-                    {/* 🔥 FIX: department is object */}
-                    <td>{emp.department?.name || '-'}</td>
+                  {/* DATE OF JOINING */}
+                  <td>{formatDate(emp.dateOfJoining)}</td>
 
-                    {/* 🔥 FIX: designation is object */}
-                    <td>{emp.designation?.designationName || '-'}</td>
+                  {/* ROLE */}
+                  <td>
+                    <span className={`role ${emp.role.toLowerCase()}`}>
+                      {emp.role}
+                    </span>
+                  </td>
 
-                    <td>
-                      <span className={`role ${emp.role.toLowerCase()}`}>
-                        {emp.role}
-                      </span>
-                    </td>
-
-                    {/* BIOMETRIC (safe) */}
-                    <td>
-                      {emp.biometricLinked ? (
-                        <span className="biometric linked">Linked</span>
-                      ) : (
-                        <span className="biometric not-linked">Not Linked</span>
-                      )}
-                    </td>
-
-                    {/* STATUS */}
-                    <td>
-                      <span
-                        className={
-                          emp.isActive
-                            ? 'status active'
-                            : 'status inactive'
-                        }
-                      >
-                        {emp.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-
-                    {/* ACTION */}
-                    <td>
+                  {/* BIOMETRIC */}
+                  <td>
+                    {emp.biometricLinked ? (
+                      <span className="biometric linked">Linked</span>
+                    ) : (
                       <button
-                        className="action-btn"
-                        onClick={() =>
-                          navigate(`/users/edit/${emp.id}`)
-                        }
+                        className="biometric-btn"
+                        onClick={() => handleAddBiometric(emp.id)}
                       >
-                        Edit
+                        + Add Biometric
                       </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                    )}
+                  </td>
+
+                  {/* STATUS */}
+                  <td>
+                    <span
+                      className={
+                        emp.isActive
+                          ? 'status active'
+                          : 'status inactive'
+                      }
+                    >
+                      {emp.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+
+                  {/* ACTION */}
+                  <td>
+                    <button
+                      className="action-btn"
+                      onClick={() =>
+                        navigate(`/users/edit/${emp.id}`)
+                      }
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
