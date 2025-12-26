@@ -110,8 +110,8 @@
 }
 
 .export-btn {
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
@@ -120,5 +120,5 @@
 }
 
 .export-btn:hover {
-  background-color: #6f0000;
+  filter: brightness(0.98);
 }

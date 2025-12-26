@@ -3,17 +3,24 @@
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background: var(--surface-2);
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #f2f4f7;
+  background: var(--surface-2);
 }
 
 .page-content {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+}
+
+@media (max-width: 920px) {
+  .page-content {
+    padding: 16px;
+  }
 }

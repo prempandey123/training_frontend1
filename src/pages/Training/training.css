@@ -57,12 +57,16 @@
 /* BUTTONS */
 .primary-btn {
   padding: 10px 16px;
-  background: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border-radius: 10px;
   border: none;
   font-weight: 700;
   cursor: pointer;
+}
+
+.primary-btn:hover {
+  filter: brightness(0.98);
 }
 
 .primary-btn.full {
@@ -90,9 +94,13 @@
 
 /* PEOPLE COUNT */
 .people-count {
-  color: #8b0000;
+  color: var(--text);
   font-weight: 600;
   cursor: pointer;
+}
+
+.people-count:hover {
+  text-decoration: underline;
 }
 
 /* MODAL */

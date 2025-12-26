@@ -24,9 +24,13 @@
 .back-btn {
   background: transparent;
   border: none;
-  color: #8b0000;
+  color: var(--text);
   font-size: 14px;
   cursor: pointer;
+}
+
+.back-btn:hover {
+  color: rgba(15, 23, 42, 0.75);
 }
 
 /* =========================
@@ -63,7 +67,8 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #8b0000;
+  border-color: rgba(246, 201, 69, 0.75);
+  box-shadow: 0 0 0 4px rgba(246, 201, 69, 0.18);
 }
 
 /* DEPARTMENT SELECTOR */
@@ -86,8 +91,8 @@
 }
 
 .department-option.selected {
-  background: #8b0000;
-  color: #ffffff;
+  background: rgba(246, 201, 69, 0.95);
+  color: var(--accent-ink);
 }
 
 /* =========================
@@ -140,13 +145,17 @@
    ========================= */
 
 .save-btn {
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
+}
+
+.save-btn:hover {
+  filter: brightness(0.98);
 }
 
 .map-btn {

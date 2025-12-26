@@ -1,7 +1,7 @@
 import Sidebar from '../Sidebar/Sidebar';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import './layout.css';
+import './Layout.css';
 
 export default function Layout({ children }) {
   return (

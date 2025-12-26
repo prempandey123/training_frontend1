@@ -17,8 +17,8 @@
 }
 
 .create-btn {
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 10px 16px;
   border-radius: 6px;
@@ -27,7 +27,7 @@
 }
 
 .create-btn:hover {
-  background-color: #6f0000;
+  filter: brightness(0.98);
 }
 
 /* Table */
@@ -119,8 +119,8 @@
 }
 /* BIOMETRIC BUTTON */
 .biometric-btn {
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 6px 10px;
   border-radius: 6px;
@@ -129,7 +129,7 @@
 }
 
 .biometric-btn:hover {
-  background-color: #6f0000;
+  filter: brightness(0.98);
 }
 
 /* COMPLETION CIRCLE */

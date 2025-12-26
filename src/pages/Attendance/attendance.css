@@ -107,12 +107,12 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  background: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
 }
 
 .toggle-btn:hover {
-  background: #6f0000;
+  filter: brightness(0.98);
 }
 
 /* NOTE */

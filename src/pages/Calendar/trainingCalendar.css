@@ -18,17 +18,19 @@
 }
 
 .fc-button {
-  background-color: #8b0000 !important;
+  background-color: var(--accent-strong) !important;
   border: none !important;
+  color: var(--accent-ink) !important;
 }
 
 .fc-button:hover {
-  background-color: #6f0000 !important;
+  background-color: var(--accent) !important;
 }
 
 .fc-daygrid-event {
-  background-color: #8b0000 !important;
+  background-color: rgba(246, 201, 69, 0.95) !important;
   border: none !important;
   font-size: 12px;
   padding: 2px 4px;
+  color: var(--accent-ink) !important;
 }

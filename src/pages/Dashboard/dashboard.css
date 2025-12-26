@@ -144,13 +144,14 @@
   text-align: center;
   cursor: pointer;
   font-weight: 600;
-  color: #8b0000;
+  color: var(--text);
+  border: 1px solid var(--border);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .action-card:hover {
-  background-color: #fdf2f2;
+  background-color: rgba(246, 201, 69, 0.14);
   transform: translateY(-2px);
 }
 
@@ -259,14 +260,15 @@
   gap: 14px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #f9fafb;
+  background: rgba(15, 23, 42, 0.035);
+  border: 1px solid var(--border);
   align-items: center;
 }
 
 .calendar-date {
   min-width: 90px;
   font-weight: 700;
-  color: #8b0000;
+  color: var(--text);
 }
 
 .calendar-info {

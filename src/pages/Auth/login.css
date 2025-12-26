@@ -1,17 +1,23 @@
 .login-page {
   height: 100vh;
-  background: linear-gradient(135deg, #8b0000, #2c2c2c);
+  background:
+    radial-gradient(1100px 550px at 10% 10%, rgba(246, 201, 69, 0.22), transparent 55%),
+    radial-gradient(900px 500px at 90% 20%, rgba(255, 183, 3, 0.18), transparent 50%),
+    linear-gradient(135deg, #0b0f14, #121a25);
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
 }
 
 .login-card {
-  background: white;
-  width: 380px;
-  padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.96);
+  width: 420px;
+  max-width: 100%;
+  padding: 32px 30px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.35);
   text-align: center;
 }
 
@@ -23,12 +29,12 @@
 .login-card h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text);
 }
 
 .login-card p {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--muted);
   margin-bottom: 24px;
 }
 
@@ -40,7 +46,7 @@
 label {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text);
 }
 
 input {
@@ -48,25 +54,35 @@ input {
   padding: 10px;
   margin-top: 6px;
   border-radius: 6px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   font-size: 14px;
+  background: #fff;
+}
+
+input:focus {
+  outline: none;
+  border-color: rgba(246, 201, 69, 0.75);
+  box-shadow: 0 0 0 4px rgba(246, 201, 69, 0.22);
 }
 
 .login-btn {
   width: 100%;
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   margin-top: 10px;
+  box-shadow: 0 16px 28px rgba(246, 201, 69, 0.28);
+  transition: transform 160ms ease, filter 160ms ease;
 }
 
 .login-btn:hover {
-  background-color: #6f0000;
+  transform: translateY(-1px);
+  filter: brightness(0.98);
 }
 
 .login-error {

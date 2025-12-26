@@ -136,8 +136,8 @@
 
 /* BUTTONS */
 .primary-btn {
-  background-color: #8b0000;
-  color: white;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-ink);
   border: none;
   padding: 8px 14px;
   border-radius: 8px;
@@ -146,13 +146,13 @@
 }
 
 .primary-btn:hover {
-  background-color: #6f0000;
+  filter: brightness(0.98);
 }
 
 .secondary-btn {
   background-color: white;
-  color: #8b0000;
-  border: 1px solid #8b0000;
+  color: var(--text);
+  border: 1px solid rgba(246, 201, 69, 0.75);
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 14px;
@@ -160,5 +160,5 @@
 }
 
 .secondary-btn:hover {
-  background-color: #fdf2f2;
+  background-color: rgba(246, 201, 69, 0.14);
 }
