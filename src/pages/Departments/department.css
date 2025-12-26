@@ -285,3 +285,212 @@
     justify-content: flex-start;
   }
 }
+/* =========================================================
+   DEPARTMENT PAGE – DASHBOARD-LIKE PREMIUM LOOK (ADD THIS AT END)
+   (No logic changes, only CSS)
+========================================================= */
+
+/* Make department page feel like dashboard canvas */
+.department-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 14px; /* slightly tighter */
+  background: transparent; /* override old solid bg */
+}
+
+.department-page::before {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 15% -10%, rgba(246, 201, 69, 0.32), transparent 60%),
+    radial-gradient(900px 500px at 95% 0%, rgba(17, 24, 39, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(249, 250, 251, 1), rgba(243, 244, 246, 1));
+  z-index: 0;
+  border-radius: 18px;
+}
+
+.department-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- ADD PAGE HEADER (AddDepartment) ---------- */
+.department-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 16px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.92), rgba(17, 24, 39, 0.80)),
+    radial-gradient(900px 500px at 20% 0%, rgba(246, 201, 69, 0.35), transparent 55%);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  box-shadow: 0 14px 34px rgba(17, 24, 39, 0.16);
+}
+
+.department-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  color: #f9fafb;
+}
+
+/* Back button */
+.back-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f9fafb;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(246, 201, 69, 0.55);
+}
+
+.back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- FORM CARD (AddDepartment) ---------- */
+.department-form {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.department-form::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(800px 220px at 15% 0%, rgba(246, 201, 69, 0.16), transparent 45%);
+  pointer-events: none;
+}
+
+.department-form > * {
+  position: relative;
+  z-index: 1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.78);
+  letter-spacing: 0.2px;
+}
+
+/* Input premium */
+.form-group input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(249, 250, 251, 1);
+  outline: none;
+  font-weight: 700;
+  color: #0f172a;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.form-group input::placeholder {
+  color: rgba(107, 114, 128, 0.9);
+  font-weight: 600;
+}
+
+.form-group input:focus {
+  border-color: rgba(246, 201, 69, 0.9);
+  box-shadow: 0 0 0 4px rgba(246, 201, 69, 0.18);
+}
+
+.form-group input:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* Actions row */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Save button (gold premium, like dashboard accents) */
+.save-btn {
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #111;
+  background: linear-gradient(135deg, #ffcc00, #ffb300);
+  box-shadow: 0 12px 26px rgba(255, 184, 0, 0.30);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(255, 184, 0, 0.38);
+  filter: saturate(1.05);
+}
+
+.save-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---------- OPTIONAL: make list topbar look slightly more premium ---------- */
+.department-topbar {
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.90);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  box-shadow: 0 12px 26px rgba(17, 24, 39, 0.06);
+}
+
+/* Toolbar matches dashboard vibe */
+.department-toolbar {
+  background: rgba(255, 255, 255, 0.90);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  box-shadow: 0 12px 26px rgba(17, 24, 39, 0.06);
+}
+
+/* Responsive polish */
+@media (max-width: 720px) {
+  .department-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-actions {
+    justify-content: stretch;
+  }
+  .save-btn {
+    width: 100%;
+  }
+}
