@@ -26,6 +26,8 @@ import MapDesignationSkills from './pages/Designations/MapDesignationSkills';
 import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
 import UpdateUserPassword from './pages/UpdateUserPassword/UpdateUserPassword';
+import OrgSkillMatrix from './pages/SkillMatrix/OrgSkillMatrix';
+
 
 export default function App() {
   return (
@@ -62,6 +64,7 @@ export default function App() {
         <Route path="training/add" element={<AddTraining />} />
 
         <Route path="skill-matrix" element={<SkillMatrix />} />
+        <Route path="skill-matrix/org" element={<OrgSkillMatrix />} />
         <Route path="skill-gap" element={<SkillGap />} />
         <Route path="training-requirements" element={<TrainingRequirements />} />
 

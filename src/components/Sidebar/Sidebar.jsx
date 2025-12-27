@@ -48,6 +48,9 @@ export default function Sidebar() {
         <li>
           <NavLink to="/skill-matrix">Skill Matrix</NavLink>
         </li>
+        <li>
+  <NavLink to="/skill-matrix/org">Skill Matrix (All)</NavLink>
+</li>
 
         <li>
           <NavLink to="/skill-gap">Skill Gap</NavLink>
