@@ -59,6 +59,24 @@ export default function Training() {
     loadTrainings();
   }, []);
 
+  // ✅ When any modal opens -> scroll to top + lock body scroll
+  useEffect(() => {
+    const anyModalOpen = showAttendeeModal || showPostponeModal;
+
+    if (anyModalOpen) {
+      // scroll modal view to top so it never opens "down"
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // lock background scroll
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = prevOverflow || '';
+      };
+    }
+  }, [showAttendeeModal, showPostponeModal]);
+
   const today = useMemo(() => new Date(), []);
 
   const upcomingTrainings = useMemo(
@@ -74,6 +92,12 @@ export default function Training() {
   const openAttendees = (training) => {
     setSelectedTraining(training);
     setShowAttendeeModal(true);
+  };
+
+  const closeAttendees = () => {
+    setShowAttendeeModal(false);
+    // optional: keep selectedTraining for a moment or clear it
+    setSelectedTraining(null);
   };
 
   const openPostpone = (training) => {
@@ -147,6 +171,25 @@ export default function Training() {
     );
   };
 
+  // ✅ Inline styles to FORCE overlay to open on top (even if CSS is wrong)
+  const overlayStyle = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 9999,
+    background: 'rgba(0,0,0,0.55)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '18px',
+  };
+
+  const modalStyle = {
+    width: 'min(980px, 100%)',
+    maxHeight: '85vh',
+    overflow: 'auto',
+    borderRadius: '14px',
+  };
+
   return (
     <div className="training-page">
       {/* HEADER */}
@@ -194,7 +237,16 @@ export default function Training() {
                 <td>{t.department || '—'}</td>
                 <td>{t.trainer || '—'}</td>
                 <td>
-                  <span className="people-count" onClick={() => openAttendees(t)} title="View attendance">
+                  <span
+                    className="people-count"
+                    onClick={() => openAttendees(t)}
+                    title="View attendance"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') openAttendees(t);
+                    }}
+                  >
                     {Array.isArray(t.attendees) ? t.attendees.length : 0}
                   </span>
                 </td>
@@ -243,7 +295,16 @@ export default function Training() {
                 <td>{t.department || '—'}</td>
                 <td>{t.trainer || '—'}</td>
                 <td>
-                  <span className="people-count" onClick={() => openAttendees(t)} title="View attendance">
+                  <span
+                    className="people-count"
+                    onClick={() => openAttendees(t)}
+                    title="View attendance"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') openAttendees(t);
+                    }}
+                  >
                     {Array.isArray(t.attendees) ? t.attendees.length : 0}
                   </span>
                 </td>
@@ -256,25 +317,29 @@ export default function Training() {
 
       {/* ATTENDANCE MODAL */}
       {showAttendeeModal && selectedTraining && (
-        <div className="modal-overlay">
-          <div className="modal large">
+        <div className="modal-overlay" style={overlayStyle} onClick={closeAttendees}>
+          <div
+            className="modal large"
+            style={modalStyle}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h3>{selectedTraining.topic} – Attendance</h3>
-              <button onClick={() => setShowAttendeeModal(false)}>✕</button>
+              <button onClick={closeAttendees}>✕</button>
             </div>
 
             <div className="attendance-summary">
               <div className="badge attended">
                 Attended
                 <b>
-                  {selectedTraining.attendees.filter(e => e.status === 'ATTENDED').length}
+                  {(selectedTraining.attendees || []).filter(e => e.status === 'ATTENDED').length}
                 </b>
               </div>
 
               <div className="badge absent">
                 Absent
                 <b>
-                  {selectedTraining.attendees.filter(e => e.status === 'ABSENT').length}
+                  {(selectedTraining.attendees || []).filter(e => e.status === 'ABSENT').length}
                 </b>
               </div>
             </div>
@@ -290,7 +355,7 @@ export default function Training() {
               </thead>
 
               <tbody>
-                {selectedTraining.attendees.map(emp => (
+                {(selectedTraining.attendees || []).map(emp => (
                   <tr key={emp.empId}>
                     <td>{emp.empId}</td>
                     <td>{emp.name}</td>
@@ -311,8 +376,12 @@ export default function Training() {
 
       {/* POSTPONE MODAL */}
       {showPostponeModal && selectedTraining && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" style={overlayStyle} onClick={closePostpone}>
+          <div
+            className="modal"
+            style={{ ...modalStyle, width: 'min(720px, 100%)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h3>Postpone Training</h3>
               <button onClick={closePostpone}>✕</button>
