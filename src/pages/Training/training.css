@@ -16,6 +16,27 @@
   font-weight: 700;
 }
 
+
+.training-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.secondary-btn {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--text, #111);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
 /* SECTION */
 .training-section {
   margin-bottom: 32px;

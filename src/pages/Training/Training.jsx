@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { getTrainings, updateTraining } from '../../api/trainingApi';
+import { getTrainings, updateTraining, downloadTrainingExcel } from '../../api/trainingApi';
 import './training.css';
 
 const formatDate = (d) => {
@@ -54,6 +54,28 @@ export default function Training() {
       setLoading(false);
     }
   };
+
+const exportExcel = async () => {
+  try {
+    const blobData = await downloadTrainingExcel();
+    const blob = new Blob([blobData], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `training-list-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error(e);
+    alert('Failed to export Excel');
+  }
+};
+
 
   useEffect(() => {
     loadTrainings();
@@ -198,9 +220,14 @@ export default function Training() {
           <h2>Training Management</h2>
           <div className="muted small">Plan, postpone and track attendance.</div>
         </div>
-        <button className="primary-btn" onClick={() => navigate('/training/add')}>
-          + Add Training
-        </button>
+        <div className="training-header-actions">
+  <button className="secondary-btn" onClick={exportExcel}>
+    Export Excel
+  </button>
+  <button className="primary-btn" onClick={() => navigate('/training/add')}>
+    + Add Training
+  </button>
+</div>
       </div>
 
       {/* UPCOMING TRAININGS */}

@@ -29,3 +29,10 @@ export const getTrainingBiometric = async (id) => {
   const res = await axios.get(`${API_BASE}/trainings/${id}/biometric`);
   return res.data;
 };
+
+export const downloadTrainingExcel = async () => {
+  const res = await axios.get(`${API_BASE}/trainings/excel`, {
+    responseType: 'blob',
+  });
+  return res.data;
+};
