@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getOrgSkillMatrix } from '../../api/skillMatrix.api';
 import { getDepartments } from '../../api/departmentApi';
 import { getDesignations } from '../../api/designationApi';
@@ -23,6 +23,10 @@ export default function OrgSkillMatrix() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
+  // Horizontal scroll controls (for large skill counts)
+  const tableWrapRef = useRef(null);
+  const [compact, setCompact] = useState(false);
+
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
 
@@ -37,8 +41,11 @@ export default function OrgSkillMatrix() {
       const [deps, desigs] = await Promise.all([getDepartments(), getDesignations()]);
       setDepartments(Array.isArray(deps) ? deps : []);
       setDesignations(Array.isArray(desigs) ? desigs : []);
-    } catch {
-      // ignore (page can still work)
+    } catch (e) {
+      setDepartments([]);
+      setDesignations([]);
+      // Keep this non-blocking: the matrix can still load even if filters fail.
+      setErr(e?.response?.data?.message || e?.message || 'Failed to load filters');
     }
   }
 
@@ -53,7 +60,7 @@ export default function OrgSkillMatrix() {
       });
       setData(res || { skills: [], employees: [] });
     } catch (e) {
-      setErr(e?.response?.data?.message || e?.message || 'Failed to load org skill matrix');
+      setErr(e?.response?.data?.message || e?.message || 'Failed to load skill matrix');
       setData({ skills: [], employees: [] });
     } finally {
       setLoading(false);
@@ -75,20 +82,66 @@ export default function OrgSkillMatrix() {
   const skills = useMemo(() => (Array.isArray(data?.skills) ? data.skills : []), [data]);
   const employees = useMemo(() => (Array.isArray(data?.employees) ? data.employees : []), [data]);
 
+  const employeeCount = employees.length;
+  const skillCount = skills.length;
+
+  const canScrollX = skillCount > 10;
+  const scrollByX = (dx) => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dx, behavior: 'smooth' });
+  };
+
   return (
-    <div className="org-skill-matrix-page">
+    <div className={`org-skill-matrix-page ${compact ? 'compact' : ''}`}>
       <div className="org-matrix-hero">
         <div>
           <div className="org-title">Skill Matrix</div>
-          <div className="org-subtitle">All employees • heatmap view</div>
+          <div className="org-subtitle">
+            {employeeCount} employees • {skillCount} skills • heatmap view
+          </div>
         </div>
 
         <div className="org-legend">
+          {canScrollX ? (
+            <div className="org-xscroll">
+              <button
+                type="button"
+                className="xbtn"
+                onClick={() => scrollByX(-420)}
+                aria-label="Scroll left"
+                title="Scroll left"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                className="xbtn"
+                onClick={() => scrollByX(420)}
+                aria-label="Scroll right"
+                title="Scroll right"
+              >
+                ▶
+              </button>
+            </div>
+          ) : null}
+
           <span className="legend-pill tone-good">Meets</span>
           <span className="legend-pill tone-warn">Partial</span>
           <span className="legend-pill tone-bad">Gap</span>
           <span className="legend-pill tone-empty">N/A</span>
         </div>
+      </div>
+
+      <div className="org-actions">
+        <button
+          type="button"
+          className={`org-chip ${compact ? 'active' : ''}`}
+          onClick={() => setCompact((v) => !v)}
+          title="More skills visible on screen"
+        >
+          Compact
+        </button>
       </div>
 
       <div className="org-filters">
@@ -131,8 +184,14 @@ export default function OrgSkillMatrix() {
       {loading ? (
         <div className="org-card">Loading…</div>
       ) : (
-        <div className="org-card org-table-wrap">
-          <table className="org-matrix-table">
+        <div
+          className="org-card org-table-wrap"
+          ref={tableWrapRef}
+          role="region"
+          aria-label="Organization skill matrix"
+          tabIndex={0}
+        >
+          <table className="org-matrix-table" aria-label="Org skill matrix table">
             <thead>
               <tr>
                 <th className="sticky-left col-emp">Employee</th>

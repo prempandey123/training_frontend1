@@ -4,6 +4,35 @@
   gap: 14px;
 }
 
+/* Small action chips (Demo / Compact) */
+.org-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.org-chip {
+  appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255,255,255,0.78);
+  color: rgba(15, 23, 42, 0.86);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.org-chip:hover { transform: translateY(-1px); }
+.org-chip:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.org-chip.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--accent-ink);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
 /* Hero header (Upside-style: clean, bold, legend on right) */
 .org-matrix-hero {
   display: flex;
@@ -114,8 +143,60 @@
 
 .org-table-wrap {
   padding: 0;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
 }
+
+/* Make scrollbars visible + on-theme */
+.org-table-wrap::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+.org-table-wrap::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+}
+.org-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.22);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+.org-table-wrap:hover::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.34);
+}
+.org-table-wrap {
+  scrollbar-color: rgba(15, 23, 42, 0.32) rgba(15, 23, 42, 0.08);
+  scrollbar-width: thin;
+}
+
+/* Hero right: legend + quick horizontal scroll buttons */
+.org-xscroll {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.xbtn {
+  appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  color: rgba(15, 23, 42, 0.9);
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.xbtn:hover { transform: translateY(-1px); }
+.xbtn:active { transform: translateY(0px); }
+.xbtn:focus-visible { outline: none; box-shadow: var(--ring); }
 
 /* Matrix table */
 .org-matrix-table {
@@ -161,6 +242,21 @@
 .col-meta { min-width: 180px; }
 .col-score { min-width: 84px; text-align: center; }
 .col-skill { min-width: 84px; text-align: center; }
+
+/* Compact mode (more columns visible) */
+.org-skill-matrix-page.compact .skill-header {
+  max-width: 100px;
+}
+
+.org-skill-matrix-page.compact .col-emp { min-width: 220px; }
+.org-skill-matrix-page.compact .col-meta { min-width: 160px; }
+.org-skill-matrix-page.compact .sticky-left-2 { left: 220px; }
+.org-skill-matrix-page.compact .sticky-left-3 { left: 380px; }
+
+.org-skill-matrix-page.compact .col-skill { min-width: 72px; }
+.org-skill-matrix-page.compact .cell { width: 56px; height: 30px; border-radius: 10px; }
+.org-skill-matrix-page.compact .cell-main { font-size: 13px; }
+.org-skill-matrix-page.compact .cell-sub { font-size: 11px; }
 
 .sticky-left,
 .sticky-left-2,
@@ -259,4 +355,23 @@
   padding: 20px !important;
   color: var(--muted);
   font-weight: 700;
+}
+
+/* Compact mode: fit more skills horizontally */
+.org-skill-matrix-page.compact .col-skill { min-width: 64px; }
+.org-skill-matrix-page.compact .cell {
+  width: 52px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.org-skill-matrix-page.compact .skill-header {
+  max-width: 90px;
+}
+
+@media (max-width: 1024px) {
+  .org-matrix-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
