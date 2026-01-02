@@ -93,6 +93,7 @@ export default function UserList() {
                 <th>Mobile</th>
                 <th>Department</th>
                 <th>Designation</th>
+                <th>Worker/Staff</th>
                 <th>Date of Joining</th>
                 <th>Role</th>
                 <th>Biometric</th>
@@ -104,7 +105,7 @@ export default function UserList() {
             <tbody>
               {filteredEmployees.length === 0 && (
                 <tr>
-                  <td colSpan="11" style={{ textAlign: 'center' }}>
+                  <td colSpan="12" style={{ textAlign: 'center' }}>
                     No matching employees found
                   </td>
                 </tr>
@@ -119,6 +120,9 @@ export default function UserList() {
 
                   <td>{emp.department?.name || '-'}</td>
                   <td>{emp.designation?.designationName || '-'}</td>
+
+                  {/* WORKER / STAFF */}
+                  <td>{emp.employeeType || '-'}</td>
 
                   {/* DATE OF JOINING */}
                   <td>{formatDate(emp.dateOfJoining)}</td>

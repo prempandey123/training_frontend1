@@ -25,6 +25,7 @@ export default function EditUser() {
     mobile: '',
     departmentId: '',
     designationId: '',
+    employeeType: '',
     role: 'EMPLOYEE',
     isActive: true,
     dateOfJoining: '',
@@ -52,6 +53,7 @@ export default function EditUser() {
           departmentId: user.department?.id || '',
           designationId: user.designation?.id || '',
           role: user.role,
+          employeeType: user.employeeType || '',
           isActive: user.isActive,
           dateOfJoining: user.dateOfJoining?.slice(0, 10) || '',
         });
@@ -139,12 +141,18 @@ export default function EditUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!form.employeeType) {
+      alert('Please select Worker / Staff for this user');
+      return;
+    }
+
     const payload = {
       name: form.name,
       mobile: form.mobile,
       departmentId: form.departmentId,
       designationId: form.designationId,
       role: form.role,
+      employeeType: form.employeeType,
       isActive: form.isActive,
       dateOfJoining: form.dateOfJoining,
     };
@@ -282,6 +290,20 @@ export default function EditUser() {
                 <option value="HOD">HOD</option>
                 <option value="HRD">HR</option>
                 <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Worker / Staff *</label>
+              <select
+                name="employeeType"
+                value={form.employeeType}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Select --</option>
+                <option value="WORKER">Worker</option>
+                <option value="STAFF">Staff</option>
               </select>
             </div>
 

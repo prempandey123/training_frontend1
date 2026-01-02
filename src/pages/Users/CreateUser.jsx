@@ -24,6 +24,7 @@ export default function CreateUser() {
     mobile: '',
     departmentId: '',
     designationId: '',
+    employeeType: '',
     role: 'EMPLOYEE',
     dateOfJoining: '',
     password: '',
@@ -88,6 +89,11 @@ export default function CreateUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.employeeType) {
+      alert('Please select Worker / Staff for this user');
+      return;
+    }
 
     if (!form.departmentId || !form.designationId) {
       alert('Please select department and designation');
@@ -241,15 +247,25 @@ export default function CreateUser() {
 
             <div>
               <label>Role *</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-              >
+              <select name="role" value={form.role} onChange={handleChange}>
                 <option value="EMPLOYEE">Employee</option>
                 <option value="HOD">HOD</option>
                 <option value="HRD">HR</option>
                 <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Worker / Staff *</label>
+              <select
+                name="employeeType"
+                value={form.employeeType}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Select --</option>
+                <option value="WORKER">Worker</option>
+                <option value="STAFF">Staff</option>
               </select>
             </div>
 
