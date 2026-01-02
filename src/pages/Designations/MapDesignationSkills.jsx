@@ -4,7 +4,6 @@ import { getSkills } from '../../api/skill.api';
 import {
   mapSkillToDesignation,
   getSkillsByDesignation,
-  updateRequiredLevel,
   removeSkillFromDesignation,
 } from '../../api/designationSkill.api';
 import './designation-skill.css';
@@ -17,7 +16,6 @@ export default function MapDesignationSkills() {
   const [mappedSkills, setMappedSkills] = useState([]);
 
   const [skillId, setSkillId] = useState('');
-  const [requiredLevel, setRequiredLevel] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -58,11 +56,9 @@ export default function MapDesignationSkills() {
       await mapSkillToDesignation({
         designationId: Number(id),
         skillId: Number(skillId),
-        requiredLevel: Number(requiredLevel),
       });
 
       setSkillId('');
-      setRequiredLevel(0);
       loadMappedSkills();
     } catch (err) {
       alert(
@@ -71,17 +67,6 @@ export default function MapDesignationSkills() {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLevelChange = async (mappingId, level) => {
-    try {
-      await updateRequiredLevel(mappingId, {
-        requiredLevel: level,
-      });
-      loadMappedSkills();
-    } catch {
-      alert('Failed to update level');
     }
   };
 
@@ -128,19 +113,6 @@ export default function MapDesignationSkills() {
             ))}
           </select>
 
-          <select
-            value={requiredLevel}
-            onChange={(e) =>
-              setRequiredLevel(Number(e.target.value))
-            }
-          >
-            {[0, 1, 2, 3, 4].map((l) => (
-              <option key={l} value={l}>
-                Level {l}
-              </option>
-            ))}
-          </select>
-
           <button
             type="button"
             onClick={handleAdd}
@@ -164,7 +136,6 @@ export default function MapDesignationSkills() {
             <thead>
               <tr>
                 <th>Skill</th>
-                <th>Required Level</th>
                 <th width="120">Action</th>
               </tr>
             </thead>
@@ -173,24 +144,6 @@ export default function MapDesignationSkills() {
               {mappedSkills.map((m) => (
                 <tr key={m.id}>
                   <td>{m.skill.name}</td>
-
-                  <td>
-                    <select
-                      value={m.requiredLevel}
-                      onChange={(e) =>
-                        handleLevelChange(
-                          m.id,
-                          Number(e.target.value),
-                        )
-                      }
-                    >
-                      {[0, 1, 2, 3, 4].map((l) => (
-                        <option key={l} value={l}>
-                          Level {l}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
 
                   <td>
                     <button

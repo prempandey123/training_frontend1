@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getDepartments } from '../../api/departmentApi';
 import { getDesignations } from '../../api/designationApi';
 import { getUserById, updateUser } from '../../api/user.api';
+import { getSkillsByDesignation } from '../../api/designationSkill.api';
+import { bulkSetRequiredLevels, getUserSkillLevels } from '../../api/userSkillLevel.api';
 import './createUser.css';
 
 export default function EditUser() {
@@ -12,6 +14,9 @@ export default function EditUser() {
   const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
+
+  // ✅ Required levels per user (based on designation skills + user overrides)
+  const [requiredLevels, setRequiredLevels] = useState([]);
 
   const [form, setForm] = useState({
     name: '',
@@ -50,6 +55,25 @@ export default function EditUser() {
           isActive: user.isActive,
           dateOfJoining: user.dateOfJoining?.slice(0, 10) || '',
         });
+
+        // ✅ Load designation skills + user-specific required levels
+        const [dsRes, userLevels] = await Promise.all([
+          user.designation?.id ? getSkillsByDesignation(user.designation.id) : Promise.resolve({ data: [] }),
+          getUserSkillLevels(id),
+        ]);
+        const bySkill = new Map((userLevels || []).map((u) => [u.skill?.id ?? u.skillId, u]));
+        const rows = (dsRes?.data ?? []).map((ds) => {
+          const skill = ds.skill ?? {};
+          const existing = bySkill.get(skill.id);
+          const userReq = existing?.requiredLevel;
+          return {
+            skillId: skill.id,
+            skillName: skill.name,
+            // 🔥 HR must set per-user required level (no designation defaults)
+            requiredLevel: userReq === null || userReq === undefined ? '' : Number(userReq),
+          };
+        }).filter((r) => r.skillId);
+        setRequiredLevels(rows);
       } catch (err) {
         alert('Failed to load employee data');
       } finally {
@@ -59,6 +83,45 @@ export default function EditUser() {
 
     loadData();
   }, [id]);
+
+  // ✅ if designation changes while editing -> reload its skills and merge existing user required levels
+  useEffect(() => {
+    async function reload() {
+      if (!form.designationId) {
+        setRequiredLevels([]);
+        return;
+      }
+      try {
+        const [dsRes, userLevels] = await Promise.all([
+          getSkillsByDesignation(form.designationId),
+          getUserSkillLevels(id),
+        ]);
+        const bySkill = new Map((userLevels || []).map((u) => [u.skill?.id ?? u.skillId, u]));
+        const rows = (dsRes?.data ?? []).map((ds) => {
+          const skill = ds.skill ?? {};
+          const existing = bySkill.get(skill.id);
+          const userReq = existing?.requiredLevel;
+          return {
+            skillId: skill.id,
+            skillName: skill.name,
+            requiredLevel: userReq === null || userReq === undefined ? '' : Number(userReq),
+          };
+        }).filter((r) => r.skillId);
+        setRequiredLevels(rows);
+      } catch (e) {
+        setRequiredLevels([]);
+      }
+    }
+    // avoid running before initial load finishes
+    if (!loading) reload();
+  }, [form.designationId]);
+
+  const updateRequiredLevel = (skillId, level) => {
+    const lv = level === '' ? '' : Number(level);
+    setRequiredLevels((prev) =>
+      prev.map((r) => (r.skillId === skillId ? { ...r, requiredLevel: lv } : r)),
+    );
+  };
 
   // 🔥 convert IDs to number
   const handleChange = (e) => {
@@ -90,9 +153,30 @@ export default function EditUser() {
       payload.password = form.password;
     }
 
+    // ✅ Force HR to set required level for every skill for this user
+    if (requiredLevels.length > 0) {
+      const missing = requiredLevels.filter((r) => r.requiredLevel === '' || r.requiredLevel === null || r.requiredLevel === undefined);
+      if (missing.length > 0) {
+        alert('Please set required level for all skills before saving.');
+        return;
+      }
+    }
+
 
     try {
       await updateUser(id, payload);
+
+      // ✅ Save user-wise required levels
+      if (requiredLevels.length > 0) {
+        await bulkSetRequiredLevels(
+          id,
+          requiredLevels.map((r) => ({
+            skillId: r.skillId,
+            requiredLevel: Number(r.requiredLevel),
+          })),
+        );
+      }
+
       alert('Employee updated successfully');
       navigate('/users');
     } catch (err) {
@@ -226,6 +310,47 @@ export default function EditUser() {
             Active Employee
           </label>
         </div>
+
+        {/* ✅ USER-WISE REQUIRED LEVELS */}
+        {form.designationId && requiredLevels.length > 0 && (
+          <div className="form-section">
+            <h3>Required Levels (User-wise)</h3>
+            <p style={{ marginTop: '-6px', color: '#666', fontSize: 13 }}>
+              Skills are taken from designation. Required levels can be different per user.
+            </p>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Skill</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Required Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requiredLevels.map((r) => (
+                    <tr key={r.skillId}>
+                      <td style={{ padding: 8 }}>{r.skillName}</td>
+                      <td style={{ padding: 8 }}>
+                        <select
+                          value={r.requiredLevel}
+                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
+                        >
+                          <option value="">Select</option>
+                          {[0, 1, 2, 3, 4].map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* ACTION */}
         <div className="form-actions">

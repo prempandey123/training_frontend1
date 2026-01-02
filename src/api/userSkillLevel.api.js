@@ -17,3 +17,11 @@ export async function getUsersUnderSkillLevel(skillId, maxLevel = 3) {
   });
   return data;
 }
+
+// ✅ HR/Admin: set required (target) levels per user (bulk)
+export async function bulkSetRequiredLevels(userId, levels) {
+  const { data } = await api.put(`/user-skill-levels/user/${userId}/required-levels`, {
+    levels,
+  });
+  return data;
+}

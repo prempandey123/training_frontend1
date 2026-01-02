@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createUser } from '../../api/user.api';
 import { getDepartments } from '../../api/departmentApi';
 import { getDesignations } from '../../api/designationApi';
+import { getSkillsByDesignation } from '../../api/designationSkill.api';
+import { bulkSetRequiredLevels } from '../../api/userSkillLevel.api';
 import './createUser.css';
 
 export default function CreateUser() {
@@ -11,6 +13,9 @@ export default function CreateUser() {
 
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
+
+  // ✅ Required levels per user (based on selected designation)
+  const [requiredLevels, setRequiredLevels] = useState([]);
 
   const [form, setForm] = useState({
     name: '',
@@ -35,15 +40,50 @@ export default function CreateUser() {
     loadMasterData();
   }, []);
 
+  // ✅ Load skills (from designation) whenever designation changes
+  useEffect(() => {
+    async function loadDesignationSkills() {
+      if (!form.designationId) {
+        setRequiredLevels([]);
+        return;
+      }
+      try {
+        const res = await getSkillsByDesignation(form.designationId);
+        const rows = (res?.data ?? res ?? []).map((ds) => {
+          const skill = ds.skill ?? ds;
+          return {
+            skillId: skill.id,
+            skillName: skill.name,
+            // 🔥 HR must set per-user required level (no designation defaults)
+            requiredLevel: '',
+          };
+        });
+        setRequiredLevels(rows);
+      } catch (e) {
+        // keep silent but reset
+        setRequiredLevels([]);
+      }
+    }
+    loadDesignationSkills();
+  }, [form.designationId]);
+
   // 🔥 IMPORTANT FIX: convert IDs to number
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === 'departmentId' || name === 'designationId') {
-      setForm({ ...form, [name]: value ? Number(value) : '' });
+      const nextVal = value ? Number(value) : '';
+      setForm({ ...form, [name]: nextVal });
     } else {
       setForm({ ...form, [name]: value });
     }
+  };
+
+  const updateRequiredLevel = (skillId, level) => {
+    const lv = level === '' ? '' : Number(level);
+    setRequiredLevels((prev) =>
+      prev.map((r) => (r.skillId === skillId ? { ...r, requiredLevel: lv } : r)),
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -54,9 +94,29 @@ export default function CreateUser() {
       return;
     }
 
+    // ✅ Force HR to set required level for every skill
+    if (requiredLevels.length > 0) {
+      const missing = requiredLevels.filter((r) => r.requiredLevel === '' || r.requiredLevel === null || r.requiredLevel === undefined);
+      if (missing.length > 0) {
+        alert('Please set required level for all skills before saving.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      await createUser(form); // 👈 backend now gets number IDs
+      const created = await createUser(form); // 👈 backend now gets number IDs
+
+      // ✅ save user-wise required levels (different users can have different required levels)
+      if (created?.id && requiredLevels.length > 0) {
+        await bulkSetRequiredLevels(
+          created.id,
+          requiredLevels.map((r) => ({
+            skillId: r.skillId,
+            requiredLevel: Number(r.requiredLevel),
+          })),
+        );
+      }
       alert('Employee created successfully');
       navigate('/users');
     } catch (error) {
@@ -205,6 +265,46 @@ export default function CreateUser() {
             </div>
           </div>
         </div>
+
+        {/* REQUIRED LEVELS (PER USER) */}
+        {requiredLevels.length > 0 && (
+          <div className="form-section">
+            <h3>Required Skill Levels (Per User)</h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: 8 }}>Skill</th>
+                    <th style={{ textAlign: 'left', padding: 8 }}>Required Level (0-4)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requiredLevels.map((r) => (
+                    <tr key={r.skillId}>
+                      <td style={{ padding: 8 }}>{r.skillName}</td>
+                      <td style={{ padding: 8 }}>
+                        <select
+                          value={r.requiredLevel}
+                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
+                        >
+                          <option value="">Select</option>
+                          {[0, 1, 2, 3, 4].map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
+              Tip: You can change these later from Edit User.
+            </p>
+          </div>
+        )}
 
         {/* ACTIONS */}
         <div className="form-actions">

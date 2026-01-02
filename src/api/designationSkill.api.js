@@ -10,11 +10,6 @@ export const getSkillsByDesignation = (designationId) => {
   return api.get(`${BASE_URL}/designation/${designationId}`);
 };
 
-/* UPDATE REQUIRED LEVEL */
-export const updateRequiredLevel = (id, data) => {
-  return api.put(`${BASE_URL}/${id}`, data);
-};
-
 /* REMOVE SKILL FROM DESIGNATION */
 export const removeSkillFromDesignation = (id) => {
   return api.delete(`${BASE_URL}/${id}`);

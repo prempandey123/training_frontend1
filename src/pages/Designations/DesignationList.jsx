@@ -41,14 +41,13 @@ export default function DesignationList() {
 
   // ✅ mapped skills normalize helper
   const getMappedSkills = (d) => {
-    // Case 1: backend returns designationSkills: [{ skill: {name}, requiredLevel }]
+    // Case 1: backend returns designationSkills: [{ skill: {name} }]
     if (Array.isArray(d.designationSkills)) {
       return d.designationSkills
         .map((ds) => {
           const name = ds?.skill?.name;
-          const level = ds?.requiredLevel ?? ds?.required_level;
           if (!name) return null;
-          return level !== undefined ? `${name} (L${level})` : name;
+          return name;
         })
         .filter(Boolean);
     }
