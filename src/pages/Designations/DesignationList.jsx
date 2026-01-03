@@ -1,3 +1,5 @@
+// ✅ DesignationList.jsx (complete) — Departments column removed (reverted)
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDesignations, deleteDesignation } from '../../api/designationApi';
@@ -44,11 +46,7 @@ export default function DesignationList() {
     // Case 1: backend returns designationSkills: [{ skill: {name} }]
     if (Array.isArray(d.designationSkills)) {
       return d.designationSkills
-        .map((ds) => {
-          const name = ds?.skill?.name;
-          if (!name) return null;
-          return name;
-        })
+        .map((ds) => ds?.skill?.name || null)
         .filter(Boolean);
     }
 
@@ -82,7 +80,6 @@ export default function DesignationList() {
             <thead>
               <tr>
                 <th>Designation Name</th>
-                <th>Departments</th>
                 <th>Mapped Skills</th>
                 <th width="240">Action</th>
               </tr>
@@ -96,24 +93,13 @@ export default function DesignationList() {
                   <tr key={d.id}>
                     <td className="designation-name">{d.designationName}</td>
 
-                    {/* DEPARTMENTS */}
-                    <td>
-                      {(d.departments || []).map((dept) => (
-                        <span key={dept.id} className="dept-tag">
-                          {dept.name}
-                        </span>
-                      ))}
-                    </td>
-
                     {/* ✅ MAPPED SKILLS */}
                     <td>
                       {mappedSkills.length === 0 ? (
                         <span className="mapped-skill-placeholder">No skills</span>
                       ) : (
                         <div className="mapped-skill-wrap">
-                          <div className="mapped-skill-count">
-                            {mappedSkills.length} mapped
-                          </div>
+                          <div className="mapped-skill-count">{mappedSkills.length} mapped</div>
 
                           <div className="mapped-skill-tags">
                             {mappedSkills.slice(0, 6).map((name) => (

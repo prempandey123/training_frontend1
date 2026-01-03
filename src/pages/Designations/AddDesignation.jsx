@@ -42,17 +42,15 @@ export default function AddDesignation() {
       return;
     }
 
-    if (selectedDepartmentIds.length === 0) {
-      alert('Select at least one department');
-      return;
-    }
-
     try {
       setLoading(true);
 
       await createDesignation({
         designationName: designationName.trim(),
-        departmentIds: selectedDepartmentIds, // 🔥 EXACT DTO MATCH
+        // Department selection is optional
+        departmentIds: selectedDepartmentIds.length
+          ? selectedDepartmentIds
+          : undefined,
       });
 
       alert('Designation added successfully');
@@ -93,9 +91,9 @@ export default function AddDesignation() {
           />
         </div>
 
-        {/* DEPARTMENTS */}
+        {/* DEPARTMENTS
         <div className="form-group">
-          <label>Applicable Departments *</label>
+          <label>Applicable Departments</label>
 
           <div className="department-selector">
             {departments.length === 0 ? (
@@ -116,7 +114,7 @@ export default function AddDesignation() {
               ))
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* ACTION */}
         <button className="save-btn" disabled={loading}>
