@@ -10,13 +10,16 @@ function clampLevel(n) {
   return Math.max(0, Math.min(4, v));
 }
 
+/**
+ * Color code is based on CURRENT level (0..4)
+ * If required is 0 => treat as N/A
+ */
 function cellTone(required, current) {
   const r = clampLevel(required);
   const c = clampLevel(current);
-  if (r === 0 && c === 0) return 'tone-empty';
-  if (c >= r && r > 0) return 'tone-good';
-  if (c === 0 && r > 0) return 'tone-bad';
-  return 'tone-warn';
+
+  if (r === 0) return 'tone-na'; // not applicable
+  return `tone-${c}`; // tone-0..tone-4
 }
 
 export default function OrgSkillMatrix() {
@@ -44,7 +47,6 @@ export default function OrgSkillMatrix() {
     } catch (e) {
       setDepartments([]);
       setDesignations([]);
-      // Keep this non-blocking: the matrix can still load even if filters fail.
       setErr(e?.response?.data?.message || e?.message || 'Failed to load filters');
     }
   }
@@ -74,7 +76,7 @@ export default function OrgSkillMatrix() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => load(), 250); // small debounce
+    const t = setTimeout(() => load(), 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departmentId, designationId, q]);
@@ -126,10 +128,13 @@ export default function OrgSkillMatrix() {
             </div>
           ) : null}
 
-          <span className="legend-pill tone-good">Meets</span>
-          <span className="legend-pill tone-warn">Partial</span>
-          <span className="legend-pill tone-bad">Gap</span>
-          <span className="legend-pill tone-empty">N/A</span>
+          {/* Legend based on CURRENT level */}
+          <span className="legend-pill tone-0">0</span>
+          <span className="legend-pill tone-1">1</span>
+          <span className="legend-pill tone-2">2</span>
+          <span className="legend-pill tone-3">3</span>
+          <span className="legend-pill tone-4">4</span>
+          <span className="legend-pill tone-na">N/A</span>
         </div>
       </div>
 
@@ -227,16 +232,18 @@ export default function OrgSkillMatrix() {
 
                     {emp.cells.map((c) => {
                       const tone = cellTone(c.requiredLevel, c.currentLevel);
+                      const cur = clampLevel(c.currentLevel);
+                      const req = clampLevel(c.requiredLevel);
+
                       return (
                         <td key={c.skillId} className="col-skill">
-                          <div className={`cell ${tone}`} title={`Current ${c.currentLevel} / Required ${c.requiredLevel}`}>
-                            <span className="cell-main">
-                              {clampLevel(c.currentLevel)}
-                            </span>
+                          <div
+                            className={`cell ${tone}`}
+                            title={`Current ${cur} / Required ${req}`}
+                          >
+                            <span className="cell-main">{cur}</span>
                             <span className="cell-sep">/</span>
-                            <span className="cell-sub">
-                              {clampLevel(c.requiredLevel)}
-                            </span>
+                            <span className="cell-sub">{req}</span>
                           </div>
                         </td>
                       );
