@@ -60,6 +60,37 @@ export default function Dashboard() {
   const [totalUpcomingHours, setTotalUpcomingHours] = useState(0);
   const [monthWiseHours, setMonthWiseHours] = useState([]); // [{ month, hours }]
 
+  // ✅ Audit logs (latest 20)
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [logUserFilter, setLogUserFilter] = useState('');
+  const [logDeptFilter, setLogDeptFilter] = useState('');
+
+  const loadAuditLogs = () => {
+    setLogsLoading(true);
+    const qs = new URLSearchParams();
+    qs.set('limit', '20');
+    if (logUserFilter) qs.set('userId', logUserFilter);
+    if (logDeptFilter) qs.set('departmentId', logDeptFilter);
+
+    api
+      .get(`/audit-logs?${qs.toString()}`)
+      .then((res) => {
+        const items = res?.data?.items;
+        setAuditLogs(Array.isArray(items) ? items : []);
+      })
+      .catch((err) => {
+        console.error('Failed to load audit logs', err?.response?.status, err?.response?.data);
+        setAuditLogs([]);
+      })
+      .finally(() => setLogsLoading(false));
+  };
+
+  useEffect(() => {
+    loadAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logUserFilter, logDeptFilter]);
+
   useEffect(() => {
     setLoadingStats(true);
 
@@ -212,117 +243,223 @@ export default function Dashboard() {
   ) : null;
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-header">
-        <h2>Dashboard</h2>
-        <p>Overview of training, competency & skill matrix</p>
-      </div>
-
-      <div className="kpi-grid">
-        <div
-          className="kpi-card kpi-users clickable"
-          onClick={() => navigate('/users')}
-          title="Open User Master"
-        >
-          <h3>Total Users</h3>
-
-          <span className="kpi-main">
-            {loadingStats ? '...' : userStats.total}
-          </span>
-
-          <div className="kpi-divider"></div>
-
-          <div className="kpi-sub">
-            <div className="kpi-pill active">
-              Active <b>{loadingStats ? '...' : userStats.active}</b>
-            </div>
-
-            <div className="kpi-pill inactive">
-              Inactive <b>{loadingStats ? '...' : userStats.inactive}</b>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="kpi-card kpi-hours clickable"
-          onClick={() => setShowHours(true)}
-          title="View month-wise hours"
-        >
-          <h3>Total Training Hours</h3>
-          <span className="kpi-main">{totalHoursLabel}</span>
-          <p className="kpi-hint">
-            Click to view month-wise
-            {loadingTraining ? '' : ' (based on backend trainings)'}
-          </p>
-        </div>
-
-        <div
-          className="kpi-card kpi-skill clickable"
-          onClick={() => navigate('/skill-matrix')}
-          title="Open Organization Skill Matrix"
-        >
-          <h3>Skill Matrix (Organization)</h3>
-          <span className="kpi-action">View <span aria-hidden>→</span></span>
-          <p className="kpi-hint">Open skill matrix module</p>
-        </div>
-
-        <div
-          className="kpi-card kpi-req clickable"
-          onClick={() => navigate('/training-requirements')}
-          title="Open Organization Training Requirements"
-        >
-          <h3>Training Requirements (Organization)</h3>
-          <span className="kpi-action">View <span aria-hidden>→</span></span>
-          <p className="kpi-hint">Open training requirements module</p>
-        </div>
-
-        <div
-          className="kpi-card kpi-cal clickable"
-          onClick={() => navigate('/calendar')}
-        >
-          <h3>Training Calendar</h3>
-          <span className="kpi-action">View <span aria-hidden>→</span></span>
-          <p className="kpi-hint">Open calendar view</p>
-        </div>
-      </div>
-
-      <div className="dashboard-section">
-        <h3>Quick Actions</h3>
-
-        <div className="action-grid">
-          <div className="action-card" onClick={() => navigate('/users')}>
-            User Master
-          </div>
-
-          <div className="action-card" onClick={() => navigate('/departments')}>
-            Department Master
-          </div>
-
-          <div className="action-card" onClick={() => navigate('/designations')}>
-            Designation Master
-          </div>
-
-          <div className="action-card" onClick={() => navigate('/skills')}>
-            Skill Master
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-section">
-        <h3>Recent Activity</h3>
-
-        <div className="activity-card">
-          <ul>
-            <li>Designation <b>Senior Operator</b> added</li>
-            <li>Skill Matrix updated for <b>HRS & Pickling</b></li>
-            <li>Training <b>Safety Induction</b> assigned to IT</li>
-            <li>User <b>Prem Pandey</b> mapped to skill matrix</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* ✅ Portal render (Always top/center of viewport) */}
-      {showHours ? createPortal(hoursModal, document.body) : null}
+  <div className="dashboard-page">
+    <div className="dashboard-header">
+      <h2>Dashboard</h2>
+      <p>Overview of training, competency & skill matrix</p>
     </div>
-  );
+
+    <div className="kpi-grid">
+      <div
+        className="kpi-card kpi-users clickable"
+        onClick={() => navigate('/users')}
+        title="Open User Master"
+      >
+        <h3>Total Users</h3>
+
+        <span className="kpi-main">
+          {loadingStats ? '...' : userStats.total}
+        </span>
+
+        <div className="kpi-divider"></div>
+
+        <div className="kpi-sub">
+          <div className="kpi-pill active">
+            Active <b>{loadingStats ? '...' : userStats.active}</b>
+          </div>
+
+          <div className="kpi-pill inactive">
+            Inactive <b>{loadingStats ? '...' : userStats.inactive}</b>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="kpi-card kpi-hours clickable"
+        onClick={() => setShowHours(true)}
+        title="View month-wise hours"
+      >
+        <h3>Total Training Hours</h3>
+        <span className="kpi-main">{totalHoursLabel}</span>
+        <p className="kpi-hint">
+          Click to view month-wise
+          {loadingTraining ? '' : ' (based on backend trainings)'}
+        </p>
+      </div>
+
+      <div
+        className="kpi-card kpi-skill clickable"
+        onClick={() => navigate('/skill-matrix')}
+        title="Open Organization Skill Matrix"
+      >
+        <h3>Skill Matrix (Organization)</h3>
+        <span className="kpi-action">View <span aria-hidden>→</span></span>
+        <p className="kpi-hint">Open skill matrix module</p>
+      </div>
+
+      <div
+        className="kpi-card kpi-req clickable"
+        onClick={() => navigate('/training-requirements')}
+        title="Open Organization Training Requirements"
+      >
+        <h3>Training Requirements (Organization)</h3>
+        <span className="kpi-action">View <span aria-hidden>→</span></span>
+        <p className="kpi-hint">Open training requirements module</p>
+      </div>
+
+      <div
+        className="kpi-card kpi-cal clickable"
+        onClick={() => navigate('/calendar')}
+      >
+        <h3>Training Calendar</h3>
+        <span className="kpi-action">View <span aria-hidden>→</span></span>
+        <p className="kpi-hint">Open calendar view</p>
+      </div>
+    </div>
+
+    {/* ✅ MOVED UP: Quick Actions */}
+    <div className="dashboard-section">
+      <h3>Quick Actions</h3>
+
+      <div className="action-grid">
+        <div className="action-card" onClick={() => navigate('/users')}>
+          User Master
+        </div>
+
+        <div className="action-card" onClick={() => navigate('/departments')}>
+          Department Master
+        </div>
+
+        <div className="action-card" onClick={() => navigate('/designations')}>
+          Designation Master
+        </div>
+
+        <div className="action-card" onClick={() => navigate('/skills')}>
+          Skill Master
+        </div>
+      </div>
+    </div>
+
+    {/* ✅ Audit Logs (same as before) */}
+    <div className="audit-card">
+      <div className="audit-header">
+        <div>
+          <h3>Audit Logs</h3>
+          <p>Who did what, when (User-wise / Department-wise)</p>
+        </div>
+
+        <div className="audit-actions">
+          <button
+            className="audit-btn"
+            onClick={() => {
+              api
+                .post('/audit-logs/generate-sample?count=20')
+                .then(() => loadAuditLogs())
+                .catch((err) => {
+                  console.error('Failed to generate sample logs', err?.response?.status, err?.response?.data);
+                });
+            }}
+            title="Generate 20 sample logs for dashboard"
+          >
+            Generate 20 Logs
+          </button>
+
+          <button className="audit-btn secondary" onClick={loadAuditLogs} title="Refresh logs">
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div className="audit-filters">
+        <div className="audit-filter">
+          <label>User</label>
+          <select value={logUserFilter} onChange={(e) => setLogUserFilter(e.target.value)}>
+            <option value="">All</option>
+            {[...new Map(
+              auditLogs
+                .filter((l) => l?.actor?.id)
+                .map((l) => [l.actor.id, l.actor])
+            ).values()].map((u) => (
+              <option key={u.id} value={String(u.id)}>
+                {u.name} (#{u.id})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="audit-filter">
+          <label>Department</label>
+          <select value={logDeptFilter} onChange={(e) => setLogDeptFilter(e.target.value)}>
+            <option value="">All</option>
+            {[...new Map(
+              auditLogs
+                .filter((l) => l?.department?.id)
+                .map((l) => [l.department.id, l.department])
+            ).values()].map((d) => (
+              <option key={d.id} value={String(d.id)}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="audit-table-wrap">
+        <table className="audit-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>User</th>
+              <th>Department</th>
+              <th>Action</th>
+              <th>Module</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {logsLoading ? (
+              <tr>
+                <td colSpan={6} className="audit-empty">Loading...</td>
+              </tr>
+            ) : auditLogs.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="audit-empty">
+                  No logs found. Click <b>Generate 20 Logs</b> to create sample entries.
+                </td>
+              </tr>
+            ) : (
+              auditLogs.map((l) => (
+                <tr key={l.id}>
+                  <td>{l.createdAt ? new Date(l.createdAt).toLocaleString() : '-'}</td>
+                  <td>{l.actor?.name || l.actor?.email || 'System'}</td>
+                  <td>{l.department?.name || '-'}</td>
+                  <td><span className="audit-pill">{l.action}</span></td>
+                  <td>{l.entity || '-'}</td>
+                  <td className="audit-desc">{l.description || '-'}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div className="dashboard-section">
+      <h3>Recent Activity</h3>
+
+      <div className="activity-card">
+        <ul>
+          <li>Designation <b>Senior Operator</b> added</li>
+          <li>Skill Matrix updated for <b>HRS & Pickling</b></li>
+          <li>Training <b>Safety Induction</b> assigned to IT</li>
+          <li>User <b>Prem Pandey</b> mapped to skill matrix</li>
+        </ul>
+      </div>
+    </div>
+
+    {/* ✅ Portal render (Always top/center of viewport) */}
+    {showHours ? createPortal(hoursModal, document.body) : null}
+  </div>
+);
 }
