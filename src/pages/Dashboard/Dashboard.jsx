@@ -62,39 +62,41 @@ export default function Dashboard() {
 
   // trainings stats from backend
   const [loadingTraining, setLoadingTraining] = useState(true);
+  const [trainings, setTrainings] = useState([]);
   const [totalUpcomingHours, setTotalUpcomingHours] = useState(0);
   const [monthWiseHours, setMonthWiseHours] = useState([]); // [{ month, hours }]
 
-  // ✅ Audit logs (latest 20)
-  const [logsLoading, setLogsLoading] = useState(true);
-  const [auditLogs, setAuditLogs] = useState([]);
-  const [logUserFilter, setLogUserFilter] = useState('');
-  const [logDeptFilter, setLogDeptFilter] = useState('');
+  // ✅ Recent activities (latest audit logs)
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [recentLogs, setRecentLogs] = useState([]);
 
-  const loadAuditLogs = () => {
-    setLogsLoading(true);
-    const qs = new URLSearchParams();
-    qs.set('limit', '20');
-    if (logUserFilter) qs.set('userId', logUserFilter);
-    if (logDeptFilter) qs.set('departmentId', logDeptFilter);
-
+  const loadRecentLogs = () => {
+    setRecentLoading(true);
     api
-      .get(`/audit-logs?${qs.toString()}`)
+      .get('/audit-logs?limit=12')
       .then((res) => {
         const items = res?.data?.items;
-        setAuditLogs(Array.isArray(items) ? items : []);
+        setRecentLogs(Array.isArray(items) ? items : []);
       })
       .catch((err) => {
-        console.error('Failed to load audit logs', err?.response?.status, err?.response?.data);
-        setAuditLogs([]);
+        console.error('Failed to load recent logs', err?.response?.status, err?.response?.data);
+        setRecentLogs([]);
       })
-      .finally(() => setLogsLoading(false));
+      .finally(() => setRecentLoading(false));
   };
 
   useEffect(() => {
-    loadAuditLogs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logUserFilter, logDeptFilter]);
+    loadRecentLogs();
+  }, []);
+
+  // ✅ Training graph controls
+  const [graphView, setGraphView] = useState('annual'); // annual | monthly | weekly
+  const [graphMonth, setGraphMonth] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  });
 
   useEffect(() => {
     setLoadingStats(true);
@@ -124,6 +126,8 @@ export default function Dashboard() {
       .get('/trainings')
       .then((res) => {
         const list = Array.isArray(res?.data) ? res.data : [];
+
+        setTrainings(list);
 
         // ✅ Today's trainings (for dashboard slider)
         const nowLocal = new Date();
@@ -228,6 +232,129 @@ export default function Dashboard() {
     const val = totalUpcomingHours;
     return `${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)} hrs`;
   }, [loadingTraining, totalUpcomingHours]);
+
+  const graph = useMemo(() => {
+    const rows = Array.isArray(trainings) ? trainings : [];
+    const now = new Date();
+    const curYear = now.getFullYear();
+
+    const add = (map, key, label, hours) => {
+      const prev = map.get(key) || { label, hours: 0 };
+      map.set(key, { label, hours: prev.hours + (hours || 0) });
+    };
+
+    const bars = [];
+
+    if (graphView === 'annual') {
+      const monthMap = new Map();
+      for (const t of rows) {
+        const date = t?.date;
+        if (!date) continue;
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) continue;
+        if (d.getFullYear() !== curYear) continue;
+        const m = d.getMonth();
+        const key = String(m);
+        const label = d.toLocaleString('en-US', { month: 'short' });
+        add(monthMap, key, label, parseTimeRangeToHours(t?.time));
+      }
+      for (let m = 0; m < 12; m++) {
+        const key = String(m);
+        const label = new Date(curYear, m, 1).toLocaleString('en-US', { month: 'short' });
+        const v = monthMap.get(key) || { label, hours: 0 };
+        bars.push({ label: v.label, value: Math.round(v.hours * 10) / 10 });
+      }
+      return { title: `Annual Training Hours (${curYear})`, bars };
+    }
+
+    if (graphView === 'monthly') {
+      // Weeks in selected month
+      const [yStr, mStr] = String(graphMonth || '').split('-');
+      const y = Number(yStr);
+      const m0 = Number(mStr) - 1;
+      if (!y || Number.isNaN(m0)) return { title: 'Monthly Training Hours', bars: [] };
+
+      const first = new Date(y, m0, 1);
+      const last = new Date(y, m0 + 1, 0);
+
+      // week starts on Monday
+      const start = new Date(first);
+      const startDay = (start.getDay() + 6) % 7;
+      start.setDate(start.getDate() - startDay);
+
+      const end = new Date(last);
+      const endDay = (end.getDay() + 6) % 7;
+      end.setDate(end.getDate() + (6 - endDay));
+
+      const weekMap = new Map();
+      for (const t of rows) {
+        const date = t?.date;
+        if (!date) continue;
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime())) continue;
+        if (d < start || d > end) continue;
+
+        // Find week start (Monday)
+        const dd = new Date(d);
+        const dow = (dd.getDay() + 6) % 7;
+        dd.setDate(dd.getDate() - dow);
+        dd.setHours(0, 0, 0, 0);
+        const key = dd.toISOString().slice(0, 10);
+        const label = `Wk ${key.slice(5)}`;
+        add(weekMap, key, label, parseTimeRangeToHours(t?.time));
+      }
+
+      const weeks = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 7)) {
+        const key = d.toISOString().slice(0, 10);
+        const label = `Wk ${key.slice(8, 10)}/${key.slice(5, 7)}`;
+        const v = weekMap.get(key) || { label, hours: 0 };
+        weeks.push({ label: v.label, value: Math.round(v.hours * 10) / 10 });
+      }
+
+      return {
+        title: `Monthly (Weekly) Training Hours (${first.toLocaleString('en-US', { month: 'long' })} ${y})`,
+        bars: weeks,
+      };
+    }
+
+    // weekly
+    const weekStart = new Date(now);
+    const dow = (weekStart.getDay() + 6) % 7;
+    weekStart.setDate(weekStart.getDate() - dow);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const dayMap = new Map();
+    for (const t of rows) {
+      const date = t?.date;
+      if (!date) continue;
+      const d = new Date(date);
+      if (Number.isNaN(d.getTime())) continue;
+      const deltaDays = Math.floor((d.getTime() - weekStart.getTime()) / (24 * 3600 * 1000));
+      if (deltaDays < 0 || deltaDays > 6) continue;
+      const key = String(deltaDays);
+      const label = d.toLocaleString('en-US', { weekday: 'short' });
+      add(dayMap, key, label, parseTimeRangeToHours(t?.time));
+    }
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      const key = String(i);
+      const label = d.toLocaleString('en-US', { weekday: 'short' });
+      const v = dayMap.get(key) || { label, hours: 0 };
+      days.push({ label: v.label, value: Math.round(v.hours * 10) / 10 });
+    }
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    return {
+      title: `Weekly Training Hours (${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()})`,
+      bars: days,
+    };
+  }, [trainings, graphView, graphMonth, loadingTraining]);
 
   // ✅ Lock background scroll when modal open + ESC close
   useEffect(() => {
@@ -376,7 +503,7 @@ export default function Dashboard() {
                       <button type="button" className="today-cta" onClick={() => navigate('/calendar')}>
                         Open Calendar →
                       </button>
-                      <button type="button" className="today-cta secondary" onClick={() => navigate('/trainings')}>
+                      <button type="button" className="today-cta secondary" onClick={() => navigate('/training')}>
                         View Trainings
                       </button>
                     </div>
@@ -463,6 +590,57 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ✅ Training Graph (Annual / Monthly / Weekly) */}
+      <div className="dashboard-section">
+        <div className="graph-head">
+          <div>
+            <h3>{graph.title}</h3>
+            <p>Switch view to see annual, monthly (weekly breakup), or weekly (daily breakup)</p>
+          </div>
+
+          <div className="graph-controls">
+            <select value={graphView} onChange={(e) => setGraphView(e.target.value)}>
+              <option value="annual">Annual</option>
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+
+            {graphView === 'monthly' ? (
+              <input
+                type="month"
+                value={graphMonth}
+                onChange={(e) => setGraphMonth(e.target.value)}
+                aria-label="Select month"
+              />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="graph-card">
+          {loadingTraining ? (
+            <div className="graph-empty">Loading...</div>
+          ) : !graph.bars?.length ? (
+            <div className="graph-empty">No training data</div>
+          ) : (
+            <div className="bar-chart" role="img" aria-label="Training hours chart">
+              {(() => {
+                const max = Math.max(0.0001, ...graph.bars.map((b) => Number(b.value || 0)));
+                return graph.bars.map((b, idx) => {
+                  const pct = Math.max(0, Math.min(100, (Number(b.value || 0) / max) * 100));
+                  return (
+                    <div key={`${b.label}-${idx}`} className="bar-col" title={`${b.label}: ${b.value} hrs`}>
+                      <div className="bar" style={{ height: `${pct}%` }} />
+                      <div className="bar-label">{b.label}</div>
+                      <div className="bar-value">{b.value}</div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ✅ MOVED UP: Quick Actions */}
       <div className="dashboard-section">
         <h3>Quick Actions</h3>
@@ -486,133 +664,31 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ✅ Audit Logs (same as before) */}
-      <div className="audit-card">
-        <div className="audit-header">
-          <div>
-            <h3>Audit Logs</h3>
-            <p>Who did what, when (User-wise / Department-wise)</p>
-          </div>
-
-          <div className="audit-actions">
-            <button
-              className="audit-btn"
-              onClick={() => {
-                api
-                  .post('/audit-logs/generate-sample?count=20')
-                  .then(() => loadAuditLogs())
-                  .catch((err) => {
-                    console.error('Failed to generate sample logs', err?.response?.status, err?.response?.data);
-                  });
-              }}
-              title="Generate 20 sample logs for dashboard"
-            >
-              Generate 20 Logs
-            </button>
-
-            <button className="audit-btn secondary" onClick={loadAuditLogs} title="Refresh logs">
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        <div className="audit-filters">
-          <div className="audit-filter">
-            <label>User</label>
-            <select value={logUserFilter} onChange={(e) => setLogUserFilter(e.target.value)}>
-              <option value="">All</option>
-              {[
-                ...new Map(
-                  auditLogs.filter((l) => l?.actor?.id).map((l) => [l.actor.id, l.actor]),
-                ).values(),
-              ].map((u) => (
-                <option key={u.id} value={String(u.id)}>
-                  {u.name} (#{u.id})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="audit-filter">
-            <label>Department</label>
-            <select value={logDeptFilter} onChange={(e) => setLogDeptFilter(e.target.value)}>
-              <option value="">All</option>
-              {[
-                ...new Map(
-                  auditLogs.filter((l) => l?.department?.id).map((l) => [l.department.id, l.department]),
-                ).values(),
-              ].map((d) => (
-                <option key={d.id} value={String(d.id)}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="audit-table-wrap">
-          <table className="audit-table">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>User</th>
-                <th>Department</th>
-                <th>Action</th>
-                <th>Module</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {logsLoading ? (
-                <tr>
-                  <td colSpan={6} className="audit-empty">
-                    Loading...
-                  </td>
-                </tr>
-              ) : auditLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="audit-empty">
-                    No logs found. Click <b>Generate 20 Logs</b> to create sample entries.
-                  </td>
-                </tr>
-              ) : (
-                auditLogs.map((l) => (
-                  <tr key={l.id}>
-                    <td>{l.createdAt ? new Date(l.createdAt).toLocaleString() : '-'}</td>
-                    <td>{l.actor?.name || l.actor?.email || 'System'}</td>
-                    <td>{l.department?.name || '-'}</td>
-                    <td>
-                      <span className="audit-pill">{l.action}</span>
-                    </td>
-                    <td>{l.entity || '-'}</td>
-                    <td className="audit-desc">{l.description || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <div className="dashboard-section">
         <h3>Recent Activity</h3>
 
         <div className="activity-card">
-          <ul>
-            <li>
-              Designation <b>Senior Operator</b> added
-            </li>
-            <li>
-              Skill Matrix updated for <b>HRS & Pickling</b>
-            </li>
-            <li>
-              Training <b>Safety Induction</b> assigned to IT
-            </li>
-            <li>
-              User <b>Prem Pandey</b> mapped to skill matrix
-            </li>
-          </ul>
+          {recentLoading ? (
+            <div className="activity-empty">Loading...</div>
+          ) : recentLogs.length === 0 ? (
+            <div className="activity-empty">
+              No recent activity yet. Once you create/edit users, skills, designations, etc. it will show here.
+            </div>
+          ) : (
+            <ul>
+              {recentLogs.map((l) => (
+                <li key={l.id}>
+                  <div className="activity-line">
+                    <span className="activity-pill">{l.action}</span>
+                    <span className="activity-text">
+                      {l.actor?.name || l.actor?.email || 'System'} — {l.description || l.entity || 'Activity'}
+                    </span>
+                  </div>
+                  <div className="activity-time">{l.createdAt ? new Date(l.createdAt).toLocaleString() : ''}</div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

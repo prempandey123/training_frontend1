@@ -63,6 +63,10 @@ export default function Sidebar() {
         <li>
           <NavLink to="/reports">Reports</NavLink>
         </li>
+
+        <li>
+          <NavLink to="/audit-logs">Audit Logs</NavLink>
+        </li>
       </ul>
 
       {/* 🔴 LOGOUT AT BOTTOM */}

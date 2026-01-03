@@ -444,6 +444,138 @@
   border-bottom: none;
 }
 
+.activity-empty {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.activity-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.activity-pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #f9fafb;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+.activity-text {
+  color: rgba(15, 23, 42, 0.86);
+  font-weight: 700;
+}
+
+.activity-time {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+/* =========================
+   TRAINING GRAPH
+========================= */
+.graph-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.graph-head h3 {
+  margin: 0;
+}
+
+.graph-head p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.graph-controls select,
+.graph-controls input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  background: #fff;
+  outline: none;
+  font-weight: 800;
+}
+
+.graph-card {
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+}
+
+.graph-empty {
+  text-align: center;
+  color: #6b7280;
+  font-weight: 800;
+  padding: 24px 0;
+}
+
+.bar-chart {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  height: 260px;
+  padding: 8px 2px;
+  overflow-x: auto;
+}
+
+.bar-col {
+  min-width: 54px;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 14px;
+  background: rgba(246, 201, 69, 0.95);
+  border: 1px solid rgba(246, 201, 69, 0.55);
+  box-shadow: 0 10px 20px rgba(246, 201, 69, 0.12);
+  transition: transform 160ms ease;
+}
+
+.bar-col:hover .bar {
+  transform: translateY(-2px);
+}
+
+.bar-label {
+  font-size: 12px;
+  color: #111827;
+  font-weight: 900;
+}
+
+.bar-value {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 800;
+}
+
 /* =========================
    MODAL (TRAINING HOURS) - ✅ NOW ALWAYS OPENS ON TOP
 ========================= */

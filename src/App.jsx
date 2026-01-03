@@ -27,6 +27,7 @@ import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
 import UpdateUserPassword from './pages/UpdateUserPassword/UpdateUserPassword';
 import OrgSkillMatrix from './pages/SkillMatrix/OrgSkillMatrix';
+import AuditLogs from './pages/AuditLogs/AuditLogs';
 
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="attendance" element={<Attendance />} />
         <Route path="my-profile" element={<MyProfile />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="/users/update-password" element={<UpdateUserPassword />} />
       </Route>
 

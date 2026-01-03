@@ -10,6 +10,12 @@ function clampLevel(n) {
   return Math.max(0, Math.min(4, v));
 }
 
+function clampPercent(p) {
+  const v = Number(p ?? 0);
+  if (Number.isNaN(v)) return 0;
+  return Math.max(0, Math.min(100, v));
+}
+
 /**
  * Color code is based on CURRENT level (0..4)
  * If required is 0 => treat as N/A
@@ -22,11 +28,22 @@ function cellTone(required, current) {
   return `tone-${c}`; // tone-0..tone-4
 }
 
+/**
+ * % badge color rules:
+ * <45 red, 45-55 orange, 55-65 yellow, 65+ green
+ */
+function percentTone(percent) {
+  const p = clampPercent(percent);
+  if (p < 45) return 'pct-red';
+  if (p < 55) return 'pct-orange';
+  if (p < 65) return 'pct-yellow';
+  return 'pct-green';
+}
+
 export default function OrgSkillMatrix() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
-  // Horizontal scroll controls (for large skill counts)
   const tableWrapRef = useRef(null);
   const [compact, setCompact] = useState(false);
 
@@ -135,6 +152,12 @@ export default function OrgSkillMatrix() {
           <span className="legend-pill tone-3">3</span>
           <span className="legend-pill tone-4">4</span>
           <span className="legend-pill tone-na">N/A</span>
+
+          {/* Optional: % Legend (agar chaho to keep) */}
+          {/* <span className="legend-pill pct-red">&lt;45%</span>
+          <span className="legend-pill pct-orange">45–55%</span>
+          <span className="legend-pill pct-yellow">55–65%</span>
+          <span className="legend-pill pct-green">65%+</span> */}
         </div>
       </div>
 
@@ -212,44 +235,52 @@ export default function OrgSkillMatrix() {
 
             <tbody>
               {employees.length ? (
-                employees.map((emp) => (
-                  <tr key={emp.id}>
-                    <td className="sticky-left col-emp">
-                      <div className="emp-name">{emp.name}</div>
-                      <div className="emp-sub">{emp.employeeId || emp.email}</div>
-                    </td>
+                employees.map((emp) => {
+                  const pct = clampPercent(emp.completionPercentage);
+                  const pctClass = percentTone(pct);
 
-                    <td className="sticky-left-2 col-meta">
-                      <div className="emp-meta">{emp.department || '—'}</div>
-                      <div className="emp-sub">{emp.designation || '—'}</div>
-                    </td>
+                  return (
+                    <tr key={emp.id}>
+                      <td className="sticky-left col-emp">
+                        <div className="emp-name">{emp.name}</div>
+                        <div className="emp-sub">{emp.employeeId || emp.email}</div>
+                      </td>
 
-                    <td className="sticky-left-3 col-score">
-                      <div className="score-ring" title={`${emp.completionPercentage}% completion`}>
-                        {emp.completionPercentage}%
-                      </div>
-                    </td>
+                      <td className="sticky-left-2 col-meta">
+                        <div className="emp-meta">{emp.department || '—'}</div>
+                        <div className="emp-sub">{emp.designation || '—'}</div>
+                      </td>
 
-                    {emp.cells.map((c) => {
-                      const tone = cellTone(c.requiredLevel, c.currentLevel);
-                      const cur = clampLevel(c.currentLevel);
-                      const req = clampLevel(c.requiredLevel);
+                      <td className="sticky-left-3 col-score">
+                        <div
+                          className={`score-ring ${pctClass}`}
+                          title={`${pct}% completion`}
+                        >
+                          {pct}%
+                        </div>
+                      </td>
 
-                      return (
-                        <td key={c.skillId} className="col-skill">
-                          <div
-                            className={`cell ${tone}`}
-                            title={`Current ${cur} / Required ${req}`}
-                          >
-                            <span className="cell-main">{cur}</span>
-                            <span className="cell-sep">/</span>
-                            <span className="cell-sub">{req}</span>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))
+                      {emp.cells.map((c) => {
+                        const tone = cellTone(c.requiredLevel, c.currentLevel);
+                        const cur = clampLevel(c.currentLevel);
+                        const req = clampLevel(c.requiredLevel);
+
+                        return (
+                          <td key={c.skillId} className="col-skill">
+                            <div
+                              className={`cell ${tone}`}
+                              title={`Current ${cur} / Required ${req}`}
+                            >
+                              <span className="cell-main">{cur}</span>
+                              <span className="cell-sep">/</span>
+                              <span className="cell-sub">{req}</span>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={3 + skills.length} className="empty">
