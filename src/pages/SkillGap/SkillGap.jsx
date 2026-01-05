@@ -5,6 +5,7 @@ import { getUsers } from '../../api/user.api';
 import { getMySkillGap, getUserSkillGap } from '../../api/skillGap.api';
 import { autoCreateRequirementsForUser, autoCreateMyRequirements } from '../../api/trainingRequirement.api';
 import { getAuthUser } from '../../utils/auth';
+import { getPriorityFromCurrentLevel } from '../../utils/priority';
 
 export default function SkillGap() {
   const navigate = useNavigate();
@@ -114,7 +115,7 @@ export default function SkillGap() {
             ))}
           </select>
           <small style={{ opacity: 0.7 }}>
-            Priority: HIGH gap ≥2, MEDIUM gap =1.
+            Priority: HIGH (current level 0-1), MEDIUM (level 2), LOW (level 3).
           </small>
         </div>
       </div>
@@ -166,7 +167,12 @@ export default function SkillGap() {
                     <td>{g.currentLevel}</td>
                     <td>{g.gap}</td>
                     <td>
-                      <span className={`pill ${String(g.priority).toLowerCase()}`}>{g.priority}</span>
+                      {(() => {
+                        const p = getPriorityFromCurrentLevel(g.currentLevel);
+                        return (
+                          <span className={`pill ${p.key}`}>{p.label}</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))

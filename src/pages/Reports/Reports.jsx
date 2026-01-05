@@ -14,6 +14,12 @@ function buildUrl(template, params) {
     if (did) url = `${url}?departmentId=${encodeURIComponent(did)}`;
   }
 
+  // TNI requirements supports optional department filter via query param
+  if (url.startsWith('/reports/tni-requirements/excel')) {
+    const did = params?.departmentId;
+    if (did) url = `${url}?departmentId=${encodeURIComponent(did)}`;
+  }
+
   return url;
 }
 

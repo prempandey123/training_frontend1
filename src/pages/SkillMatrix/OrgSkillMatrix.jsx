@@ -2,19 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getOrgSkillMatrix } from '../../api/skillMatrix.api';
 import { getDepartments } from '../../api/departmentApi';
 import { getDesignations } from '../../api/designationApi';
+import { openPrintWindow } from '../../utils/printPdf';
+import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
+import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
 import './orgSkillMatrix.css';
-
-function clampLevel(n) {
-  const v = Number(n ?? 0);
-  if (Number.isNaN(v)) return 0;
-  return Math.max(0, Math.min(4, v));
-}
-
-function clampPercent(p) {
-  const v = Number(p ?? 0);
-  if (Number.isNaN(v)) return 0;
-  return Math.max(0, Math.min(100, v));
-}
 
 /**
  * Color code is based on CURRENT level (0..4)
@@ -34,10 +25,12 @@ function cellTone(required, current) {
  */
 function percentTone(percent) {
   const p = clampPercent(percent);
-  if (p < 45) return 'pct-red';
-  if (p < 55) return 'pct-orange';
-  if (p < 65) return 'pct-yellow';
-  return 'pct-green';
+  const bucket = getPercentColor(p).bucket;
+  if (bucket === 'red') return 'pct-red';
+  if (bucket === 'orange') return 'pct-orange';
+  if (bucket === 'yellow') return 'pct-yellow';
+  if (bucket === 'lightGreen') return 'pct-lgreen';
+  return 'pct-dgreen';
 }
 
 export default function OrgSkillMatrix() {
@@ -46,6 +39,7 @@ export default function OrgSkillMatrix() {
 
   const tableWrapRef = useRef(null);
   const [compact, setCompact] = useState(false);
+  const [printFriendly, setPrintFriendly] = useState(true);
 
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
@@ -111,6 +105,22 @@ export default function OrgSkillMatrix() {
     el.scrollBy({ left: dx, behavior: 'smooth' });
   };
 
+  const exportPdf = () => {
+    const html = buildOrgMatrixPrintHtml({
+      title: 'Organization Skill Matrix',
+      subtitle: `${employeeCount} employees • ${skillCount} skills`,
+      skills,
+      employees,
+      columnsPerPage: compact ? 14 : 12,
+      printFriendly,
+    });
+    openPrintWindow({
+      title: 'Organization Skill Matrix',
+      html,
+      landscape: true,
+    });
+  };
+
   return (
     <div className={`org-skill-matrix-page ${compact ? 'compact' : ''}`}>
       <div className="org-matrix-hero">
@@ -162,6 +172,24 @@ export default function OrgSkillMatrix() {
       </div>
 
       <div className="org-actions">
+        <button
+          type="button"
+          className={`org-chip ${printFriendly ? 'active' : ''}`}
+          onClick={() => setPrintFriendly((v) => !v)}
+          title="Softer colors + grey borders (best for printing)"
+        >
+          Print-friendly
+        </button>
+
+        <button
+          type="button"
+          className="org-chip"
+          onClick={exportPdf}
+          title="Opens print dialog — choose Save as PDF"
+        >
+          Export PDF
+        </button>
+
         <button
           type="button"
           className={`org-chip ${compact ? 'active' : ''}`}

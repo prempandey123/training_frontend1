@@ -8,6 +8,7 @@ import {
   updateTrainingRequirementStatus,
 } from '../../api/trainingRequirement.api';
 import { getAuthUser } from '../../utils/auth';
+import { getPriorityFromCurrentLevel } from '../../utils/priority';
 
 export default function TrainingRequirements() {
   const navigate = useNavigate();
@@ -142,7 +143,12 @@ export default function TrainingRequirements() {
                   <td>{r.requiredLevel}</td>
                   <td>{r.currentLevel}</td>
                   <td>{r.gap}</td>
-                  <td><span className={`pill ${String(r.priority).toLowerCase()}`}>{r.priority}</span></td>
+                  <td>
+                    {(() => {
+                      const p = getPriorityFromCurrentLevel(r.currentLevel);
+                      return <span className={`pill ${p.key}`}>{p.label}</span>;
+                    })()}
+                  </td>
                   <td>
                     {r.suggestedTraining ? (
                       <div>

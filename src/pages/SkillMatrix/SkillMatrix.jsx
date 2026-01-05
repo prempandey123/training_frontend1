@@ -5,6 +5,9 @@ import { getUsers } from '../../api/user.api';
 import { getSkillMatrixForUser, getMySkillMatrix } from '../../api/skillMatrix.api';
 import { getAuthUser } from '../../utils/auth';
 import { upsertMySkillLevel } from '../../api/userSkillLevel.api';
+import { openPrintWindow } from '../../utils/printPdf';
+import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
+import { clampLevel, clampPercent, getLevelColor, getPercentColor } from '../../utils/skillColor';
 
 export default function SkillMatrix() {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ export default function SkillMatrix() {
   const [loading, setLoading] = useState(true);
   const [savingSkillId, setSavingSkillId] = useState(null);
   const [error, setError] = useState('');
+  const [printFriendly, setPrintFriendly] = useState(true);
 
   const authUser = getAuthUser();
 
@@ -71,6 +75,28 @@ export default function SkillMatrix() {
 
   const headerTitle = matrix?.user?.name || matrix?.user?.email || 'Skill Matrix';
 
+  const exportPdf = () => {
+    const userTitle = headerTitle;
+    const metaParts = [];
+    if (matrix?.user?.designation) metaParts.push(matrix.user.designation);
+    if (matrix?.user?.department) metaParts.push(matrix.user.department);
+
+    const html = buildUserMatrixPrintHtml({
+      title: 'Skill Matrix',
+      userTitle,
+      userMeta: metaParts.join(' • '),
+      summary: matrix?.summary || null,
+      rows: skillRows,
+      printFriendly,
+    });
+
+    openPrintWindow({
+      title: 'Skill Matrix',
+      html,
+      landscape: true,
+    });
+  };
+
   const handleLevelChange = async (skillId, nextLevel) => {
     if (!canEditMine) return;
     setSavingSkillId(skillId);
@@ -88,9 +114,29 @@ export default function SkillMatrix() {
     <div className="skill-matrix-page">
       <div className="matrix-header">
         <h2>Skill Matrix</h2>
-        <button className="add-btn" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            type="button"
+            className={`add-btn ${printFriendly ? 'active' : ''}`}
+            onClick={() => setPrintFriendly((v) => !v)}
+            title="Softer colors + grey borders (best for printing)"
+          >
+            Print-friendly
+          </button>
+
+          <button
+            type="button"
+            className="add-btn"
+            onClick={exportPdf}
+            title="Opens print dialog — choose Save as PDF"
+          >
+            Export PDF
+          </button>
+
+          <button className="add-btn" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+        </div>
       </div>
 
       <div className="matrix-filters">
@@ -140,7 +186,7 @@ export default function SkillMatrix() {
                 Skills: <b>{matrix.summary.totalSkills}</b> • Required Score:{' '}
                 <b>{matrix.summary.totalRequiredScore}</b> • Current Score:{' '}
                 <b>{matrix.summary.totalCurrentScore}</b> • Completion:{' '}
-                <b>{matrix.summary.completionPercentage}%</b>
+                <CompletionPill percent={matrix.summary.completionPercentage} printFriendly={printFriendly} />
               </div>
             ) : null}
           </div>
@@ -163,13 +209,36 @@ export default function SkillMatrix() {
                   const current = s.currentLevel ?? s.current_level ?? s.current ?? 0;
                   const gap = s.gap ?? (Number(required) - Number(current));
 
+                  const reqLevel = clampLevel(required);
+                  const curLevel = clampLevel(current);
+                  const reqC = getLevelColor(reqLevel, { printFriendly: false });
+                  const curC = getLevelColor(curLevel, { printFriendly: false });
+
                   const isMineRow = selectedUserId === '' || String(authUser?.id) === String(selectedUserId);
                   const editable = canEditMine && isMineRow;
 
                   return (
                     <tr key={skillId || skillName}>
                       <td>{skillName}</td>
-                      <td>{required}</td>
+                      <td>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            minWidth: 32,
+                            height: 28,
+                            padding: '0 10px',
+                            borderRadius: 999,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 800,
+                            background: reqC.bg,
+                            color: reqC.text,
+                            border: '1px solid rgba(0,0,0,0.18)',
+                          }}
+                        >
+                          {reqLevel}
+                        </span>
+                      </td>
                       <td>
                         {editable ? (
                           <select
@@ -184,7 +253,23 @@ export default function SkillMatrix() {
                             ))}
                           </select>
                         ) : (
-                          current
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              minWidth: 32,
+                              height: 28,
+                              padding: '0 10px',
+                              borderRadius: 999,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 800,
+                              background: curC.bg,
+                              color: curC.text,
+                              border: '1px solid rgba(0,0,0,0.18)',
+                            }}
+                          >
+                            {curLevel}
+                          </span>
                         )}
                       </td>
                       <td>{gap}</td>
@@ -203,5 +288,29 @@ export default function SkillMatrix() {
         </div>
       )}
     </div>
+  );
+}
+
+function CompletionPill({ percent, printFriendly }) {
+  const p = clampPercent(percent);
+  const c = getPercentColor(p, { printFriendly });
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2px 10px',
+        borderRadius: 999,
+        fontWeight: 800,
+        marginLeft: 6,
+        background: c.bg,
+        color: c.text,
+        border: '1px solid rgba(0,0,0,0.18)',
+      }}
+      title={`${p}% completion`}
+    >
+      {p}%
+    </span>
   );
 }

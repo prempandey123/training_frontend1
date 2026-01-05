@@ -376,36 +376,44 @@
 }
 
 /* ===== PERCENTAGE BASED COLORS (Completion %) ===== */
-/* < 45% → Red */
+/* 0–25% → Red */
 .pct-red {
-  background: rgba(220, 38, 38, 0.30);
+  background: rgba(211, 47, 47, 0.30);
   color: #7f1d1d;
-  border-color: rgba(220, 38, 38, 0.55);
-  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.18);
+  border-color: rgba(211, 47, 47, 0.60);
+  box-shadow: 0 10px 24px rgba(211, 47, 47, 0.18);
 }
 
-/* 45–55% → Orange */
+/* 26–50% → Orange (clearly different from yellow) */
 .pct-orange {
-  background: rgba(249, 115, 22, 0.32);
+  background: rgba(245, 124, 0, 0.32);
   color: #7c2d12;
-  border-color: rgba(249, 115, 22, 0.62);
-  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.18);
+  border-color: rgba(245, 124, 0, 0.70);
+  box-shadow: 0 10px 24px rgba(245, 124, 0, 0.18);
 }
 
-/* 55–65% → Yellow */
+/* 51–75% → Yellow (light, readable) */
 .pct-yellow {
-  background: rgba(250, 204, 21, 0.34);
-  color: #713f12;
-  border-color: rgba(250, 204, 21, 0.62);
-  box-shadow: 0 10px 24px rgba(250, 204, 21, 0.18);
+  background: rgba(255, 241, 118, 0.48);
+  color: #4e3b0b;
+  border-color: rgba(255, 241, 118, 0.85);
+  box-shadow: 0 10px 24px rgba(250, 204, 21, 0.14);
 }
 
-/* ≥ 65% → Green */
-.pct-green {
-  background: rgba(22, 163, 74, 0.30);
-  color: #14532d;
-  border-color: rgba(22, 163, 74, 0.62);
-  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.18);
+/* 76–90% → Light green */
+.pct-lgreen {
+  background: rgba(129, 199, 132, 0.36);
+  color: #0f3a1d;
+  border-color: rgba(129, 199, 132, 0.72);
+  box-shadow: 0 10px 24px rgba(129, 199, 132, 0.18);
+}
+
+/* 91–100% → Dark green */
+.pct-dgreen {
+  background: rgba(46, 125, 50, 0.32);
+  color: #eaffef;
+  border-color: rgba(46, 125, 50, 0.70);
+  box-shadow: 0 10px 24px rgba(46, 125, 50, 0.18);
 }
 
 .empty {
