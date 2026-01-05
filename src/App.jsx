@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import UserList from './pages/Users/UserList';
 import Training from './pages/Training/Training';
 import SkillMatrix from './pages/SkillMatrix/SkillMatrix';
+import CompetencyMatrix from './pages/SkillMatrix/CompetencyMatrix';
 import Reports from './pages/Reports/Reports';
 import CreateUser from './pages/Users/CreateUser';
 import AddDesignation from './pages/Designations/AddDesignation';
@@ -27,6 +28,7 @@ import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
 import UpdateUserPassword from './pages/UpdateUserPassword/UpdateUserPassword';
 import OrgSkillMatrix from './pages/SkillMatrix/OrgSkillMatrix';
+import OrgCompetencyMatrix from './pages/SkillMatrix/OrgCompetencyMatrix';
 import AuditLogs from './pages/AuditLogs/AuditLogs';
 
 
@@ -66,6 +68,9 @@ export default function App() {
 
         <Route path="skill-matrix" element={<SkillMatrix />} />
         <Route path="skill-matrix/org" element={<OrgSkillMatrix />} />
+
+        <Route path="competency-matrix" element={<CompetencyMatrix />} />
+        <Route path="competency-matrix/org" element={<OrgCompetencyMatrix />} />
         <Route path="skill-gap" element={<SkillGap />} />
         <Route path="training-requirements" element={<TrainingRequirements />} />
 

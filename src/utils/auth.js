@@ -1,4 +1,5 @@
 import { loginApi } from '../api/auth.api';
+import { getUserById } from '../api/user.api';
 
 const TOKEN_KEY = 'access_token';
 const USER_KEY = 'auth_user';
@@ -40,16 +41,27 @@ export const login = async (email, password) => {
   localStorage.setItem(TOKEN_KEY, token);
 
   const payload = decodeJwt(token) || {};
-  // Store what we can for UI
-  localStorage.setItem(
-    USER_KEY,
-    JSON.stringify({
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
-      name: payload.name, // might be undefined
-    })
-  );
+  // Store what we can for UI (and enrich with employeeType if possible)
+  const baseUser = {
+    id: payload.sub,
+    email: payload.email,
+    role: payload.role,
+    name: payload.name, // might be undefined
+    employeeType: undefined,
+  };
+
+  // Try to enrich with employeeType from DB user
+  try {
+    if (payload?.sub) {
+      const me = await getUserById(payload.sub);
+      baseUser.employeeType = me?.employeeType || me?.employee_type || me?.employee_type_name;
+      if (!baseUser.name) baseUser.name = me?.name;
+    }
+  } catch {
+    // ignore
+  }
+
+  localStorage.setItem(USER_KEY, JSON.stringify(baseUser));
 
   return { token, payload };
 };

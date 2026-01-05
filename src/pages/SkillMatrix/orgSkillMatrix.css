@@ -321,11 +321,29 @@
   font-weight: 900;
   border: 1px solid rgba(15, 23, 42, 0.14);
 
+  /* Prevent browser from wrapping/merging text inside pills */
+  white-space: nowrap;
+
   /* solid feel */
   box-shadow:
     inset 0 -2px 0 rgba(15, 23, 42, 0.10),
     0 6px 14px rgba(15, 23, 42, 0.08);
 }
+
+/* Stacked cell layout (used in Competency org matrix) */
+.cell.stack {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.cell.stack .cell-main { font-size: 13px; }
+.cell.stack .cell-sub { font-size: 11px; opacity: 0.9; }
+
+.cell-sub { white-space: nowrap; }
 
 .cell-main { font-size: 14px; }
 .cell-sep { font-size: 12px; opacity: 0.75; }

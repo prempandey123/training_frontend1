@@ -93,6 +93,9 @@
 
 .sidebar-menu {
   flex: 1;
+  min-height: 0; /* allow flex child to shrink so logout stays visible */
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .sidebar-logout {

@@ -7,9 +7,13 @@ import { getAuthUser } from '../../utils/auth';
 import { upsertMySkillLevel, upsertUserSkillLevel } from '../../api/userSkillLevel.api';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
-import { clampLevel, clampPercent, getLevelColor, getPercentColor } from '../../utils/skillColor';
+import { clampLevel, getLevelColor } from '../../utils/skillColor';
 
-export default function SkillMatrix() {
+/**
+ * Competency Matrix
+ * Same logic as Skill Matrix, but meant for STAFF employees.
+ */
+export default function CompetencyMatrix() {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -21,7 +25,6 @@ export default function SkillMatrix() {
   const [printFriendly, setPrintFriendly] = useState(true);
 
   const authUser = getAuthUser();
-
   const canEditMine = Boolean(authUser?.id);
   const isAdmin = String(authUser?.role || '').toUpperCase().includes('ADMIN');
 
@@ -29,11 +32,10 @@ export default function SkillMatrix() {
     try {
       const list = await getUsers();
       const all = Array.isArray(list) ? list : [];
-      // Worker Skill Matrix should list WORKER employees only
-      const workers = all.filter((u) => String(u?.employeeType || u?.employee_type || '').toUpperCase() === 'WORKER');
-      setUsers(workers);
+      // Competency Matrix should list STAFF employees only
+      const staff = all.filter((u) => String(u?.employeeType || u?.employee_type || '').toUpperCase() === 'STAFF');
+      setUsers(staff);
     } catch (e) {
-      // ignore (some setups may protect this endpoint)
       setUsers([]);
     }
   }
@@ -45,7 +47,7 @@ export default function SkillMatrix() {
       const data = userId ? await getSkillMatrixForUser(userId) : await getMySkillMatrix();
       setMatrix(data);
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Failed to load skill matrix';
+      const msg = e?.response?.data?.message || e?.message || 'Failed to load competency matrix';
       setError(msg);
       setMatrix(null);
     } finally {
@@ -55,7 +57,6 @@ export default function SkillMatrix() {
 
   useEffect(() => {
     loadUsers();
-    // Default: if token has sub, show my matrix; else show first user once loaded
     if (authUser?.id) {
       loadMatrix('');
     } else {
@@ -77,7 +78,7 @@ export default function SkillMatrix() {
     return Array.isArray(rows) ? rows : [];
   }, [matrix]);
 
-  const headerTitle = matrix?.user?.name || matrix?.user?.email || 'Skill Matrix';
+  const headerTitle = matrix?.user?.name || matrix?.user?.email || 'Competency Matrix';
 
   const exportPdf = () => {
     const userTitle = headerTitle;
@@ -86,7 +87,7 @@ export default function SkillMatrix() {
     if (matrix?.user?.department) metaParts.push(matrix.user.department);
 
     const html = buildUserMatrixPrintHtml({
-      title: 'Skill Matrix',
+      title: 'Competency Matrix',
       userTitle,
       userMeta: metaParts.join(' • '),
       summary: matrix?.summary || null,
@@ -95,7 +96,7 @@ export default function SkillMatrix() {
     });
 
     openPrintWindow({
-      title: 'Skill Matrix',
+      title: 'Competency Matrix',
       html,
       landscape: true,
     });
@@ -113,7 +114,7 @@ export default function SkillMatrix() {
         await loadMatrix(String(targetUserId));
       } else {
         await upsertMySkillLevel(skillId, Number(nextLevel));
-        await loadMatrix(''); // reload my matrix
+        await loadMatrix('');
       }
     } catch (e) {
       alert(e?.response?.data?.message || e?.message || 'Update failed');
@@ -125,7 +126,7 @@ export default function SkillMatrix() {
   return (
     <div className="skill-matrix-page">
       <div className="matrix-header">
-        <h2>Skill Matrix</h2>
+        <h2>Competency Matrix</h2>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button
             type="button"
@@ -170,7 +171,9 @@ export default function SkillMatrix() {
             ))}
           </select>
           <small style={{ opacity: 0.7 }}>
-            {isAdmin ? 'Admin: you can update any selected employee\'s current level.' : 'Note: Only your own levels are editable.'}
+            {isAdmin
+              ? 'Admin: you can update any selected employee\'s current level.'
+              : 'Note: Only your own levels are editable (as per rules).'}
           </small>
         </div>
       </div>
@@ -195,9 +198,8 @@ export default function SkillMatrix() {
             ) : null}
             {matrix?.summary ? (
               <div style={{ marginTop: 8, opacity: 0.9 }}>
-                Skills: <b>{matrix.summary.totalSkills}</b> • Required Score:{' '}
-                <b>{matrix.summary.totalRequiredScore}</b> • Current Score:{' '}
-                <b>{matrix.summary.totalCurrentScore}</b> • Completion:{' '}
+                Skills: <b>{matrix.summary.totalSkills}</b> • Required Score: <b>{matrix.summary.totalRequiredScore}</b> •
+                Current Score: <b>{matrix.summary.totalCurrentScore}</b> • Completion:{' '}
                 <CompletionPill percent={matrix.summary.completionPercentage} printFriendly={printFriendly} />
               </div>
             ) : null}
@@ -206,7 +208,7 @@ export default function SkillMatrix() {
           <table className="matrix-table">
             <thead>
               <tr>
-                <th>Skill</th>
+                <th>Competency</th>
                 <th>Required</th>
                 <th>Current</th>
                 <th>Gap</th>
@@ -216,7 +218,7 @@ export default function SkillMatrix() {
               {skillRows.length ? (
                 skillRows.map((s) => {
                   const skillId = s.skillId ?? s.skill?.id ?? s.id;
-                  const skillName = s.skillName ?? s.skill?.name ?? s.name ?? 'Skill';
+                  const skillName = s.skillName ?? s.skill?.name ?? s.name ?? 'Competency';
                   const required = s.requiredLevel ?? s.required_level ?? s.required ?? 0;
                   const current = s.currentLevel ?? s.current_level ?? s.current ?? 0;
                   const gap = s.gap ?? (Number(required) - Number(current));
@@ -230,68 +232,43 @@ export default function SkillMatrix() {
                   const editable = isAdmin || (canEditMine && isMineRow);
 
                   return (
-                    <tr key={skillId || skillName}>
-                      <td>{skillName}</td>
-                      <td>
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            minWidth: 32,
-                            height: 28,
-                            padding: '0 10px',
-                            borderRadius: 999,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 800,
-                            background: reqC.bg,
-                            color: reqC.text,
-                            border: '1px solid rgba(0,0,0,0.18)',
-                          }}
-                        >
-                          {reqLevel}
-                        </span>
+                    <tr key={skillId}>
+                      <td style={{ fontWeight: 700 }}>{skillName}</td>
+
+                      <td style={{ background: reqC.bg, color: reqC.text, textAlign: 'center', fontWeight: 700 }}>
+                        {reqLevel}
                       </td>
-                      <td>
+
+                      <td
+                        style={{ background: curC.bg, color: curC.text, textAlign: 'center', fontWeight: 700 }}
+                        title={editable ? 'Click to edit your current level' : ''}
+                      >
                         {editable ? (
                           <select
+                            value={curLevel}
                             disabled={savingSkillId === skillId}
-                            value={current}
                             onChange={(e) => handleLevelChange(skillId, e.target.value)}
+                            style={{ width: '100%', border: 'none', background: 'transparent', color: curC.text, fontWeight: 800 }}
                           >
                             {[0, 1, 2, 3, 4].map((lvl) => (
-                              <option key={lvl} value={lvl}>
+                              <option key={lvl} value={lvl} style={{ color: '#000' }}>
                                 {lvl}
                               </option>
                             ))}
                           </select>
                         ) : (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              minWidth: 32,
-                              height: 28,
-                              padding: '0 10px',
-                              borderRadius: 999,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              background: curC.bg,
-                              color: curC.text,
-                              border: '1px solid rgba(0,0,0,0.18)',
-                            }}
-                          >
-                            {curLevel}
-                          </span>
+                          curLevel
                         )}
                       </td>
-                      <td>{gap}</td>
+
+                      <td style={{ textAlign: 'center', fontWeight: 800 }}>{gap}</td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', opacity: 0.75 }}>
-                    No skills mapped for this designation yet.
+                  <td colSpan={4} style={{ opacity: 0.7, padding: 16 }}>
+                    No competencies mapped.
                   </td>
                 </tr>
               )}
@@ -304,25 +281,21 @@ export default function SkillMatrix() {
 }
 
 function CompletionPill({ percent, printFriendly }) {
-  const p = clampPercent(percent);
-  const c = getPercentColor(p, { printFriendly });
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2px 10px',
-        borderRadius: 999,
-        fontWeight: 800,
-        marginLeft: 6,
-        background: c.bg,
-        color: c.text,
-        border: '1px solid rgba(0,0,0,0.18)',
-      }}
-      title={`${p}% completion`}
-    >
-      {p}%
-    </span>
-  );
+  // Reuse helper from skillColor without importing percent function (keep minimal)
+  const p = Number.isFinite(Number(percent)) ? Number(percent) : 0;
+  // eslint-disable-next-line no-nested-ternary
+  const bg = p <= 25 ? '#d32f2f' : p <= 50 ? '#f57c00' : p <= 75 ? '#fff176' : p <= 90 ? '#81c784' : '#2e7d32';
+  const text = p <= 50 ? '#ffffff' : p <= 75 ? '#000000' : p <= 90 ? '#000000' : '#ffffff';
+
+  const style = {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: 999,
+    background: printFriendly ? '#f4f4f4' : bg,
+    color: printFriendly ? '#111' : text,
+    border: printFriendly ? '1px solid #bdbdbd' : 'none',
+    fontWeight: 800,
+  };
+
+  return <span style={style}>{Math.round(p)}%</span>;
 }

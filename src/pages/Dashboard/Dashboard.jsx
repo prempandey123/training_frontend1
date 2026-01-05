@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../api/api';
 import './dashboard.css';
+import { getAuthUser } from '../../utils/auth';
 
 function parseTimeRangeToHours(timeRange) {
   // Supports: "10:00 - 12:00", "10:00-12:00"
@@ -46,6 +47,7 @@ function yyyymm(dateStr) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const authUser = getAuthUser();
   const [showHours, setShowHours] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -559,7 +561,10 @@ export default function Dashboard() {
 
         <div
           className="kpi-card kpi-skill clickable"
-          onClick={() => navigate('/skill-matrix')}
+          onClick={() => {
+            const t = String(authUser?.employeeType || '').toUpperCase();
+            navigate(t === 'STAFF' ? '/competency-matrix' : '/skill-matrix');
+          }}
           title="Open Organization Skill Matrix"
         >
           <h3>Skill Matrix (Organization)</h3>

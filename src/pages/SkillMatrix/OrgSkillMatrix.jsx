@@ -70,6 +70,7 @@ export default function OrgSkillMatrix() {
         departmentId: departmentId || undefined,
         designationId: designationId || undefined,
         q: q || undefined,
+        employeeType: 'WORKER',
       });
       setData(res || { skills: [], employees: [] });
     } catch (e) {
@@ -82,11 +83,19 @@ export default function OrgSkillMatrix() {
 
   useEffect(() => {
     boot();
-    load();
+    // Department must be selected first
+    setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    // Require department selection before loading data
+    if (!departmentId) {
+      setData({ skills: [], employees: [] });
+      setLoading(false);
+      return;
+    }
+
     const t = setTimeout(() => load(), 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,7 +213,9 @@ export default function OrgSkillMatrix() {
         <div className="filter">
           <label>Department</label>
           <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-            <option value="">All</option>
+            <option value="" disabled>
+              Select
+            </option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
@@ -237,7 +248,11 @@ export default function OrgSkillMatrix() {
 
       {err ? <div className="org-alert">⚠ {err}</div> : null}
 
-      {loading ? (
+      {!departmentId ? (
+        <div className="org-card" style={{ padding: 16 }}>
+          Please select a <b>Department</b> to load the Skill Matrix.
+        </div>
+      ) : loading ? (
         <div className="org-card">Loading…</div>
       ) : (
         <div
