@@ -20,10 +20,17 @@ export default function SkillMatrix() {
   const [error, setError] = useState('');
   const [printFriendly, setPrintFriendly] = useState(true);
 
+  // Employee dropdown search (explicit apply)
+  const [userSearch, setUserSearch] = useState('');
+  const [appliedUserSearch, setAppliedUserSearch] = useState('');
+
   const authUser = getAuthUser();
 
   const canEditMine = Boolean(authUser?.id);
-  const isAdmin = String(authUser?.role || '').toUpperCase().includes('ADMIN');
+  const roleStr = String(authUser?.role || '').toUpperCase();
+  const isAdmin = roleStr.includes('ADMIN');
+  const isHR = roleStr.includes('HR');
+  const canEditAll = isAdmin || isHR;
 
   async function loadUsers() {
     try {
@@ -72,6 +79,17 @@ export default function SkillMatrix() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users]);
 
+  const filteredUsers = useMemo(() => {
+    const term = appliedUserSearch.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter((u) => {
+      const name = String(u?.name || '').toLowerCase();
+      const empId = String(u?.employeeId || '').toLowerCase();
+      const email = String(u?.email || '').toLowerCase();
+      return name.includes(term) || empId.includes(term) || email.includes(term);
+    });
+  }, [users, appliedUserSearch]);
+
   const skillRows = useMemo(() => {
     const rows = matrix?.skills;
     return Array.isArray(rows) ? rows : [];
@@ -102,13 +120,13 @@ export default function SkillMatrix() {
   };
 
   const handleLevelChange = async (skillId, nextLevel) => {
-    if (!canEditMine && !isAdmin) return;
+    if (!canEditMine && !canEditAll) return;
     setSavingSkillId(skillId);
     try {
       const targetUserId = selectedUserId ? Number(selectedUserId) : Number(authUser?.id);
       const isMyView = !selectedUserId || String(targetUserId) === String(authUser?.id);
 
-      if (isAdmin && !isMyView) {
+      if (canEditAll && !isMyView) {
         await upsertUserSkillLevel(targetUserId, skillId, Number(nextLevel));
         await loadMatrix(String(targetUserId));
       } else {
@@ -154,6 +172,29 @@ export default function SkillMatrix() {
       <div className="matrix-filters">
         <div className="filter-item">
           <label>Employee</label>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+            <input
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="Search employee (name / emp id / email)"
+              style={{ minWidth: 260, flex: 1 }}
+            />
+            <button type="button" className="add-btn" onClick={() => setAppliedUserSearch(userSearch)}>
+              Search
+            </button>
+            <button
+              type="button"
+              className="add-btn"
+              onClick={() => {
+                setUserSearch('');
+                setAppliedUserSearch('');
+              }}
+            >
+              Clear
+            </button>
+          </div>
+
           <select
             value={selectedUserId}
             onChange={(e) => {
@@ -163,14 +204,16 @@ export default function SkillMatrix() {
             }}
           >
             {authUser?.id ? <option value="">(Me)</option> : null}
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name} ({u.employeeId || u.email})
               </option>
             ))}
           </select>
           <small style={{ opacity: 0.7 }}>
-            {isAdmin ? 'Admin: you can update any selected employee\'s current level.' : 'Note: Only your own levels are editable.'}
+            {canEditAll
+              ? 'Admin/HR: you can update any selected employee\'s current level.'
+              : 'Note: Only your own levels are editable.'}
           </small>
         </div>
       </div>
@@ -227,64 +270,45 @@ export default function SkillMatrix() {
                   const curC = getLevelColor(curLevel, { printFriendly: false });
 
                   const isMineRow = selectedUserId === '' || String(authUser?.id) === String(selectedUserId);
-                  const editable = isAdmin || (canEditMine && isMineRow);
+                  const editable = canEditAll || (canEditMine && isMineRow);
 
                   return (
                     <tr key={skillId || skillName}>
-                      <td>{skillName}</td>
-                      <td>
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            minWidth: 32,
-                            height: 28,
-                            padding: '0 10px',
-                            borderRadius: 999,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 800,
-                            background: reqC.bg,
-                            color: reqC.text,
-                            border: '1px solid rgba(0,0,0,0.18)',
-                          }}
-                        >
-                          {reqLevel}
-                        </span>
+                      <td style={{ fontWeight: 700 }}>{skillName}</td>
+
+                      <td style={{ background: reqC.bg, color: reqC.text, textAlign: 'center', fontWeight: 700 }}>
+                        {reqLevel}
                       </td>
-                      <td>
+
+                      <td
+                        style={{ background: curC.bg, color: curC.text, textAlign: 'center', fontWeight: 700 }}
+                        title={editable ? 'Click to edit current level' : ''}
+                      >
                         {editable ? (
                           <select
+                            value={curLevel}
                             disabled={savingSkillId === skillId}
-                            value={current}
                             onChange={(e) => handleLevelChange(skillId, e.target.value)}
+                            style={{
+                              width: '100%',
+                              border: 'none',
+                              background: 'transparent',
+                              color: curC.text,
+                              fontWeight: 800,
+                            }}
                           >
                             {[0, 1, 2, 3, 4].map((lvl) => (
-                              <option key={lvl} value={lvl}>
+                              <option key={lvl} value={lvl} style={{ color: '#000' }}>
                                 {lvl}
                               </option>
                             ))}
                           </select>
                         ) : (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              minWidth: 32,
-                              height: 28,
-                              padding: '0 10px',
-                              borderRadius: 999,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              background: curC.bg,
-                              color: curC.text,
-                              border: '1px solid rgba(0,0,0,0.18)',
-                            }}
-                          >
-                            {curLevel}
-                          </span>
+                          curLevel
                         )}
                       </td>
-                      <td>{gap}</td>
+
+                      <td style={{ textAlign: 'center', fontWeight: 800 }}>{gap}</td>
                     </tr>
                   );
                 })

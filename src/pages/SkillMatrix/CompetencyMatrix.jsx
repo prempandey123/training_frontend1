@@ -24,9 +24,16 @@ export default function CompetencyMatrix() {
   const [error, setError] = useState('');
   const [printFriendly, setPrintFriendly] = useState(true);
 
+  // Employee dropdown search (explicit apply)
+  const [userSearch, setUserSearch] = useState('');
+  const [appliedUserSearch, setAppliedUserSearch] = useState('');
+
   const authUser = getAuthUser();
   const canEditMine = Boolean(authUser?.id);
-  const isAdmin = String(authUser?.role || '').toUpperCase().includes('ADMIN');
+  const roleStr = String(authUser?.role || '').toUpperCase();
+  const isAdmin = roleStr.includes('ADMIN');
+  const isHR = roleStr.includes('HR');
+  const canEditAll = isAdmin || isHR;
 
   async function loadUsers() {
     try {
@@ -73,6 +80,17 @@ export default function CompetencyMatrix() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users]);
 
+  const filteredUsers = useMemo(() => {
+    const term = appliedUserSearch.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter((u) => {
+      const name = String(u?.name || '').toLowerCase();
+      const empId = String(u?.employeeId || '').toLowerCase();
+      const email = String(u?.email || '').toLowerCase();
+      return name.includes(term) || empId.includes(term) || email.includes(term);
+    });
+  }, [users, appliedUserSearch]);
+
   const skillRows = useMemo(() => {
     const rows = matrix?.skills;
     return Array.isArray(rows) ? rows : [];
@@ -103,13 +121,13 @@ export default function CompetencyMatrix() {
   };
 
   const handleLevelChange = async (skillId, nextLevel) => {
-    if (!canEditMine && !isAdmin) return;
+    if (!canEditMine && !canEditAll) return;
     setSavingSkillId(skillId);
     try {
       const targetUserId = selectedUserId ? Number(selectedUserId) : Number(authUser?.id);
       const isMyView = !selectedUserId || String(targetUserId) === String(authUser?.id);
 
-      if (isAdmin && !isMyView) {
+      if (canEditAll && !isMyView) {
         await upsertUserSkillLevel(targetUserId, skillId, Number(nextLevel));
         await loadMatrix(String(targetUserId));
       } else {
@@ -155,6 +173,28 @@ export default function CompetencyMatrix() {
       <div className="matrix-filters">
         <div className="filter-item">
           <label>Employee</label>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+            <input
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="Search employee (name / emp id / email)"
+              style={{ minWidth: 260, flex: 1 }}
+            />
+            <button type="button" className="add-btn" onClick={() => setAppliedUserSearch(userSearch)}>
+              Search
+            </button>
+            <button
+              type="button"
+              className="add-btn"
+              onClick={() => {
+                setUserSearch('');
+                setAppliedUserSearch('');
+              }}
+            >
+              Clear
+            </button>
+          </div>
           <select
             value={selectedUserId}
             onChange={(e) => {
@@ -164,15 +204,15 @@ export default function CompetencyMatrix() {
             }}
           >
             {authUser?.id ? <option value="">(Me)</option> : null}
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name} ({u.employeeId || u.email})
               </option>
             ))}
           </select>
           <small style={{ opacity: 0.7 }}>
-            {isAdmin
-              ? 'Admin: you can update any selected employee\'s current level.'
+            {canEditAll
+              ? 'Admin/HR: you can update any selected employee\'s current level.'
               : 'Note: Only your own levels are editable (as per rules).'}
           </small>
         </div>
