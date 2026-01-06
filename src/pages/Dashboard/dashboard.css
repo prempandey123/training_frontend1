@@ -213,6 +213,10 @@
 .kpi-req::after {
   background: linear-gradient(90deg, rgba(168, 85, 247, 1), rgba(246, 201, 69, 1));
 }
+.kpi-comp::after {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 1), rgba(17, 24, 39, 0.85));
+}
+
 
 .kpi-cal::after {
   background: linear-gradient(90deg, rgba(244, 63, 94, 1), rgba(17, 24, 39, 0.85));
@@ -534,12 +538,23 @@
 }
 
 .bar-chart {
+  position: relative;
   display: flex;
   gap: 10px;
   align-items: flex-end;
   height: 260px;
   padding: 8px 2px;
   overflow-x: auto;
+  background-image: linear-gradient(to top, rgba(17, 24, 39, 0.06) 1px, transparent 1px);
+  background-size: 100% 52px;
+  border-radius: 16px;
+}
+
+.graph-total {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 700;
 }
 
 .bar-col {

@@ -6,7 +6,12 @@ import './dashboard.css';
 import { getAuthUser } from '../../utils/auth';
 
 function parseTimeRangeToHours(timeRange) {
-  // Supports: "10:00 - 12:00", "10:00-12:00"
+  // Supports (examples):
+  // - "10:00 - 12:00"
+  // - "10:00-12:00"
+  // - "10:00 AM - 12:30 PM"
+  // - "10 AM - 1 PM"
+  // - "10:00 am-12:00 pm"
   if (!timeRange || typeof timeRange !== 'string') return 0;
 
   const parts = timeRange.split('-').map((s) => s.trim()).filter(Boolean);
@@ -14,20 +19,42 @@ function parseTimeRangeToHours(timeRange) {
 
   const [startStr, endStr] = parts;
 
-  const toMinutes = (hhmm) => {
-    const m = String(hhmm).match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+  const toMinutes = (raw) => {
+    const s = String(raw || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toUpperCase();
+
+    // 24h: HH:mm
+    let m = s.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (m) return Number(m[1]) * 60 + Number(m[2]);
+
+    // 12h: H(:mm)? (AM|PM)
+    m = s.match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/);
     if (!m) return null;
-    return Number(m[1]) * 60 + Number(m[2]);
+    let hh = Number(m[1]);
+    const mm = Number(m[2] || 0);
+    const ap = m[3];
+    if (hh < 1 || hh > 12) return null;
+    if (ap === 'AM') {
+      if (hh === 12) hh = 0;
+    } else {
+      if (hh !== 12) hh += 12;
+    }
+    return hh * 60 + mm;
   };
 
   const startMin = toMinutes(startStr);
   const endMin = toMinutes(endStr);
   if (startMin == null || endMin == null) return 0;
 
-  const diff = endMin - startMin;
-  if (diff <= 0) return 0;
+  let diff = endMin - startMin;
 
-  return diff / 60;
+  // If training crosses midnight (rare), treat as next day.
+  if (diff < 0) diff += 24 * 60;
+
+  if (diff <= 0) return 0;
+  return Math.round((diff / 60) * 100) / 100;
 }
 
 function getMonthLabel(dateStr) {
@@ -66,6 +93,7 @@ export default function Dashboard() {
   const [loadingTraining, setLoadingTraining] = useState(true);
   const [trainings, setTrainings] = useState([]);
   const [totalUpcomingHours, setTotalUpcomingHours] = useState(0);
+  const [totalYearHours, setTotalYearHours] = useState(0);
   const [monthWiseHours, setMonthWiseHours] = useState([]); // [{ month, hours }]
 
   // ✅ Recent activities (latest audit logs)
@@ -155,25 +183,63 @@ export default function Dashboard() {
 
         const now = new Date();
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const curYear = now.getFullYear();
 
         let upcomingTotal = 0;
+        let yearTotal = 0;
         const monthMap = new Map(); // key yyyy-mm -> {monthLabel, hours}
+
+        const getStartDateTime = (dateStr, timeRange) => {
+          if (!dateStr) return new Date('invalid');
+          const parts = String(timeRange || '')
+            .split('-')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const startRaw = parts[0] || '';
+
+          const s = startRaw
+            .trim()
+            .replace(/\s+/g, ' ')
+            .toUpperCase();
+
+          // 24h HH:mm
+          let m = s.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+          if (m) return new Date(`${dateStr}T${String(m[1]).padStart(2, '0')}:${m[2]}:00`);
+
+          // 12h H(:mm)? AM|PM
+          m = s.match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/);
+          if (m) {
+            let hh = Number(m[1]);
+            const mm = Number(m[2] || 0);
+            const ap = m[3];
+            if (hh >= 1 && hh <= 12) {
+              if (ap === 'AM') {
+                if (hh === 12) hh = 0;
+              } else {
+                if (hh !== 12) hh += 12;
+              }
+              return new Date(`${dateStr}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00`);
+            }
+          }
+
+          // fallback: midnight
+          return new Date(`${dateStr}T00:00:00`);
+        };
 
         for (const t of list) {
           const date = t?.date; // "YYYY-MM-DD"
           const time = t?.time; // "HH:mm - HH:mm"
           if (!date) continue;
 
-          let startDt = new Date(date);
-          if (time && typeof time === 'string') {
-            const startPart = time.split('-')[0]?.trim();
-            const m = String(startPart || '').match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
-            if (m) {
-              startDt = new Date(`${date}T${String(m[1]).padStart(2, '0')}:${m[2]}:00`);
-            }
-          }
+          const startDt = getStartDateTime(date, time);
 
           const hours = parseTimeRangeToHours(time);
+
+          // Year-wise total (current year)
+          const dOnly = new Date(date);
+          if (!Number.isNaN(dOnly.getTime()) && dOnly.getFullYear() === curYear) {
+            yearTotal += hours;
+          }
 
           // Month-wise: include all trainings
           const key = yyyymm(date);
@@ -195,11 +261,13 @@ export default function Dashboard() {
           }));
 
         setTotalUpcomingHours(Math.round(upcomingTotal * 10) / 10);
+        setTotalYearHours(Math.round(yearTotal * 10) / 10);
         setMonthWiseHours(sorted);
       })
       .catch((err) => {
         console.error('Failed to load trainings', err?.response?.status, err?.response?.data);
         setTotalUpcomingHours(0);
+        setTotalYearHours(0);
         setMonthWiseHours([]);
         setTodayTrainings([]);
         setTodayIdx(0);
@@ -231,9 +299,10 @@ export default function Dashboard() {
 
   const totalHoursLabel = useMemo(() => {
     if (loadingTraining) return '...';
-    const val = totalUpcomingHours;
+    // Dashboard KPI shows this year's total training hours
+    const val = totalYearHours;
     return `${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)} hrs`;
-  }, [loadingTraining, totalUpcomingHours]);
+  }, [loadingTraining, totalYearHours]);
 
   const graph = useMemo(() => {
     const rows = Array.isArray(trainings) ? trainings : [];
@@ -266,7 +335,8 @@ export default function Dashboard() {
         const v = monthMap.get(key) || { label, hours: 0 };
         bars.push({ label: v.label, value: Math.round(v.hours * 10) / 10 });
       }
-      return { title: `Annual Training Hours (${curYear})`, bars };
+      const total = Math.round(bars.reduce((s, b) => s + Number(b.value || 0), 0) * 10) / 10;
+      return { title: `Annual Training Hours (${curYear})`, bars, total };
     }
 
     if (graphView === 'monthly') {
@@ -274,7 +344,7 @@ export default function Dashboard() {
       const [yStr, mStr] = String(graphMonth || '').split('-');
       const y = Number(yStr);
       const m0 = Number(mStr) - 1;
-      if (!y || Number.isNaN(m0)) return { title: 'Monthly Training Hours', bars: [] };
+      if (!y || Number.isNaN(m0)) return { title: 'Monthly Training Hours', bars: [], total: 0 };
 
       const first = new Date(y, m0, 1);
       const last = new Date(y, m0 + 1, 0);
@@ -314,9 +384,11 @@ export default function Dashboard() {
         weeks.push({ label: v.label, value: Math.round(v.hours * 10) / 10 });
       }
 
+      const total = Math.round(weeks.reduce((s, b) => s + Number(b.value || 0), 0) * 10) / 10;
       return {
         title: `Monthly (Weekly) Training Hours (${first.toLocaleString('en-US', { month: 'long' })} ${y})`,
         bars: weeks,
+        total,
       };
     }
 
@@ -352,9 +424,11 @@ export default function Dashboard() {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
+    const total = Math.round(days.reduce((s, b) => s + Number(b.value || 0), 0) * 10) / 10;
     return {
       title: `Weekly Training Hours (${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()})`,
       bars: days,
+      total,
     };
   }, [trainings, graphView, graphMonth, loadingTraining]);
 
@@ -561,10 +635,7 @@ export default function Dashboard() {
 
         <div
           className="kpi-card kpi-skill clickable"
-          onClick={() => {
-            const t = String(authUser?.employeeType || '').toUpperCase();
-            navigate(t === 'STAFF' ? '/competency-matrix' : '/skill-matrix');
-          }}
+          onClick={() => navigate('/skill-matrix')}
           title="Open Organization Skill Matrix"
         >
           <h3>Skill Matrix (Organization)</h3>
@@ -573,6 +644,19 @@ export default function Dashboard() {
           </span>
           <p className="kpi-hint">Open skill matrix module</p>
         </div>
+
+        <div
+          className="kpi-card kpi-comp clickable"
+          onClick={() => navigate('/competency-matrix')}
+          title="Open Organization Competency Matrix"
+        >
+          <h3>Competency Matrix (Organization)</h3>
+          <span className="kpi-action">
+            View <span aria-hidden>→</span>
+          </span>
+          <p className="kpi-hint">Open competency matrix module</p>
+        </div>
+
 
         <div
           className="kpi-card kpi-req clickable"
@@ -601,6 +685,12 @@ export default function Dashboard() {
           <div>
             <h3>{graph.title}</h3>
             <p>Switch view to see annual, monthly (weekly breakup), or weekly (daily breakup)</p>
+            {!loadingTraining ? (
+              <div className="graph-total">
+                Total: <b>{(graph?.total || 0) % 1 === 0 ? Number(graph?.total || 0).toFixed(0) : Number(graph?.total || 0).toFixed(1)}</b>{' '}
+                hrs
+              </div>
+            ) : null}
           </div>
 
           <div className="graph-controls">
