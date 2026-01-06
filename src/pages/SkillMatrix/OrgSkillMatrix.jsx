@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getOrgSkillMatrix } from '../../api/skillMatrix.api';
 import { getDepartments } from '../../api/departmentApi';
-import { getDesignations } from '../../api/designationApi';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
@@ -42,23 +41,17 @@ export default function OrgSkillMatrix() {
   const [printFriendly, setPrintFriendly] = useState(true);
 
   const [departments, setDepartments] = useState([]);
-  const [designations, setDesignations] = useState([]);
-
   const [departmentId, setDepartmentId] = useState('');
-  const [designationId, setDesignationId] = useState('');
-  const [q, setQ] = useState('');
 
   const [data, setData] = useState({ skills: [], employees: [] });
 
   async function boot() {
     try {
-      const [deps, desigs] = await Promise.all([getDepartments(), getDesignations()]);
+      const deps = await getDepartments();
       setDepartments(Array.isArray(deps) ? deps : []);
-      setDesignations(Array.isArray(desigs) ? desigs : []);
     } catch (e) {
       setDepartments([]);
-      setDesignations([]);
-      setErr(e?.response?.data?.message || e?.message || 'Failed to load filters');
+      setErr(e?.response?.data?.message || e?.message || 'Failed to load departments');
     }
   }
 
@@ -68,8 +61,6 @@ export default function OrgSkillMatrix() {
     try {
       const res = await getOrgSkillMatrix({
         departmentId: departmentId || undefined,
-        designationId: designationId || undefined,
-        q: q || undefined,
         employeeType: 'WORKER',
       });
       setData(res || { skills: [], employees: [] });
@@ -99,7 +90,7 @@ export default function OrgSkillMatrix() {
     const t = setTimeout(() => load(), 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, designationId, q]);
+  }, [departmentId]);
 
   const skills = useMemo(() => (Array.isArray(data?.skills) ? data.skills : []), [data]);
   const employees = useMemo(() => (Array.isArray(data?.employees) ? data.employees : []), [data]);
@@ -171,12 +162,6 @@ export default function OrgSkillMatrix() {
           <span className="legend-pill tone-3">3</span>
           <span className="legend-pill tone-4">4</span>
           <span className="legend-pill tone-na">N/A</span>
-
-          {/* Optional: % Legend (agar chaho to keep) */}
-          {/* <span className="legend-pill pct-red">&lt;45%</span>
-          <span className="legend-pill pct-orange">45–55%</span>
-          <span className="legend-pill pct-yellow">55–65%</span>
-          <span className="legend-pill pct-green">65%+</span> */}
         </div>
       </div>
 
@@ -209,6 +194,7 @@ export default function OrgSkillMatrix() {
         </button>
       </div>
 
+      {/* ONLY DEPARTMENT FILTER */}
       <div className="org-filters">
         <div className="filter">
           <label>Department</label>
@@ -222,27 +208,6 @@ export default function OrgSkillMatrix() {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="filter">
-          <label>Designation</label>
-          <select value={designationId} onChange={(e) => setDesignationId(e.target.value)}>
-            <option value="">All</option>
-            {designations.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.designationName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter grow">
-          <label>Search</label>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Name / Employee ID / Email"
-          />
         </div>
       </div>
 
@@ -295,10 +260,7 @@ export default function OrgSkillMatrix() {
                       </td>
 
                       <td className="sticky-left-3 col-score">
-                        <div
-                          className={`score-ring ${pctClass}`}
-                          title={`${pct}% completion`}
-                        >
+                        <div className={`score-ring ${pctClass}`} title={`${pct}% completion`}>
                           {pct}%
                         </div>
                       </td>
@@ -310,10 +272,7 @@ export default function OrgSkillMatrix() {
 
                         return (
                           <td key={c.skillId} className="col-skill">
-                            <div
-                              className={`cell ${tone}`}
-                              title={`Current ${cur} / Required ${req}`}
-                            >
+                            <div className={`cell ${tone}`} title={`Current ${cur} / Required ${req}`}>
                               <span className="cell-main">{cur}</span>
                               <span className="cell-sep">/</span>
                               <span className="cell-sub">{req}</span>

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getOrgSkillMatrix } from '../../api/skillMatrix.api';
 import { getDepartments } from '../../api/departmentApi';
-import { getDesignations } from '../../api/designationApi';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
@@ -9,7 +8,7 @@ import './orgSkillMatrix.css';
 
 /**
  * Competency Matrix (Org / Department-wise)
- * Same heatmap rendering as OrgSkillMatrix, but only shows STAFF employees.
+ * Only shows STAFF employees
  */
 
 function cellTone(required, current) {
@@ -38,23 +37,17 @@ export default function OrgCompetencyMatrix() {
   const [printFriendly, setPrintFriendly] = useState(true);
 
   const [departments, setDepartments] = useState([]);
-  const [designations, setDesignations] = useState([]);
-
   const [departmentId, setDepartmentId] = useState('');
-  const [designationId, setDesignationId] = useState('');
-  const [q, setQ] = useState('');
 
   const [data, setData] = useState({ skills: [], employees: [] });
 
   async function boot() {
     try {
-      const [deps, desigs] = await Promise.all([getDepartments(), getDesignations()]);
+      const deps = await getDepartments();
       setDepartments(Array.isArray(deps) ? deps : []);
-      setDesignations(Array.isArray(desigs) ? desigs : []);
     } catch (e) {
       setDepartments([]);
-      setDesignations([]);
-      setErr(e?.response?.data?.message || e?.message || 'Failed to load filters');
+      setErr(e?.response?.data?.message || e?.message || 'Failed to load departments');
     }
   }
 
@@ -63,9 +56,7 @@ export default function OrgCompetencyMatrix() {
     setErr('');
     try {
       const res = await getOrgSkillMatrix({
-        departmentId: departmentId || undefined,
-        designationId: designationId || undefined,
-        q: q || undefined,
+        departmentId,
         employeeType: 'STAFF',
       });
       setData(res || { skills: [], employees: [] });
@@ -79,9 +70,7 @@ export default function OrgCompetencyMatrix() {
 
   useEffect(() => {
     boot();
-    // Department must be selected first
     setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -93,8 +82,7 @@ export default function OrgCompetencyMatrix() {
 
     const t = setTimeout(() => load(), 250);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, designationId, q]);
+  }, [departmentId]);
 
   const skills = useMemo(() => (Array.isArray(data?.skills) ? data.skills : []), [data]);
   const employees = useMemo(() => (Array.isArray(data?.employees) ? data.employees : []), [data]);
@@ -137,16 +125,12 @@ export default function OrgCompetencyMatrix() {
         </div>
 
         <div className="org-legend">
-          {canScrollX ? (
+          {canScrollX && (
             <div className="org-xscroll">
-              <button type="button" className="xbtn" onClick={() => scrollByX(-420)} title="Scroll left">
-                ◀
-              </button>
-              <button type="button" className="xbtn" onClick={() => scrollByX(420)} title="Scroll right">
-                ▶
-              </button>
+              <button type="button" className="xbtn" onClick={() => scrollByX(-420)}>◀</button>
+              <button type="button" className="xbtn" onClick={() => scrollByX(420)}>▶</button>
             </div>
-          ) : null}
+          )}
 
           <span className="legend-pill tone-0">0</span>
           <span className="legend-pill tone-1">1</span>
@@ -162,12 +146,11 @@ export default function OrgCompetencyMatrix() {
           type="button"
           className={`org-chip ${printFriendly ? 'active' : ''}`}
           onClick={() => setPrintFriendly((v) => !v)}
-          title="Softer colors + grey borders (best for printing)"
         >
           Print-friendly
         </button>
 
-        <button type="button" className="org-chip" onClick={exportPdf} title="Opens print dialog — choose Save as PDF">
+        <button type="button" className="org-chip" onClick={exportPdf}>
           Export PDF
         </button>
 
@@ -175,46 +158,25 @@ export default function OrgCompetencyMatrix() {
           type="button"
           className={`org-chip ${compact ? 'active' : ''}`}
           onClick={() => setCompact((v) => !v)}
-          title="More competencies visible on screen"
         >
           Compact
         </button>
       </div>
 
+      {/* ONLY DEPARTMENT FILTER */}
       <div className="org-filters">
         <div className="filter">
           <label>Department</label>
           <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-            <option value="" disabled>
-              Select
-            </option>
+            <option value="" disabled>Select</option>
             {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
+              <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
-        </div>
-
-        <div className="filter">
-          <label>Designation</label>
-          <select value={designationId} onChange={(e) => setDesignationId(e.target.value)}>
-            <option value="">All</option>
-            {designations.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.title || d.name || d.designationName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter grow">
-          <label>Search</label>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name / Employee ID / Email" />
         </div>
       </div>
 
-      {err ? <div className="org-alert">⚠ {err}</div> : null}
+      {err && <div className="org-alert">⚠ {err}</div>}
 
       {!departmentId ? (
         <div className="org-card" style={{ padding: 16 }}>
@@ -223,71 +185,61 @@ export default function OrgCompetencyMatrix() {
       ) : loading ? (
         <div className="org-card">Loading…</div>
       ) : (
-        <div className="org-card org-table-wrap" ref={tableWrapRef} role="region" aria-label="Organization competency matrix" tabIndex={0}>
-          <table className="org-matrix-table" aria-label="Org competency matrix table">
+        <div className="org-card org-table-wrap" ref={tableWrapRef}>
+          <table className="org-matrix-table">
             <thead>
               <tr>
                 <th className="sticky-left col-emp">Employee</th>
                 <th className="sticky-left-2 col-meta">Dept / Role</th>
                 <th className="sticky-left-3 col-score">%</th>
                 {skills.map((s) => (
-                  <th key={s.id} className="col-skill" title={s.name}>
-                    <span className="skill-header">{s.name}</span>
-                  </th>
+                  <th key={s.id} className="col-skill">{s.name}</th>
                 ))}
               </tr>
             </thead>
 
             <tbody>
-              {employees.length ? (
-                employees.map((emp) => {
-                  const pct = clampPercent(emp.completionPercentage);
-                  const pctClass = percentTone(pct);
+              {employees.length ? employees.map((emp) => {
+                const pct = clampPercent(emp.completionPercentage);
+                const pctClass = percentTone(pct);
 
-                  return (
-                    <tr key={emp.id}>
-                      <td className="sticky-left col-emp">
-                        <div className="emp-name">{emp.name}</div>
-                        <div className="emp-sub">{emp.employeeId || emp.email}</div>
-                      </td>
+                return (
+                  <tr key={emp.id}>
+                    <td className="sticky-left col-emp">
+                      <div className="emp-name">{emp.name}</div>
+                      <div className="emp-sub">{emp.employeeId || emp.email}</div>
+                    </td>
 
-                      <td className="sticky-left-2 col-meta">
-                        <div className="emp-meta">{emp.department || '—'}</div>
-                        <div className="emp-sub">{emp.designation || '—'}</div>
-                      </td>
+                    <td className="sticky-left-2 col-meta">
+                      <div className="emp-meta">{emp.department || '—'}</div>
+                      <div className="emp-sub">{emp.designation || '—'}</div>
+                    </td>
 
-                      <td className="sticky-left-3 col-score">
-                        <div className={`score-ring ${pctClass}`} title={`${pct}% completion`}>
-                          {pct}%
-                        </div>
-                      </td>
+                    <td className="sticky-left-3 col-score">
+                      <div className={`score-ring ${pctClass}`}>{pct}%</div>
+                    </td>
 
-                      {emp.cells.map((c) => {
-                        const tone = cellTone(4, c.currentLevel);
-                        const cur = clampLevel(c.currentLevel);
-                        const req = 4;
+                    {emp.cells.map((c) => {
+                      const cur = clampLevel(c.currentLevel);
+                      const req = 4;
+                      const tone = cellTone(req, cur);
 
-                        // Keep SAME rendering as Skill Matrix (All): Current/Required
-                        // If required is 0 => N/A
-                        const na = req === 0;
-
-                        return (
-                          <td key={c.skillId} className="col-skill">
-                            <div className={`cell ${tone}`} title={na ? 'N/A' : `Current ${cur} / Required ${req}`}>
-                              <span className="cell-main">{na ? '-' : cur}</span>
-                              {na ? null : <span className="cell-sep">/</span>}
-                              {na ? null : <span className="cell-sub">{req}</span>}
-                            </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })
-              ) : (
+                      return (
+                        <td key={c.skillId} className="col-skill">
+                          <div className={`cell ${tone}`}>
+                            <span className="cell-main">{cur}</span>
+                            <span className="cell-sep">/</span>
+                            <span className="cell-sub">{req}</span>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              }) : (
                 <tr>
                   <td colSpan={3 + skills.length} className="empty">
-                    No employees found for current filters.
+                    No employees found.
                   </td>
                 </tr>
               )}
