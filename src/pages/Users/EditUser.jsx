@@ -72,7 +72,7 @@ export default function EditUser() {
             skillId: skill.id,
             skillName: skill.name,
             // 🔥 HR must set per-user required level (no designation defaults)
-            requiredLevel: userReq === null || userReq === undefined ? '' : Number(userReq),
+            requiredLevel: 4,
           };
         }).filter((r) => r.skillId);
         setRequiredLevels(rows);
@@ -106,7 +106,7 @@ export default function EditUser() {
           return {
             skillId: skill.id,
             skillName: skill.name,
-            requiredLevel: userReq === null || userReq === undefined ? '' : Number(userReq),
+            requiredLevel: 4,
           };
         }).filter((r) => r.skillId);
         setRequiredLevels(rows);
@@ -161,16 +161,6 @@ export default function EditUser() {
       payload.password = form.password;
     }
 
-    // ✅ Force HR to set required level for every skill for this user
-    if (requiredLevels.length > 0) {
-      const missing = requiredLevels.filter((r) => r.requiredLevel === '' || r.requiredLevel === null || r.requiredLevel === undefined);
-      if (missing.length > 0) {
-        alert('Please set required level for all skills before saving.');
-        return;
-      }
-    }
-
-
     try {
       await updateUser(id, payload);
 
@@ -180,7 +170,7 @@ export default function EditUser() {
           id,
           requiredLevels.map((r) => ({
             skillId: r.skillId,
-            requiredLevel: Number(r.requiredLevel),
+            requiredLevel: 4,
           })),
         );
       }
@@ -354,16 +344,8 @@ export default function EditUser() {
                     <tr key={r.skillId}>
                       <td style={{ padding: 8 }}>{r.skillName}</td>
                       <td style={{ padding: 8 }}>
-                        <select
-                          value={r.requiredLevel}
-                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
-                        >
-                          <option value="">Select</option>
-                          {[0, 1, 2, 3, 4].map((v) => (
-                            <option key={v} value={v}>
-                              {v}
-                            </option>
-                          ))}
+                        <select value={ 4 } disabled>
+                          <option value="4">4</option>
                         </select>
                       </td>
                     </tr>

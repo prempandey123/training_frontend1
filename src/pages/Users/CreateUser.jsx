@@ -56,7 +56,7 @@ export default function CreateUser() {
             skillId: skill.id,
             skillName: skill.name,
             // 🔥 HR must set per-user required level (no designation defaults)
-            requiredLevel: '',
+            requiredLevel: 4,
           };
         });
         setRequiredLevels(rows);
@@ -100,14 +100,7 @@ export default function CreateUser() {
       return;
     }
 
-    // ✅ Force HR to set required level for every skill
-    if (requiredLevels.length > 0) {
-      const missing = requiredLevels.filter((r) => r.requiredLevel === '' || r.requiredLevel === null || r.requiredLevel === undefined);
-      if (missing.length > 0) {
-        alert('Please set required level for all skills before saving.');
-        return;
-      }
-    }
+    // 🔒 Required Level is fixed to 4 (no need to set per skill)
 
     setLoading(true);
     try {
@@ -119,7 +112,7 @@ export default function CreateUser() {
           created.id,
           requiredLevels.map((r) => ({
             skillId: r.skillId,
-            requiredLevel: Number(r.requiredLevel),
+            requiredLevel: 4,
           })),
         );
       }
@@ -291,7 +284,7 @@ export default function CreateUser() {
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left', padding: 8 }}>Skill</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Required Level (0-4)</th>
+                    <th style={{ textAlign: 'left', padding: 8 }}>Required Level (Fixed: 4)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -299,16 +292,8 @@ export default function CreateUser() {
                     <tr key={r.skillId}>
                       <td style={{ padding: 8 }}>{r.skillName}</td>
                       <td style={{ padding: 8 }}>
-                        <select
-                          value={r.requiredLevel}
-                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
-                        >
-                          <option value="">Select</option>
-                          {[0, 1, 2, 3, 4].map((v) => (
-                            <option key={v} value={v}>
-                              {v}
-                            </option>
-                          ))}
+                        <select value={ 4 } disabled>
+                          <option value="4">4</option>
                         </select>
                       </td>
                     </tr>

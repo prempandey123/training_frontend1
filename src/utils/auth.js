@@ -55,6 +55,8 @@ export const login = async (email, password) => {
     if (payload?.sub) {
       const me = await getUserById(payload.sub);
       baseUser.employeeType = me?.employeeType || me?.employee_type || me?.employee_type_name;
+      // Some backends may not include role in JWT payload
+      if (!baseUser.role) baseUser.role = me?.role || me?.userRole;
       if (!baseUser.name) baseUser.name = me?.name;
     }
   } catch {

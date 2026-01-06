@@ -70,7 +70,7 @@ export function buildOrgMatrixPrintHtml({
             .map((s) => {
               const c = (emp.cells || []).find((x) => String(x.skillId) === String(s.id));
               const cur = clampLevel(c?.currentLevel);
-              const req = clampLevel(c?.requiredLevel);
+              const req = 4;
 
               if (!req) {
                 const naC = getNaColor({ printFriendly });

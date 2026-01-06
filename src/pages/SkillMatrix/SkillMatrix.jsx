@@ -260,7 +260,7 @@ export default function SkillMatrix() {
                 skillRows.map((s) => {
                   const skillId = s.skillId ?? s.skill?.id ?? s.id;
                   const skillName = s.skillName ?? s.skill?.name ?? s.name ?? 'Skill';
-                  const required = s.requiredLevel ?? s.required_level ?? s.required ?? 0;
+                  const required = 4; // 🔒 fixed required level
                   const current = s.currentLevel ?? s.current_level ?? s.current ?? 0;
                   const gap = s.gap ?? (Number(required) - Number(current));
 

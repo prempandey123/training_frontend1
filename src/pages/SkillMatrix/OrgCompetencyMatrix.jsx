@@ -263,9 +263,9 @@ export default function OrgCompetencyMatrix() {
                       </td>
 
                       {emp.cells.map((c) => {
-                        const tone = cellTone(c.requiredLevel, c.currentLevel);
+                        const tone = cellTone(4, c.currentLevel);
                         const cur = clampLevel(c.currentLevel);
-                        const req = clampLevel(c.requiredLevel);
+                        const req = 4;
 
                         // Keep SAME rendering as Skill Matrix (All): Current/Required
                         // If required is 0 => N/A

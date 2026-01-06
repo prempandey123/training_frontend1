@@ -69,7 +69,7 @@ export function generateMockOrgSkillMatrix({ employeeCount = 50, skillCount = 20
 
     const cells = skills.map((s) => {
       // Required level pattern: more variance but mostly 1..3; sometimes 0 (N/A)
-      const requiredLevel = r() < 0.12 ? 0 : 1 + Math.floor(r() * 3);
+      const requiredLevel = 4;
 
       // Current level biased slightly below required to show heatmap variety
       let currentLevel;

@@ -56,7 +56,7 @@ export function buildUserMatrixPrintHtml({
   const body = (rows || [])
     .map((r) => {
       const skill = esc(r.skillName || r.name || 'Skill');
-      const req = clampLevel(r.requiredLevel ?? r.required ?? 0);
+      const req = 4;
       const cur = clampLevel(r.currentLevel ?? r.current ?? 0);
       const gap = Number(r.gap ?? req - cur);
 

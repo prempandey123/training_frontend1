@@ -304,9 +304,9 @@ export default function OrgSkillMatrix() {
                       </td>
 
                       {emp.cells.map((c) => {
-                        const tone = cellTone(c.requiredLevel, c.currentLevel);
+                        const tone = cellTone(4, c.currentLevel);
                         const cur = clampLevel(c.currentLevel);
-                        const req = clampLevel(c.requiredLevel);
+                        const req = 4;
 
                         return (
                           <td key={c.skillId} className="col-skill">
