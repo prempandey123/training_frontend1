@@ -241,6 +241,7 @@ const exportExcel = async () => {
           <thead>
             <tr>
               <th>Topic</th>
+              <th>Training Type</th>
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
@@ -253,12 +254,13 @@ const exportExcel = async () => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="8" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="9" className="no-data">Loading trainings...</td></tr>
             ) : upcomingTrainings.length === 0 ? (
-              <tr><td colSpan="8" className="no-data">No upcoming trainings</td></tr>
+              <tr><td colSpan="9" className="no-data">No upcoming trainings</td></tr>
             ) : upcomingTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
+                <td>{t.trainingType || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{t.time || '—'}</td>
                 <td>{t.department || '—'}</td>
@@ -300,6 +302,7 @@ const exportExcel = async () => {
           <thead>
             <tr>
               <th>Topic</th>
+              <th>Training Type</th>
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
@@ -317,6 +320,7 @@ const exportExcel = async () => {
             ) : previousTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
+                <td>{t.trainingType || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{t.time || '—'}</td>
                 <td>{t.department || '—'}</td>

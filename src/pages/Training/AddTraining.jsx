@@ -16,6 +16,7 @@ export default function AddTraining() {
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
   const [status, setStatus] = useState('PENDING');
+  const [trainingType, setTrainingType] = useState('Internal');
   const [trainer, setTrainer] = useState('');
 
   /* SKILL SEARCH */
@@ -206,6 +207,7 @@ export default function AddTraining() {
       skills: selectedSkill?.name ? [selectedSkill.name] : [],
       assignedEmployees,
       status,
+      trainingType,
       trainer: (trainer || "").trim() || undefined,
     };
 
@@ -262,6 +264,17 @@ export default function AddTraining() {
                   required
                 />
               </div>
+
+              <div className="form-group">
+                <label>Training Type *</label>
+                <select value={trainingType} onChange={(e) => setTrainingType(e.target.value)} required>
+                  <option value="Internal">Internal</option>
+                  <option value="External">External</option>
+                  <option value="Online">Online</option>
+                  <option value="Internal In house">Internal In house</option>
+                </select>
+              </div>
+
               <div className="form-group">
                 <label>From *</label>
                 <input
