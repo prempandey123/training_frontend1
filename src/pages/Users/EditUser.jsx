@@ -5,11 +5,16 @@ import { getDesignations } from '../../api/designationApi';
 import { getUserById, updateUser } from '../../api/user.api';
 import { getSkillsByDesignation } from '../../api/designationSkill.api';
 import { bulkSetRequiredLevels, getUserSkillLevels } from '../../api/userSkillLevel.api';
+import { getAuthUser } from '../../utils/auth';
 import './createUser.css';
 
 export default function EditUser() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const authUser = getAuthUser();
+  const role = String(authUser?.role || '').toUpperCase();
+  const isHOD = role === 'HOD';
+  const myDeptId = Number(authUser?.departmentId);
 
   const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
@@ -42,6 +47,13 @@ export default function EditUser() {
           getDesignations(),
         ]);
 
+        // 🔒 Frontend safety: HOD can edit only users within own department
+        const userDeptId = Number(user?.department?.id);
+        if (isHOD && myDeptId && userDeptId && userDeptId !== myDeptId) {
+          alert('You can edit only employees within your department');
+          navigate('/users');
+          return;
+        }
         setDepartments(deptData);
         setDesignations(desigData);
 
@@ -149,13 +161,17 @@ export default function EditUser() {
     const payload = {
       name: form.name,
       mobile: form.mobile,
-      departmentId: form.departmentId,
       designationId: form.designationId,
-      role: form.role,
       employeeType: form.employeeType,
       isActive: form.isActive,
       dateOfJoining: form.dateOfJoining,
     };
+
+    // HOD: department/role are fixed; backend also enforces this
+    if (!isHOD) {
+      payload.departmentId = form.departmentId;
+      payload.role = form.role;
+    }
 
     if (form.password?.trim()) {
       payload.password = form.password;
@@ -237,21 +253,31 @@ export default function EditUser() {
           <h3>Organization Details</h3>
 
           <div className="form-grid">
-            <div>
-              <label>Department</label>
-              <select
-                name="departmentId"
-                value={form.departmentId}
-                onChange={handleChange}
-              >
-                <option value="">Select Department</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!isHOD ? (
+              <div>
+                <label>Department</label>
+                <select
+                  name="departmentId"
+                  value={form.departmentId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label>Department</label>
+                <input
+                  value={departments.find((d) => d.id === form.departmentId)?.name || ''}
+                  disabled
+                />
+              </div>
+            )}
 
             <div>
               <label>Designation</label>
@@ -269,19 +295,26 @@ export default function EditUser() {
               </select>
             </div>
 
-            <div>
-              <label>Role</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-              >
-                <option value="EMPLOYEE">Employee</option>
-                <option value="HOD">HOD</option>
-                <option value="HRD">HR</option>
-                <option value="ADMIN">Admin</option>
-              </select>
-            </div>
+            {!isHOD ? (
+              <div>
+                <label>Role</label>
+                <select
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                >
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="HOD">HOD</option>
+                  <option value="HRD">HR</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label>Role</label>
+                <input value={form.role || ''} disabled />
+              </div>
+            )}
 
             <div>
               <label>Worker / Staff *</label>

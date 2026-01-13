@@ -12,6 +12,8 @@ export default function Sidebar() {
   // ✅ Admin should always see ALL matrix views (Skill + Competency, Single + Org)
   // (Some setups use SUPER_ADMIN, ADMIN_USER, etc.)
   const isAdmin = role.includes('ADMIN');
+  const isHR = role.includes('HR');
+  const isHOD = role === 'HOD';
 
   // ✅ Show matrices based on role/employeeType:
   // - ADMIN -> show both (Skill + Competency)
@@ -31,24 +33,43 @@ export default function Sidebar() {
     navigate('/login');
   };
 
-  const coreLinks = [
-    { to: '/', label: 'Dashboard', end: true },
-    { to: '/my-profile', label: 'My Profile' },
-  ];
+  // For HOD: show only Skills & Designations (per requirement)
+  const coreLinks = isHOD
+    ? []
+    : [
+        { to: '/', label: 'Dashboard', end: true },
+        { to: '/my-profile', label: 'My Profile' },
+      ];
 
   const managementLinks = [
-    { to: '/users', label: 'User Management' },
-    { to: '/users/update-password', label: 'Update User Password' },
+    ...(isAdmin || isHR
+      ? [
+          { to: '/users', label: 'User Management' },
+          { to: '/users/update-password', label: 'Update User Password' },
+          { to: '/departments', label: 'Department Management' },
+        ]
+      : []),
+    ...(isHOD ? [{ to: '/users', label: 'Users (My Dept)' }] : []),
+    ...(isAdmin || isHR || isHOD
+      ? [
+          { to: '/designations', label: 'Designations' },
+          { to: '/skills', label: 'Skills' },
+        ]
+      : []),
   ];
 
-  const trainingLinks = [
-    { to: '/calendar', label: 'Training Calendar' },
-    { to: '/training', label: 'Training' },
-    { to: '/attendance', label: 'Attendance' },
-    { to: '/training-requirements', label: 'Training Requirements' },
-  ];
+  const trainingLinks = isHOD
+    ? []
+    : [
+        { to: '/calendar', label: 'Training Calendar' },
+        { to: '/training', label: 'Training' },
+        { to: '/attendance', label: 'Attendance' },
+        { to: '/training-requirements', label: 'Training Requirements' },
+      ];
 
-  const matrixLinks = [
+  const matrixLinks = isHOD
+    ? []
+    : [
     ...(showWorkerMatrix
       ? [
           { to: '/skill-matrix', label: 'SKILL MATRIX (SINGLE)' },
@@ -63,12 +84,14 @@ export default function Sidebar() {
       : []),
   ];
 
-  const insightsLinks = [
-    { to: '/skill-gap', label: 'Skill Gap' },
-    { to: '/reports', label: 'Reports' },
-  ];
+  const insightsLinks = isHOD
+    ? []
+    : [
+        { to: '/skill-gap', label: 'Skill Gap' },
+        { to: '/reports', label: 'Reports' },
+      ];
 
-  const systemLinks = [{ to: '/audit-logs', label: 'Audit Logs' }];
+  const systemLinks = isHOD ? [] : [{ to: '/audit-logs', label: 'Audit Logs' }];
 
   const Section = ({ title, links }) => {
     if (!links?.length) return null;

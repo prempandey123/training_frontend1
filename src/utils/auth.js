@@ -46,6 +46,7 @@ export const login = async (email, password) => {
     id: payload.sub,
     email: payload.email,
     role: payload.role,
+    departmentId: payload.departmentId,
     name: payload.name, // might be undefined
     employeeType: undefined,
   };

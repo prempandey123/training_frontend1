@@ -1,10 +1,15 @@
 import './userList.css';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api/api';
+import { getAuthUser } from '../../utils/auth';
 
 export default function UserList() {
   const navigate = useNavigate();
+  const authUser = getAuthUser();
+  const role = String(authUser?.role || '').toUpperCase();
+  const isHOD = role === 'HOD';
+  const deptId = Number(authUser?.departmentId);
 
   const maxScore = 20; // future use (skill matrix)
 
@@ -26,8 +31,13 @@ export default function UserList() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/users');
-        setEmployees(res.data);
+        const res = await api.get('/users');
+        let data = res.data || [];
+        // Extra frontend safety: filter to my department for HOD
+        if (isHOD && deptId) {
+          data = data.filter((u) => Number(u?.department?.id) === deptId);
+        }
+        setEmployees(data);
       } catch (err) {
         console.error(err);
         setError('Failed to load employees');
@@ -37,7 +47,7 @@ export default function UserList() {
     };
 
     fetchUsers();
-  }, []);
+  }, [isHOD, deptId]);
 
   // 🔍 SEARCH FILTER (Name / Employee ID)
   const filteredEmployees = employees.filter((emp) => {
@@ -68,12 +78,14 @@ export default function UserList() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <button
-            className="create-btn"
-            onClick={() => navigate('/users/create')}
-          >
-            + Add Employee
-          </button>
+          {!isHOD && (
+            <button
+              className="create-btn"
+              onClick={() => navigate('/users/create')}
+            >
+              + Add Employee
+            </button>
+          )}
         </div>
       </div>
 
