@@ -254,7 +254,7 @@ export default function App() {
           }
         />
         <Route
-          path="/users/update-password"
+          path="users/update-password"
           element={
             <RoleRoute allow={["ADMIN", "HR"]}>
               <UpdateUserPassword />
