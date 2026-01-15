@@ -42,6 +42,17 @@ export default function Training() {
   const [postponeTo, setPostponeTo] = useState('');
   const [postponeSaving, setPostponeSaving] = useState(false);
 
+  // Edit Training modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editTopic, setEditTopic] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editFrom, setEditFrom] = useState('');
+  const [editTo, setEditTo] = useState('');
+  const [editTrainer, setEditTrainer] = useState('');
+  const [editTrainingType, setEditTrainingType] = useState('INTERNAL');
+  const [editAttendees, setEditAttendees] = useState([]);
+
   const loadTrainings = async () => {
     try {
       const data = await getTrainings();
@@ -83,7 +94,7 @@ const exportExcel = async () => {
 
   // ✅ When any modal opens -> scroll to top + lock body scroll
   useEffect(() => {
-    const anyModalOpen = showAttendeeModal || showPostponeModal;
+    const anyModalOpen = showAttendeeModal || showPostponeModal || showEditModal;
 
     if (anyModalOpen) {
       // scroll modal view to top so it never opens "down"
@@ -174,6 +185,102 @@ const exportExcel = async () => {
       alert('Failed to postpone training');
     } finally {
       setPostponeSaving(false);
+    }
+  };
+
+
+  const openEdit = (training) => {
+    setSelectedTraining(training);
+
+    setEditTopic(training?.topic || '');
+    setEditDate(training?.date || '');
+    setEditTrainer(training?.trainer || '');
+    setEditTrainingType(training?.trainingType || 'INTERNAL');
+
+    const parts = String(training?.time || '')
+      .split('-')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    setEditFrom(parts[0] || '');
+    setEditTo(parts[1] || '');
+
+    const current = Array.isArray(training?.attendees) ? training.attendees : [];
+    setEditAttendees(
+      current.map((a) => ({
+        empId: a.empId || '',
+        name: a.name || '',
+        dept: a.dept || '',
+        status: a.status,
+      })),
+    );
+
+    setShowEditModal(true);
+  };
+
+  const closeEdit = () => {
+    setShowEditModal(false);
+    setEditSaving(false);
+    setEditTopic('');
+    setEditDate('');
+    setEditFrom('');
+    setEditTo('');
+    setEditTrainer('');
+    setEditTrainingType('INTERNAL');
+    setEditAttendees([]);
+    setSelectedTraining(null);
+  };
+
+  const addEmptyParticipant = () => {
+    setEditAttendees((prev) => [...prev, { empId: '', name: '', dept: '' }]);
+  };
+
+  const updateParticipant = (idx, key, value) => {
+    setEditAttendees((prev) =>
+      prev.map((p, i) => (i === idx ? { ...p, [key]: value } : p)),
+    );
+  };
+
+  const removeParticipant = (idx) => {
+    setEditAttendees((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const saveEdit = async () => {
+    if (!selectedTraining?.id) return;
+
+    const topic = (editTopic || '').trim();
+    const date = (editDate || '').trim();
+    const time = normalizeTimeRange(editFrom, editTo);
+
+    if (!topic) return alert('Please enter topic');
+    if (!date) return alert('Please select date');
+    if (!time) return alert('Please select From & To time');
+
+    const attendees = (editAttendees || [])
+      .map((a) => ({
+        empId: String(a.empId || '').trim(),
+        name: String(a.name || '').trim(),
+        dept: String(a.dept || '').trim(),
+        ...(a.status ? { status: a.status } : {}),
+      }))
+      .filter((a) => a.empId && a.name);
+
+    try {
+      setEditSaving(true);
+      await updateTraining(selectedTraining.id, {
+        topic,
+        trainingDate: date,
+        trainingTime: time,
+        trainer: (editTrainer || '').trim(),
+        trainingType: editTrainingType,
+        attendees,
+      });
+      await loadTrainings();
+      closeEdit();
+    } catch (e) {
+      console.error(e);
+      alert(e?.response?.data?.message || 'Failed to update training');
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -281,9 +388,14 @@ const exportExcel = async () => {
                 </td>
                 <td>{renderStatus(t)}</td>
                 <td className="td-right">
-                  <button className="secondary-btn" onClick={() => openPostpone(t)}>
-                    Postpone
-                  </button>
+                  <div className="row-actions">
+                    <button className="secondary-btn" onClick={() => openEdit(t)}>
+                      Edit
+                    </button>
+                    <button className="secondary-btn" onClick={() => openPostpone(t)}>
+                      Postpone
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -309,14 +421,15 @@ const exportExcel = async () => {
               <th>Trainer</th>
               <th>Participants</th>
               <th>Status</th>
+              <th className="th-right">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="9" className="no-data">Loading trainings...</td></tr>
             ) : previousTrainings.length === 0 ? (
-              <tr><td colSpan="7" className="no-data">No previous trainings</td></tr>
+              <tr><td colSpan="9" className="no-data">No previous trainings</td></tr>
             ) : previousTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
@@ -340,6 +453,11 @@ const exportExcel = async () => {
                   </span>
                 </td>
                 <td>{renderStatus(t)}</td>
+                <td className="td-right">
+                  <button className="secondary-btn" onClick={() => openEdit(t)}>
+                    Edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -458,7 +576,111 @@ const exportExcel = async () => {
           </div>
         </div>
       )}
+      
+
+      {/* EDIT MODAL */}
+      {showEditModal && selectedTraining && (
+        <div className="modal-overlay" style={overlayStyle} onClick={closeEdit}>
+          <div
+            className="modal large"
+            style={{ ...modalStyle, width: 'min(980px, 100%)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Edit Training</h3>
+              <button onClick={closeEdit}>✕</button>
+            </div>
+
+            <div className="postpone-meta">
+              <div className="muted small"><b>ID:</b> {selectedTraining.id}</div>
+              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {selectedTraining.time || '—'}</div>
+            </div>
+
+            <div className="form-row two">
+              <div className="form-group">
+                <label>Topic *</label>
+                <input value={editTopic} onChange={(e) => setEditTopic(e.target.value)} placeholder="Training topic" />
+              </div>
+
+              <div className="form-group">
+                <label>Trainer</label>
+                <input value={editTrainer} onChange={(e) => setEditTrainer(e.target.value)} placeholder="Trainer name" />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Date *</label>
+                <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>From *</label>
+                <input type="time" value={editFrom} onChange={(e) => setEditFrom(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>To *</label>
+                <input type="time" value={editTo} onChange={(e) => setEditTo(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Training Type</label>
+              <select value={editTrainingType} onChange={(e) => setEditTrainingType(e.target.value)}>
+                <option value="INTERNAL">INTERNAL</option>
+                <option value="EXTERNAL">EXTERNAL</option>
+              </select>
+            </div>
+
+            <div className="block">
+              <div className="block-head">
+                <div>
+                  <b>Participants</b>
+                  <div className="muted small">Add/remove participants (EmpId &amp; Name required).</div>
+                </div>
+                <button className="secondary-btn" onClick={addEmptyParticipant}>+ Add</button>
+              </div>
+
+              <table className="modal-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 140 }}>Employee ID</th>
+                    <th>Name</th>
+                    <th style={{ width: 180 }}>Department</th>
+                    <th style={{ width: 120 }}>Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {editAttendees.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="no-data">No participants. Click “+ Add”.</td>
+                    </tr>
+                  ) : editAttendees.map((p, i) => (
+                    <tr key={`${p.empId}-${i}`}>
+                      <td>
+                        <input value={p.empId} onChange={(e) => updateParticipant(i, 'empId', e.target.value)} placeholder="EMP001" />
+                      </td>
+                      <td>
+                        <input value={p.name} onChange={(e) => updateParticipant(i, 'name', e.target.value)} placeholder="Employee name" />
+                      </td>
+                      <td>
+                        <input value={p.dept || ''} onChange={(e) => updateParticipant(i, 'dept', e.target.value)} placeholder="Dept" />
+                      </td>
+                      <td>
+                        <button className="danger-btn" onClick={() => removeParticipant(i)}>Remove</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button className="primary-btn full" onClick={saveEdit} disabled={editSaving}>
+              {editSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
-  );
+    );
 }

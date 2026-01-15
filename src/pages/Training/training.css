@@ -715,3 +715,52 @@ input.mini {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+
+/* Align right utility for action column */
+.th-right, .td-right { text-align: right; }
+
+.row-actions{
+  display: inline-flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Modal tables (attendance + edit participants) */
+.modal-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modal-table th{
+  text-align: left;
+  font-size: 12px;
+  padding: 10px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-table td{
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-table input{
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+}
+
+/* Danger button (remove participant) */
+.danger-btn{
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 800;
+  cursor: pointer;
+}
+.danger-btn:hover{ filter: brightness(0.98); }
