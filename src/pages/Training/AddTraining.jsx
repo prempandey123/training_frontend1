@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './training.css';
 
-import { createTraining } from '../../api/trainingApi';
+import { createTraining, sendTrainingMailPreview } from '../../api/trainingApi';
 import { searchSkills } from '../../api/skill.api';
 import { getUsersUnderSkillLevel } from '../../api/userSkillLevel.api';
 import { searchUsers } from '../../api/user.api';
@@ -221,6 +221,40 @@ export default function AddTraining() {
     }
   };
 
+  const handleSendMail = async () => {
+    try {
+      const assignedEmployees = assignedUsers.map((u) => ({
+        empId: u.employeeId,
+        name: u.name,
+        dept: u.department || undefined,
+      }));
+
+      const departments = Array.from(new Set(assignedUsers.map((u) => u.department).filter(Boolean)));
+
+      const payload = {
+        topic,
+        trainingDate,
+        trainingTime: `${fromTime} - ${toTime}`,
+        departments,
+        skills: selectedSkill?.name ? [selectedSkill.name] : [],
+        assignedEmployees,
+        status,
+        trainingType,
+        trainer: (trainer || "").trim() || undefined,
+      };
+
+      await sendTrainingMailPreview(payload);
+      showToast(`Mail sent to ${assignedEmployees.length} participant(s).`, "success");
+    } catch (e) {
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Failed to send mail. Please check backend logs / Brevo config.";
+      showToast(Array.isArray(msg) ? msg.join(", ") : msg, "error");
+    }
+  };
+
+
   return (
     <div className="training-page">
       <div className="training-header">
@@ -322,7 +356,7 @@ export default function AddTraining() {
                 type="button"
                 className="link-btn"
                 onClick={clearSelection}
-                disabled={!assignedUserIds.length}
+                disabled={!assignedUserIds.length || !topic || !trainingDate || !fromTime || !toTime}
                 title="Remove all selected employees"
               >
                 Clear selection
@@ -510,8 +544,8 @@ export default function AddTraining() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  onClick={() => showToast("Mail feature backend me baad me add hoga.", "info")}
-                  disabled={!assignedUserIds.length}
+                  onClick={handleSendMail}
+                  disabled={!assignedUserIds.length || !topic || !trainingDate || !fromTime || !toTime}
                 >
                   Send mail to participants
                 </button>

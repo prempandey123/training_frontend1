@@ -14,6 +14,12 @@ export const createTraining = async (payload) => {
   return res.data;
 };
 
+// Send training mail to participants without creating a training (used by Add Training screen button).
+export const sendTrainingMailPreview = async (payload) => {
+  const res = await axios.post(`${API_BASE}/trainings/send-mail-preview`, payload);
+  return res.data;
+};
+
 export const updateTraining = async (id, payload) => {
   const res = await axios.patch(`${API_BASE}/trainings/${id}`, payload);
   return res.data;
