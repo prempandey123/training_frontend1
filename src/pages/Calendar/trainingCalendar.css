@@ -34,3 +34,16 @@
   padding: 2px 4px;
   color: var(--accent-ink) !important;
 }
+
+/* Past dates (disabled for creating training) */
+.fc-day-past-disabled {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.fc-day-past-disabled .fc-daygrid-day-frame {
+  cursor: not-allowed;
+}
+
+.fc-day-past-disabled .fc-daygrid-day-number {
+  opacity: 0.55;
+}

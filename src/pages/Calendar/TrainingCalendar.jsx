@@ -14,6 +14,13 @@ export default function TrainingCalendar() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
+  // Today at 00:00 (local time) for consistent past-date checks
+  const todayStart = useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }, []);
+
   useEffect(() => {
     let alive = true;
 
@@ -78,11 +85,29 @@ export default function TrainingCalendar() {
         initialView="dayGridMonth"
         headerToolbar={headerToolbar}
         events={events}
+        dayCellDidMount={(arg) => {
+          // Add a visual "disabled" state for past dates
+          const cell = new Date(arg.date);
+          cell.setHours(0, 0, 0, 0);
+          if (cell < todayStart) {
+            arg.el.classList.add('fc-day-past-disabled');
+          }
+        }}
         dateClick={(info) => {
           // When user clicks on an empty date cell, open Create Training page
           // and prefill trainingDate with the clicked date.
           const dateStr = info?.dateStr; // YYYY-MM-DD
           if (!dateStr) return;
+
+          // Disable past dates for creating a training
+          const clicked = new Date(dateStr);
+          clicked.setHours(0, 0, 0, 0);
+          if (clicked < todayStart) {
+            // You can replace alert with toast if you have one
+            alert('Training creation is not allowed for past days.');
+            return;
+          }
+
           navigate(`/training/add?date=${encodeURIComponent(dateStr)}`);
         }}
         eventClick={(info) => {
