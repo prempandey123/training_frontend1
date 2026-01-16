@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,6 +9,7 @@ import api from '../../api/api';
 import './trainingCalendar.css';
 
 export default function TrainingCalendar() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
@@ -76,6 +78,13 @@ export default function TrainingCalendar() {
         initialView="dayGridMonth"
         headerToolbar={headerToolbar}
         events={events}
+        dateClick={(info) => {
+          // When user clicks on an empty date cell, open Create Training page
+          // and prefill trainingDate with the clicked date.
+          const dateStr = info?.dateStr; // YYYY-MM-DD
+          if (!dateStr) return;
+          navigate(`/training/add?date=${encodeURIComponent(dateStr)}`);
+        }}
         eventClick={(info) => {
           const p = info?.event?.extendedProps || {};
           alert(

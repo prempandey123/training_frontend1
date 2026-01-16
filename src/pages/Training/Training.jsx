@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { getTrainings, updateTraining, downloadTrainingExcel } from '../../api/trainingApi';
+import { searchUsers } from '../../api/user.api';
 import './training.css';
 
 const formatDate = (d) => {
@@ -50,8 +51,13 @@ export default function Training() {
   const [editFrom, setEditFrom] = useState('');
   const [editTo, setEditTo] = useState('');
   const [editTrainer, setEditTrainer] = useState('');
-  const [editTrainingType, setEditTrainingType] = useState('INTERNAL');
+  // trainingType values come from backend enum: 'Internal' | 'External' | 'Online' | 'Internal In house'
+  const [editTrainingType, setEditTrainingType] = useState('Internal');
   const [editAttendees, setEditAttendees] = useState([]);
+
+  // Smart employee search (typeahead) for edit participants
+  // State is keyed by row index so multiple rows can search independently
+  const [editSearchByRow, setEditSearchByRow] = useState({});
 
   const loadTrainings = async () => {
     try {
@@ -108,7 +114,7 @@ const exportExcel = async () => {
         document.body.style.overflow = prevOverflow || '';
       };
     }
-  }, [showAttendeeModal, showPostponeModal]);
+  }, [showAttendeeModal, showPostponeModal, showEditModal]);
 
   const today = useMemo(() => new Date(), []);
 
@@ -195,7 +201,15 @@ const exportExcel = async () => {
     setEditTopic(training?.topic || '');
     setEditDate(training?.date || '');
     setEditTrainer(training?.trainer || '');
-    setEditTrainingType(training?.trainingType || 'INTERNAL');
+    // Backend stores enum values like 'Internal', 'External', ...
+    const ttype = training?.trainingType;
+    const normalizedType =
+      ttype === 'INTERNAL' ? 'Internal' :
+      ttype === 'EXTERNAL' ? 'External' :
+      ttype === 'ONLINE' ? 'Online' :
+      ttype === 'INTERNAL_IN_HOUSE' ? 'Internal In house' :
+      (ttype || 'Internal');
+    setEditTrainingType(normalizedType);
 
     const parts = String(training?.time || '')
       .split('-')
@@ -225,7 +239,7 @@ const exportExcel = async () => {
     setEditFrom('');
     setEditTo('');
     setEditTrainer('');
-    setEditTrainingType('INTERNAL');
+    setEditTrainingType('Internal');
     setEditAttendees([]);
     setSelectedTraining(null);
   };
@@ -318,6 +332,84 @@ const exportExcel = async () => {
     overflow: 'auto',
     borderRadius: '14px',
   };
+
+  // 🔎 Smart employee search for Edit Participants
+  function ParticipantNameTypeahead({ idx, value, onPick, onChange, disabled }) {
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState([]);
+
+    useEffect(() => {
+      const q = (value || '').trim();
+      if (!q || q.length < 2) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
+      const t = setTimeout(async () => {
+        try {
+          setLoading(true);
+          const list = await searchUsers(q);
+          setResults(Array.isArray(list) ? list : []);
+        } catch (e) {
+          console.error(e);
+          setResults([]);
+        } finally {
+          setLoading(false);
+        }
+      }, 250);
+
+      return () => clearTimeout(t);
+    }, [value]);
+
+    const pick = (u) => {
+      onPick?.(u);
+      setOpen(false);
+      setResults([]);
+    };
+
+    return (
+      <div className="typeahead" style={{ position: 'relative' }}>
+        <input
+          value={value}
+          onChange={(e) => {
+            onChange?.(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 140)}
+          placeholder="Start typing name / EmpId"
+          disabled={disabled}
+        />
+        {loading && <div className="typeahead-hint">Searching…</div>}
+        {open && !!results.length && (
+          <div className="typeahead-list" style={{ maxHeight: 220, overflow: 'auto' }}>
+            {results.map((u) => {
+              const dept = u?.department?.name || u?.department || '—';
+              const desig = u?.designation?.designationName || u?.designation || '—';
+              return (
+                <button
+                  key={u.id}
+                  type="button"
+                  className="typeahead-item"
+                  onMouseDown={(e) => e.preventDefault()} // keep focus
+                  onClick={() => pick(u)}
+                  title={`${u.name} (${u.employeeId})`}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <span><b>{u.name}</b> <span className="muted">({u.employeeId})</span></span>
+                    <span className="muted">{dept}</span>
+                  </div>
+                  <div className="muted small" style={{ marginTop: 2 }}>{desig}</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="training-page">
@@ -626,8 +718,10 @@ const exportExcel = async () => {
             <div className="form-group">
               <label>Training Type</label>
               <select value={editTrainingType} onChange={(e) => setEditTrainingType(e.target.value)}>
-                <option value="INTERNAL">INTERNAL</option>
-                <option value="EXTERNAL">EXTERNAL</option>
+                <option value="Internal">Internal</option>
+                <option value="External">External</option>
+                <option value="Online">Online</option>
+                <option value="Internal In house">Internal In house</option>
               </select>
             </div>
 
@@ -660,7 +754,17 @@ const exportExcel = async () => {
                         <input value={p.empId} onChange={(e) => updateParticipant(i, 'empId', e.target.value)} placeholder="EMP001" />
                       </td>
                       <td>
-                        <input value={p.name} onChange={(e) => updateParticipant(i, 'name', e.target.value)} placeholder="Employee name" />
+                        <ParticipantNameTypeahead
+                          idx={i}
+                          value={p.name}
+                          disabled={editSaving}
+                          onChange={(val) => updateParticipant(i, 'name', val)}
+                          onPick={(u) => {
+                            updateParticipant(i, 'empId', u?.employeeId || '');
+                            updateParticipant(i, 'name', u?.name || '');
+                            updateParticipant(i, 'dept', u?.department?.name || u?.department || '');
+                          }}
+                        />
                       </td>
                       <td>
                         <input value={p.dept || ''} onChange={(e) => updateParticipant(i, 'dept', e.target.value)} placeholder="Dept" />

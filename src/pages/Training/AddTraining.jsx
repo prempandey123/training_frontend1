@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './training.css';
 
 import { createTraining, sendTrainingMailPreview } from '../../api/trainingApi';
@@ -9,6 +9,7 @@ import { searchUsers } from '../../api/user.api';
 
 export default function AddTraining() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   /* BASIC INFO */
   const [topic, setTopic] = useState('');
@@ -18,6 +19,16 @@ export default function AddTraining() {
   const [status, setStatus] = useState('PENDING');
   const [trainingType, setTrainingType] = useState('Internal');
   const [trainer, setTrainer] = useState('');
+
+  // If user came from Calendar date click, pre-fill the training date
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const date = (params.get('date') || '').trim();
+    // accept only YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      setTrainingDate(date);
+    }
+  }, [location.search]);
 
   /* SKILL SEARCH */
   const [skillQuery, setSkillQuery] = useState('');
