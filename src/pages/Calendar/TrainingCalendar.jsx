@@ -6,6 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 import api from '../../api/api';
+import { formatTimeRangeIST } from '../../utils/datetime';
 import './trainingCalendar.css';
 
 export default function TrainingCalendar() {
@@ -117,7 +118,7 @@ export default function TrainingCalendar() {
 Department: ${p.department || '-'}
 Trainer: ${p.trainer || '-'}
 Status: ${p.status || '-'}
-Time: ${p.time || '-'}`
+Time: ${formatTimeRangeIST(p.time)}`
           );
         }}
         height="auto"

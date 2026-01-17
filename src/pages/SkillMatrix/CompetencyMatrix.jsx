@@ -33,7 +33,8 @@ export default function CompetencyMatrix() {
   const roleStr = String(authUser?.role || '').toUpperCase();
   const isAdmin = roleStr.includes('ADMIN');
   const isHR = roleStr.includes('HR');
-  const canEditAll = isAdmin || isHR;
+  const isHOD = roleStr === 'HOD';
+  const canEditAll = isAdmin || isHR || isHOD;
 
   async function loadUsers() {
     try {
@@ -41,7 +42,12 @@ export default function CompetencyMatrix() {
       const all = Array.isArray(list) ? list : [];
       // Competency Matrix should list STAFF employees only
       const staff = all.filter((u) => String(u?.employeeType || u?.employee_type || '').toUpperCase() === 'STAFF');
-      setUsers(staff);
+
+      // ✅ HOD should see ONLY own department employees
+      const deptId = authUser?.departmentId;
+      const scoped = isHOD && deptId ? staff.filter((u) => String(u?.departmentId || u?.department_id) === String(deptId)) : staff;
+
+      setUsers(scoped);
     } catch (e) {
       setUsers([]);
     }
@@ -212,7 +218,9 @@ export default function CompetencyMatrix() {
           </select>
           <small style={{ opacity: 0.7 }}>
             {canEditAll
-              ? 'Admin/HR: you can update any selected employee\'s current level.'
+              ? (isHOD
+                  ? 'HOD: you can update current levels for employees in your department.'
+                  : 'Admin/HR: you can update any selected employee\'s current level.')
               : 'Note: Only your own levels are editable (as per rules).'}
           </small>
         </div>

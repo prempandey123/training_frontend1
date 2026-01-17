@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../api/api';
 import './dashboard.css';
+import { formatTimeRangeIST } from '../../utils/datetime';
 import { getAuthUser } from '../../utils/auth';
 
 function parseTimeRangeToHours(timeRange) {
@@ -551,7 +552,7 @@ export default function Dashboard() {
                     <div className="today-topic">{t.topic}</div>
 
                     <div className="today-meta">
-                      <span className="today-chip">🕒 {t.time || '—'}</span>
+                      <span className="today-chip">🕒 {formatTimeRangeIST(t.time)}</span>
                       {t.trainer ? <span className="today-chip">👤 {t.trainer}</span> : null}
                     </div>
 

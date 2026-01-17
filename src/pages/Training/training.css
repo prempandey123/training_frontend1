@@ -764,3 +764,20 @@ input.mini {
   cursor: pointer;
 }
 .danger-btn:hover{ filter: brightness(0.98); }
+
+/* 12-hour time picker (HH : MM AM/PM) */
+.time12 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.time12 select {
+  min-width: 76px;
+}
+
+.time12 .time-sep {
+  opacity: 0.8;
+  font-weight: 700;
+}

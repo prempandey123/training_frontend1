@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './trainingRequirements.css';
+import { formatDateIST, formatTimeRangeIST } from '../../utils/datetime';
 import { getUsers } from '../../api/user.api';
 import {
   getMyTrainingRequirements,
@@ -154,7 +155,7 @@ export default function TrainingRequirements() {
                       <div>
                         <div style={{ fontWeight: 700 }}>{r.suggestedTraining.topic}</div>
                         <div style={{ opacity: 0.8, fontSize: 12 }}>
-                          {r.suggestedTraining.date} • {r.suggestedTraining.time}
+                          {formatDateIST(r.suggestedTraining.date)} • {formatTimeRangeIST(r.suggestedTraining.time)}
                         </div>
                       </div>
                     ) : (

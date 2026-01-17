@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import './attendance.css';
+import { formatDateIST, formatTimeRangeIST } from '../../utils/datetime';
 import { getTrainings, getTrainingBiometric, updateTraining } from '../../api/trainingApi';
 
 function getLocalISODate() {
@@ -178,7 +179,7 @@ export default function Attendance() {
                 ) : (
                   filteredTrainings.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.topic} • {t.date} • {t.time || '—'}
+                      {t.topic} • {formatDateIST(t.date)} • {formatTimeRangeIST(t.time)}
                     </option>
                   ))
                 )}

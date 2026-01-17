@@ -50,7 +50,8 @@ export default function Sidebar() {
         ]
       : []),
     ...(isHOD ? [{ to: '/users', label: 'Users (My Dept)' }] : []),
-    ...(isAdmin || isHR || isHOD
+    // HOD requirement: instead of Designations/Skills in sidebar, show matrices.
+    ...(isAdmin || isHR
       ? [
           { to: '/designations', label: 'Designations' },
           { to: '/skills', label: 'Skills' },
@@ -68,21 +69,17 @@ export default function Sidebar() {
       ];
 
   const matrixLinks = isHOD
-    ? []
+    ? [
+        // ✅ HOD requirement: manage ONLY own department, SINGLE view only
+        { to: '/skill-matrix', label: 'Skill Matrix' },
+        { to: '/competency-matrix', label: 'Competency Matrix' },
+      ]
     : [
-    ...(showWorkerMatrix
-      ? [
-          { to: '/skill-matrix', label: 'SKILL MATRIX (SINGLE)' },
-          { to: '/skill-matrix/org', label: 'SKILL MATRIX (ORG)' },
-        ]
-      : []),
-    ...(showStaffMatrix
-      ? [
-          { to: '/competency-matrix', label: 'COMPETENCY MATRIX (SINGLE)' },
-          { to: '/competency-matrix/org', label: 'COMPETENCY MATRIX (ORG)' },
-        ]
-      : []),
-  ];
+        ...(showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix' }] : []),
+        ...(showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix' }] : []),
+        ...(showWorkerMatrix ? [{ to: '/skill-matrix/org', label: 'SKILL MATRIX (ORG)' }] : []),
+        ...(showStaffMatrix ? [{ to: '/competency-matrix/org', label: 'COMPETENCY MATRIX (ORG)' }] : []),
+      ];
 
   const insightsLinks = isHOD
     ? []

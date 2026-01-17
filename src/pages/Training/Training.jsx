@@ -2,14 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { getTrainings, updateTraining, downloadTrainingExcel } from '../../api/trainingApi';
 import { searchUsers } from '../../api/user.api';
+import { formatDateIST, formatTimeRangeIST, from24Time, to24Time, splitTimeRange } from '../../utils/datetime';
 import './training.css';
 
-const formatDate = (d) => {
-  if (!d) return '—';
-  const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return d;
-  return dt.toLocaleDateString();
-};
+// Standard: 12h time format in IST (UTC+05:30)
+const formatDate = formatDateIST;
 
 const normalizeTimeRange = (from, to) => {
   const f = (from || '').trim();
@@ -43,6 +40,33 @@ export default function Training() {
   const [postponeTo, setPostponeTo] = useState('');
   const [postponeSaving, setPostponeSaving] = useState(false);
 
+  // 12-hour time pickers (AM/PM)
+  const hourOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')),
+    [],
+  );
+  const minuteOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')),
+    [],
+  );
+
+  const [postponeFromHH, setPostponeFromHH] = useState('09');
+  const [postponeFromMM, setPostponeFromMM] = useState('00');
+  const [postponeFromMeridiem, setPostponeFromMeridiem] = useState('AM');
+  const [postponeToHH, setPostponeToHH] = useState('10');
+  const [postponeToMM, setPostponeToMM] = useState('00');
+  const [postponeToMeridiem, setPostponeToMeridiem] = useState('AM');
+
+  useEffect(() => {
+    const v = to24Time(postponeFromHH, postponeFromMM, postponeFromMeridiem);
+    if (v) setPostponeFrom(v);
+  }, [postponeFromHH, postponeFromMM, postponeFromMeridiem]);
+
+  useEffect(() => {
+    const v = to24Time(postponeToHH, postponeToMM, postponeToMeridiem);
+    if (v) setPostponeTo(v);
+  }, [postponeToHH, postponeToMM, postponeToMeridiem]);
+
   // Edit Training modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -50,6 +74,23 @@ export default function Training() {
   const [editDate, setEditDate] = useState('');
   const [editFrom, setEditFrom] = useState('');
   const [editTo, setEditTo] = useState('');
+
+  const [editFromHH, setEditFromHH] = useState('09');
+  const [editFromMM, setEditFromMM] = useState('00');
+  const [editFromMeridiem, setEditFromMeridiem] = useState('AM');
+  const [editToHH, setEditToHH] = useState('10');
+  const [editToMM, setEditToMM] = useState('00');
+  const [editToMeridiem, setEditToMeridiem] = useState('AM');
+
+  useEffect(() => {
+    const v = to24Time(editFromHH, editFromMM, editFromMeridiem);
+    if (v) setEditFrom(v);
+  }, [editFromHH, editFromMM, editFromMeridiem]);
+
+  useEffect(() => {
+    const v = to24Time(editToHH, editToMM, editToMeridiem);
+    if (v) setEditTo(v);
+  }, [editToHH, editToMM, editToMeridiem]);
   const [editTrainer, setEditTrainer] = useState('');
   const [editVenue, setEditVenue] = useState('');
   // trainingType values come from backend enum: 'Internal' | 'External' | 'Online' | 'Internal In house'
@@ -147,12 +188,19 @@ const exportExcel = async () => {
     setPostponeReason(training?.postponeReason || '');
     setPostponeDate(training?.date || '');
 
-    const parts = String(training?.time || '')
-      .split('-')
-      .map((p) => p.trim())
-      .filter(Boolean);
-    setPostponeFrom(parts[0] || '');
-    setPostponeTo(parts[1] || '');
+    const parts = splitTimeRange(training?.time || '');
+    setPostponeFrom(parts.from || '');
+    setPostponeTo(parts.to || '');
+
+    const pFrom = from24Time(parts.from);
+    setPostponeFromHH(pFrom.hh);
+    setPostponeFromMM(pFrom.mm);
+    setPostponeFromMeridiem(pFrom.ap);
+
+    const pTo = from24Time(parts.to);
+    setPostponeToHH(pTo.hh);
+    setPostponeToMM(pTo.mm);
+    setPostponeToMeridiem(pTo.ap);
 
     setShowPostponeModal(true);
   };
@@ -164,6 +212,12 @@ const exportExcel = async () => {
     setPostponeDate('');
     setPostponeFrom('');
     setPostponeTo('');
+    setPostponeFromHH('09');
+    setPostponeFromMM('00');
+    setPostponeFromMeridiem('AM');
+    setPostponeToHH('10');
+    setPostponeToMM('00');
+    setPostponeToMeridiem('AM');
     setPostponeSaving(false);
   };
 
@@ -213,12 +267,19 @@ const exportExcel = async () => {
       (ttype || 'Internal');
     setEditTrainingType(normalizedType);
 
-    const parts = String(training?.time || '')
-      .split('-')
-      .map((p) => p.trim())
-      .filter(Boolean);
-    setEditFrom(parts[0] || '');
-    setEditTo(parts[1] || '');
+    const parts = splitTimeRange(training?.time || '');
+    setEditFrom(parts.from || '');
+    setEditTo(parts.to || '');
+
+    const pFrom = from24Time(parts.from);
+    setEditFromHH(pFrom.hh);
+    setEditFromMM(pFrom.mm);
+    setEditFromMeridiem(pFrom.ap);
+
+    const pTo = from24Time(parts.to);
+    setEditToHH(pTo.hh);
+    setEditToMM(pTo.mm);
+    setEditToMeridiem(pTo.ap);
 
     const current = Array.isArray(training?.attendees) ? training.attendees : [];
     setEditAttendees(
@@ -240,6 +301,12 @@ const exportExcel = async () => {
     setEditDate('');
     setEditFrom('');
     setEditTo('');
+    setEditFromHH('09');
+    setEditFromMM('00');
+    setEditFromMeridiem('AM');
+    setEditToHH('10');
+    setEditToMM('00');
+    setEditToMeridiem('AM');
     setEditTrainer('');
     setEditVenue('');
     setEditTrainingType('Internal');
@@ -277,7 +344,6 @@ const exportExcel = async () => {
         empId: String(a.empId || '').trim(),
         name: String(a.name || '').trim(),
         dept: String(a.dept || '').trim(),
-        ...(a.status ? { status: a.status } : {}),
       }))
       .filter((a) => a.empId && a.name);
 
@@ -467,7 +533,7 @@ const exportExcel = async () => {
                 <td>{t.trainingType || "—"}</td>
                 <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
-                <td>{t.time || '—'}</td>
+                <td>{formatTimeRangeIST(t.time)}</td>
                 <td>{t.department || '—'}</td>
                 <td>{t.trainer || '—'}</td>
                 <td>
@@ -535,7 +601,7 @@ const exportExcel = async () => {
                 <td>{t.trainingType || "—"}</td>
                 <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
-                <td>{t.time || '—'}</td>
+                <td>{formatTimeRangeIST(t.time)}</td>
                 <td>{t.department || '—'}</td>
                 <td>{t.trainer || '—'}</td>
                 <td>
@@ -638,7 +704,7 @@ const exportExcel = async () => {
 
             <div className="postpone-meta">
               <div className="muted small"><b>Topic:</b> {selectedTraining.topic}</div>
-              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {selectedTraining.time || '—'}</div>
+              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {formatTimeRangeIST(selectedTraining.time)}</div>
             </div>
 
             <div className="form-group">
@@ -658,11 +724,35 @@ const exportExcel = async () => {
               </div>
               <div className="form-group">
                 <label>From *</label>
-                <input type="time" value={postponeFrom} onChange={(e) => setPostponeFrom(e.target.value)} />
+                <div className="time12">
+                  <select value={postponeFromHH} onChange={(e) => setPostponeFromHH(e.target.value)}>
+                    {hourOptions.map((h) => (<option key={h} value={h}>{h}</option>))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={postponeFromMM} onChange={(e) => setPostponeFromMM(e.target.value)}>
+                    {minuteOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
+                  </select>
+                  <select value={postponeFromMeridiem} onChange={(e) => setPostponeFromMeridiem(e.target.value)}>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
               <div className="form-group">
                 <label>To *</label>
-                <input type="time" value={postponeTo} onChange={(e) => setPostponeTo(e.target.value)} />
+                <div className="time12">
+                  <select value={postponeToHH} onChange={(e) => setPostponeToHH(e.target.value)}>
+                    {hourOptions.map((h) => (<option key={h} value={h}>{h}</option>))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={postponeToMM} onChange={(e) => setPostponeToMM(e.target.value)}>
+                    {minuteOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
+                  </select>
+                  <select value={postponeToMeridiem} onChange={(e) => setPostponeToMeridiem(e.target.value)}>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -693,7 +783,7 @@ const exportExcel = async () => {
 
             <div className="postpone-meta">
               <div className="muted small"><b>ID:</b> {selectedTraining.id}</div>
-              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {selectedTraining.time || '—'}</div>
+              <div className="muted small"><b>Current:</b> {formatDate(selectedTraining.date)} • {formatTimeRangeIST(selectedTraining.time)}</div>
             </div>
 
             <div className="form-row two">
@@ -715,11 +805,35 @@ const exportExcel = async () => {
               </div>
               <div className="form-group">
                 <label>From *</label>
-                <input type="time" value={editFrom} onChange={(e) => setEditFrom(e.target.value)} />
+                <div className="time12">
+                  <select value={editFromHH} onChange={(e) => setEditFromHH(e.target.value)}>
+                    {hourOptions.map((h) => (<option key={h} value={h}>{h}</option>))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={editFromMM} onChange={(e) => setEditFromMM(e.target.value)}>
+                    {minuteOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
+                  </select>
+                  <select value={editFromMeridiem} onChange={(e) => setEditFromMeridiem(e.target.value)}>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
               <div className="form-group">
                 <label>To *</label>
-                <input type="time" value={editTo} onChange={(e) => setEditTo(e.target.value)} />
+                <div className="time12">
+                  <select value={editToHH} onChange={(e) => setEditToHH(e.target.value)}>
+                    {hourOptions.map((h) => (<option key={h} value={h}>{h}</option>))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={editToMM} onChange={(e) => setEditToMM(e.target.value)}>
+                    {minuteOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
+                  </select>
+                  <select value={editToMeridiem} onChange={(e) => setEditToMeridiem(e.target.value)}>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
             </div>
 

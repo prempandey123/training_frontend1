@@ -30,7 +30,8 @@ export default function SkillMatrix() {
   const roleStr = String(authUser?.role || '').toUpperCase();
   const isAdmin = roleStr.includes('ADMIN');
   const isHR = roleStr.includes('HR');
-  const canEditAll = isAdmin || isHR;
+  const isHOD = roleStr === 'HOD';
+  const canEditAll = isAdmin || isHR || isHOD;
 
   async function loadUsers() {
     try {
@@ -38,7 +39,14 @@ export default function SkillMatrix() {
       const all = Array.isArray(list) ? list : [];
       // Worker Skill Matrix should list WORKER employees only
       const workers = all.filter((u) => String(u?.employeeType || u?.employee_type || '').toUpperCase() === 'WORKER');
-      setUsers(workers);
+
+      // ✅ HOD should see ONLY own department employees
+      const deptId = authUser?.departmentId;
+      const scoped = isHOD && deptId
+        ? workers.filter((u) => String(u?.departmentId || u?.department_id) === String(deptId))
+        : workers;
+
+      setUsers(scoped);
     } catch (e) {
       // ignore (some setups may protect this endpoint)
       setUsers([]);
@@ -212,7 +220,9 @@ export default function SkillMatrix() {
           </select>
           <small style={{ opacity: 0.7 }}>
             {canEditAll
-              ? 'Admin/HR: you can update any selected employee\'s current level.'
+              ? (isHOD
+                  ? 'HOD: you can update current levels for employees in your department.'
+                  : 'Admin/HR: you can update any selected employee\'s current level.')
               : 'Note: Only your own levels are editable.'}
           </small>
         </div>

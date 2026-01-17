@@ -1,6 +1,6 @@
 import './updateUserPassword.css';
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import api from '../../api/api';
 
 export default function UpdateUserPassword() {
   const [users, setUsers] = useState([]);
@@ -18,7 +18,8 @@ export default function UpdateUserPassword() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/users');
+        // ✅ Use authenticated axios instance so JWT is attached
+        const res = await api.get('/users');
         setUsers(res.data);
       } catch (e) {
         console.error(e);
@@ -60,7 +61,7 @@ export default function UpdateUserPassword() {
 
       // ✅ Backend endpoint (recommended):
       // PATCH http://localhost:3000/users/:id/password
-      await axios.patch(`http://localhost:3000/users/${selectedUser.id}/password`, {
+      await api.patch(`/users/${selectedUser.id}/password`, {
         newPassword,
       });
 

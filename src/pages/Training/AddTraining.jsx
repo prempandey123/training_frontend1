@@ -6,6 +6,7 @@ import { createTraining, sendTrainingMailPreview } from '../../api/trainingApi';
 import { searchSkills } from '../../api/skill.api';
 import { getUsersUnderSkillLevel } from '../../api/userSkillLevel.api';
 import { searchUsers } from '../../api/user.api';
+import { to24Time } from '../../utils/datetime';
 
 export default function AddTraining() {
   const navigate = useNavigate();
@@ -14,8 +15,36 @@ export default function AddTraining() {
   /* BASIC INFO */
   const [topic, setTopic] = useState('');
   const [trainingDate, setTrainingDate] = useState('');
-  const [fromTime, setFromTime] = useState('');
-  const [toTime, setToTime] = useState('');
+  const [fromTime, setFromTime] = useState(''); // stored as 24h "HH:mm"
+  const [toTime, setToTime] = useState('');     // stored as 24h "HH:mm"
+
+  // 12-hour UI controls (HH : MM AM/PM)
+  const [fromHH, setFromHH] = useState('09');
+  const [fromMM, setFromMM] = useState('00');
+  const [fromMeridiem, setFromMeridiem] = useState('AM');
+  const [toHH, setToHH] = useState('10');
+  const [toMM, setToMM] = useState('00');
+  const [toMeridiem, setToMeridiem] = useState('AM');
+
+  const hourOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')),
+    [],
+  );
+  const minuteOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')),
+    [],
+  );
+
+  // Keep 24h values synced for API payload
+  useEffect(() => {
+    const v = to24Time(fromHH, fromMM, fromMeridiem);
+    if (v) setFromTime(v);
+  }, [fromHH, fromMM, fromMeridiem]);
+
+  useEffect(() => {
+    const v = to24Time(toHH, toMM, toMeridiem);
+    if (v) setToTime(v);
+  }, [toHH, toMM, toMeridiem]);
   const [status, setStatus] = useState('PENDING');
   const [trainingType, setTrainingType] = useState('Internal');
   const [trainer, setTrainer] = useState('');
@@ -335,21 +364,43 @@ export default function AddTraining() {
 
               <div className="form-group">
                 <label>From *</label>
-                <input
-                  type="time"
-                  value={fromTime}
-                  onChange={(e) => setFromTime(e.target.value)}
-                  required
-                />
+                <div className="time12">
+                  <select value={fromHH} onChange={(e) => setFromHH(e.target.value)} required>
+                    {hourOptions.map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={fromMM} onChange={(e) => setFromMM(e.target.value)} required>
+                    {minuteOptions.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <select value={fromMeridiem} onChange={(e) => setFromMeridiem(e.target.value)} required>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
               <div className="form-group">
                 <label>To *</label>
-                <input
-                  type="time"
-                  value={toTime}
-                  onChange={(e) => setToTime(e.target.value)}
-                  required
-                />
+                <div className="time12">
+                  <select value={toHH} onChange={(e) => setToHH(e.target.value)} required>
+                    {hourOptions.map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                  <span className="time-sep">:</span>
+                  <select value={toMM} onChange={(e) => setToMM(e.target.value)} required>
+                    {minuteOptions.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <select value={toMeridiem} onChange={(e) => setToMeridiem(e.target.value)} required>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </div>
               </div>
             </div>
 

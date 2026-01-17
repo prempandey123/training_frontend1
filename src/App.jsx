@@ -166,7 +166,7 @@ export default function App() {
         <Route
           path="skill-matrix"
           element={
-            <RoleRoute allow={["ADMIN", "HR"]}>
+            <RoleRoute allow={["ADMIN", "HR", "HOD"]}>
               <SkillMatrix />
             </RoleRoute>
           }
@@ -183,7 +183,7 @@ export default function App() {
         <Route
           path="competency-matrix"
           element={
-            <RoleRoute allow={["ADMIN", "HR"]}>
+            <RoleRoute allow={["ADMIN", "HR", "HOD"]}>
               <CompetencyMatrix />
             </RoleRoute>
           }
