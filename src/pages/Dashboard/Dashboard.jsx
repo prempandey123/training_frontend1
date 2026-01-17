@@ -635,7 +635,7 @@ export default function Dashboard() {
 
         <div
           className="kpi-card kpi-skill clickable"
-          onClick={() => navigate('/skill-matrix')}
+          onClick={() => navigate('/skill-matrix/org')}
           title="Open Organization Skill Matrix"
         >
           <h3>Skill Matrix (Organization)</h3>
@@ -647,7 +647,7 @@ export default function Dashboard() {
 
         <div
           className="kpi-card kpi-comp clickable"
-          onClick={() => navigate('/competency-matrix')}
+          onClick={() => navigate('/competency-matrix/org')}
           title="Open Organization Competency Matrix"
         >
           <h3>Competency Matrix (Organization)</h3>

@@ -51,6 +51,7 @@ export default function Training() {
   const [editFrom, setEditFrom] = useState('');
   const [editTo, setEditTo] = useState('');
   const [editTrainer, setEditTrainer] = useState('');
+  const [editVenue, setEditVenue] = useState('');
   // trainingType values come from backend enum: 'Internal' | 'External' | 'Online' | 'Internal In house'
   const [editTrainingType, setEditTrainingType] = useState('Internal');
   const [editAttendees, setEditAttendees] = useState([]);
@@ -201,6 +202,7 @@ const exportExcel = async () => {
     setEditTopic(training?.topic || '');
     setEditDate(training?.date || '');
     setEditTrainer(training?.trainer || '');
+    setEditVenue(training?.venue || '');
     // Backend stores enum values like 'Internal', 'External', ...
     const ttype = training?.trainingType;
     const normalizedType =
@@ -239,6 +241,7 @@ const exportExcel = async () => {
     setEditFrom('');
     setEditTo('');
     setEditTrainer('');
+    setEditVenue('');
     setEditTrainingType('Internal');
     setEditAttendees([]);
     setSelectedTraining(null);
@@ -282,6 +285,7 @@ const exportExcel = async () => {
       setEditSaving(true);
       await updateTraining(selectedTraining.id, {
         topic,
+        venue: (editVenue || '').trim(),
         trainingDate: date,
         trainingTime: time,
         trainer: (editTrainer || '').trim(),
@@ -441,6 +445,7 @@ const exportExcel = async () => {
             <tr>
               <th>Topic</th>
               <th>Training Type</th>
+              <th>Venue</th>
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
@@ -453,13 +458,14 @@ const exportExcel = async () => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="9" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="10" className="no-data">Loading trainings...</td></tr>
             ) : upcomingTrainings.length === 0 ? (
-              <tr><td colSpan="9" className="no-data">No upcoming trainings</td></tr>
+              <tr><td colSpan="10" className="no-data">No upcoming trainings</td></tr>
             ) : upcomingTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
                 <td>{t.trainingType || "—"}</td>
+                <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{t.time || '—'}</td>
                 <td>{t.department || '—'}</td>
@@ -507,6 +513,7 @@ const exportExcel = async () => {
             <tr>
               <th>Topic</th>
               <th>Training Type</th>
+              <th>Venue</th>
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
@@ -519,13 +526,14 @@ const exportExcel = async () => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="9" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="10" className="no-data">Loading trainings...</td></tr>
             ) : previousTrainings.length === 0 ? (
-              <tr><td colSpan="9" className="no-data">No previous trainings</td></tr>
+              <tr><td colSpan="10" className="no-data">No previous trainings</td></tr>
             ) : previousTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
                 <td>{t.trainingType || "—"}</td>
+                <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{t.time || '—'}</td>
                 <td>{t.department || '—'}</td>
@@ -715,14 +723,21 @@ const exportExcel = async () => {
               </div>
             </div>
 
-            <div className="form-group">
-              <label>Training Type</label>
-              <select value={editTrainingType} onChange={(e) => setEditTrainingType(e.target.value)}>
-                <option value="Internal">Internal</option>
-                <option value="External">External</option>
-                <option value="Online">Online</option>
-                <option value="Internal In house">Internal In house</option>
-              </select>
+            <div className="form-row two">
+              <div className="form-group">
+                <label>Venue</label>
+                <input value={editVenue} onChange={(e) => setEditVenue(e.target.value)} placeholder="e.g. Training Room 2 / Auditorium / Online (Teams)" />
+              </div>
+
+              <div className="form-group">
+                <label>Training Type</label>
+                <select value={editTrainingType} onChange={(e) => setEditTrainingType(e.target.value)}>
+                  <option value="Internal">Internal</option>
+                  <option value="External">External</option>
+                  <option value="Online">Online</option>
+                  <option value="Internal In house">Internal In house</option>
+                </select>
+              </div>
             </div>
 
             <div className="block">

@@ -19,6 +19,7 @@ export default function AddTraining() {
   const [status, setStatus] = useState('PENDING');
   const [trainingType, setTrainingType] = useState('Internal');
   const [trainer, setTrainer] = useState('');
+  const [venue, setVenue] = useState('');
 
   // If user came from Calendar date click, pre-fill the training date
   useEffect(() => {
@@ -212,6 +213,7 @@ export default function AddTraining() {
 
     const payload = {
       topic,
+      venue: (venue || '').trim() || undefined,
       trainingDate,
       trainingTime: `${fromTime} - ${toTime}`,
       departments,
@@ -244,6 +246,7 @@ export default function AddTraining() {
 
       const payload = {
         topic,
+        venue: (venue || '').trim() || undefined,
         trainingDate,
         trainingTime: `${fromTime} - ${toTime}`,
         departments,
@@ -297,6 +300,16 @@ export default function AddTraining() {
                 placeholder="e.g. Mr. Sharma"
               />
               <div className="helper">You can keep this blank.</div>
+            </div>
+
+            <div className="form-group">
+              <label>Venue (optional)</label>
+              <input
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                placeholder="e.g. Training Room 2 / Auditorium / Online (Teams)"
+              />
+              <div className="helper">Location of the session (will be shown in listing & emails).</div>
             </div>
 
             <div className="form-row">

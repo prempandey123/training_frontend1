@@ -104,7 +104,7 @@ export default function TrainingCalendar() {
           clicked.setHours(0, 0, 0, 0);
           if (clicked < todayStart) {
             // You can replace alert with toast if you have one
-            alert('Training creation is not allowed for past days.');
+            alert('Past date par training create nahi kar sakte.');
             return;
           }
 
