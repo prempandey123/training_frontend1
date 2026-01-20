@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getDepartments } from '../../api/departmentApi';
 import { getDesignations } from '../../api/designationApi';
 import { getUserById, updateUser } from '../../api/user.api';
-import { getSkillsByDesignation } from '../../api/designationSkill.api';
+import { getSkills } from '../../api/skill.api';
 import { bulkSetRequiredLevels, getUserSkillLevels } from '../../api/userSkillLevel.api';
 import { getAuthUser } from '../../utils/auth';
 import './createUser.css';
@@ -20,8 +20,10 @@ export default function EditUser() {
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
 
-  // ✅ Required levels per user (based on designation skills + user overrides)
-  const [requiredLevels, setRequiredLevels] = useState([]);
+  // ✅ Required skills are now independent of designation
+  const [allSkills, setAllSkills] = useState([]);
+  const [requiredLevels, setRequiredLevels] = useState([]); // [{skillId, skillName, requiredLevel}]
+  const [skillToAdd, setSkillToAdd] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -41,10 +43,11 @@ export default function EditUser() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [user, deptData, desigData] = await Promise.all([
+        const [user, deptData, desigData, skillsData] = await Promise.all([
           getUserById(id),
           getDepartments(),
           getDesignations(),
+          getSkills(),
         ]);
 
         // 🔒 Frontend safety: HOD can edit only users within own department
@@ -56,6 +59,7 @@ export default function EditUser() {
         }
         setDepartments(deptData);
         setDesignations(desigData);
+        setAllSkills(skillsData || []);
 
         setForm({
           name: user.name,
@@ -70,23 +74,20 @@ export default function EditUser() {
           dateOfJoining: user.dateOfJoining?.slice(0, 10) || '',
         });
 
-        // ✅ Load designation skills + user-specific required levels
-        const [dsRes, userLevels] = await Promise.all([
-          user.designation?.id ? getSkillsByDesignation(user.designation.id) : Promise.resolve({ data: [] }),
-          getUserSkillLevels(id),
-        ]);
-        const bySkill = new Map((userLevels || []).map((u) => [u.skill?.id ?? u.skillId, u]));
-        const rows = (dsRes?.data ?? []).map((ds) => {
-          const skill = ds.skill ?? {};
-          const existing = bySkill.get(skill.id);
-          const userReq = existing?.requiredLevel;
-          return {
-            skillId: skill.id,
-            skillName: skill.name,
-            // 🔥 HR must set per-user required level (no designation defaults)
-            requiredLevel: 4,
-          };
-        }).filter((r) => r.skillId);
+        // ✅ Load user-specific required skills (requiredLevel != null)
+        const userLevels = await getUserSkillLevels(id);
+        const rows = (userLevels || [])
+          .filter((u) => u?.requiredLevel !== null && u?.requiredLevel !== undefined)
+          .map((u) => {
+            const sid = u.skill?.id ?? u.skillId;
+            const sname = u.skill?.name ?? u.skillName;
+            return {
+              skillId: sid,
+              skillName: sname || (skillsData || []).find((s) => s.id === sid)?.name || 'Skill',
+              requiredLevel: Number(u.requiredLevel),
+            };
+          })
+          .filter((r) => r.skillId);
         setRequiredLevels(rows);
       } catch (err) {
         alert('Failed to load employee data');
@@ -98,37 +99,25 @@ export default function EditUser() {
     loadData();
   }, [id]);
 
-  // ✅ if designation changes while editing -> reload its skills and merge existing user required levels
-  useEffect(() => {
-    async function reload() {
-      if (!form.designationId) {
-        setRequiredLevels([]);
-        return;
-      }
-      try {
-        const [dsRes, userLevels] = await Promise.all([
-          getSkillsByDesignation(form.designationId),
-          getUserSkillLevels(id),
-        ]);
-        const bySkill = new Map((userLevels || []).map((u) => [u.skill?.id ?? u.skillId, u]));
-        const rows = (dsRes?.data ?? []).map((ds) => {
-          const skill = ds.skill ?? {};
-          const existing = bySkill.get(skill.id);
-          const userReq = existing?.requiredLevel;
-          return {
-            skillId: skill.id,
-            skillName: skill.name,
-            requiredLevel: 4,
-          };
-        }).filter((r) => r.skillId);
-        setRequiredLevels(rows);
-      } catch (e) {
-        setRequiredLevels([]);
-      }
-    }
-    // avoid running before initial load finishes
-    if (!loading) reload();
-  }, [form.designationId]);
+  const addRequiredSkill = () => {
+    const sid = Number(skillToAdd);
+    if (!Number.isInteger(sid)) return;
+    if (requiredLevels.some((r) => r.skillId === sid)) return;
+    const skill = allSkills.find((s) => s.id === sid);
+    setRequiredLevels((prev) => [
+      ...prev,
+      {
+        skillId: sid,
+        skillName: skill?.name || 'Skill',
+        requiredLevel: 4, // default
+      },
+    ]);
+    setSkillToAdd('');
+  };
+
+  const removeRequiredSkill = (skillId) => {
+    setRequiredLevels((prev) => prev.filter((r) => r.skillId !== skillId));
+  };
 
   const updateRequiredLevel = (skillId, level) => {
     const lv = level === '' ? '' : Number(level);
@@ -180,14 +169,17 @@ export default function EditUser() {
     try {
       await updateUser(id, payload);
 
-      // ✅ Save user-wise required levels
-      if (requiredLevels.length > 0) {
+      // ✅ Save user-wise required skills (ADMIN/HR only)
+      const isAdminHr = role.includes('ADMIN') || role.includes('HR');
+      if (isAdminHr) {
         await bulkSetRequiredLevels(
           id,
-          requiredLevels.map((r) => ({
-            skillId: r.skillId,
-            requiredLevel: 4,
-          })),
+          (requiredLevels || [])
+            .filter((r) => Number.isInteger(Number(r.skillId)))
+            .map((r) => ({
+              skillId: Number(r.skillId),
+              requiredLevel: Number.isInteger(Number(r.requiredLevel)) ? Number(r.requiredLevel) : 4,
+            })),
         );
       }
 
@@ -356,13 +348,32 @@ export default function EditUser() {
           </label>
         </div>
 
-        {/* ✅ USER-WISE REQUIRED LEVELS */}
-        {form.designationId && requiredLevels.length > 0 && (
+        {/* ✅ USER-WISE REQUIRED SKILLS (independent of designation) */}
+        {(role.includes('ADMIN') || role.includes('HR')) && (
           <div className="form-section">
-            <h3>Required Levels (User-wise)</h3>
+            <h3>Required Skills (User-wise)</h3>
             <p style={{ marginTop: '-6px', color: '#666', fontSize: 13 }}>
-              Skills are taken from designation. Required levels can be different per user.
+              Add the skills required for this employee. Default required level is 4, and you can change it.
             </p>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'end', marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 260 }}>
+                <label style={{ display: 'block', marginBottom: 6 }}>Add Skill</label>
+                <select value={skillToAdd} onChange={(e) => setSkillToAdd(e.target.value)}>
+                  <option value="">Select Skill</option>
+                  {allSkills
+                    .filter((s) => !requiredLevels.some((r) => r.skillId === s.id))
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <button type="button" className="primary-btn" onClick={addRequiredSkill} disabled={!skillToAdd}>
+                + Add
+              </button>
+            </div>
 
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -370,16 +381,39 @@ export default function EditUser() {
                   <tr>
                     <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Skill</th>
                     <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Required Level</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {requiredLevels.map((r) => (
+                  {requiredLevels.length === 0 ? (
+                    <tr>
+                      <td style={{ padding: 8 }} colSpan={3}>
+                        No required skills added.
+                      </td>
+                    </tr>
+                  ) : requiredLevels.map((r) => (
                     <tr key={r.skillId}>
                       <td style={{ padding: 8 }}>{r.skillName}</td>
                       <td style={{ padding: 8 }}>
-                        <select value={ 4 } disabled>
+                        <select
+                          value={String(r.requiredLevel ?? 4)}
+                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
+                        >
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
                           <option value="4">4</option>
                         </select>
+                      </td>
+                      <td style={{ padding: 8 }}>
+                        <button
+                          type="button"
+                          className="back-btn"
+                          onClick={() => removeRequiredSkill(r.skillId)}
+                        >
+                          Remove
+                        </button>
                       </td>
                     </tr>
                   ))}
