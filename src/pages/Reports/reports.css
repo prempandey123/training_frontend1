@@ -22,11 +22,27 @@
   color: #6b7280;
 }
 
+.report-filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .report-filters select {
   padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
-  margin-left: 10px;
+  margin-left: 0;
+}
+
+.report-input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  margin-left: 0;
+  min-width: 150px;
 }
 
 /* SUMMARY */

@@ -4,23 +4,34 @@ import { getAuthUser } from '../../utils/auth';
 import './reports.css';
 
 function buildUrl(template, params) {
-  let url = template;
+  let url = template || '';
+
+  // Replace path params
   if (params?.userId) url = url.replace(':userId', String(params.userId));
   if (params?.departmentId) url = url.replace(':departmentId', String(params.departmentId));
 
-  // If training completion supports optional department filter via query param
-  if (url.startsWith('/reports/training-completion/excel')) {
+  const [path, rawQuery] = url.split('?');
+  const qs = new URLSearchParams(rawQuery || '');
+
+  // Optional filters used by some existing reports
+  if (path.startsWith('/reports/training-completion/excel')) {
     const did = params?.departmentId;
-    if (did) url = `${url}?departmentId=${encodeURIComponent(did)}`;
+    if (did && !qs.has('departmentId')) qs.set('departmentId', String(did));
+  }
+  if (path.startsWith('/reports/tni-requirements/excel')) {
+    const did = params?.departmentId;
+    if (did && !qs.has('departmentId')) qs.set('departmentId', String(did));
   }
 
-  // TNI requirements supports optional department filter via query param
-  if (url.startsWith('/reports/tni-requirements/excel')) {
-    const did = params?.departmentId;
-    if (did) url = `${url}?departmentId=${encodeURIComponent(did)}`;
-  }
+  // Custom report params (Annexure / master record exports)
+  if (params?.year && !qs.has('year')) qs.set('year', String(params.year));
+  if (params?.upto && !qs.has('upto')) qs.set('upto', String(params.upto));
+  if (params?.fy && !qs.has('fy')) qs.set('fy', String(params.fy));
+  if (params?.start && !qs.has('start')) qs.set('start', String(params.start));
+  if (params?.end && !qs.has('end')) qs.set('end', String(params.end));
 
-  return url;
+  const queryOut = qs.toString();
+  return `${path}${queryOut ? `?${queryOut}` : ''}`;
 }
 
 export default function Reports() {
@@ -30,6 +41,13 @@ export default function Reports() {
   const [departments, setDepartments] = useState([]);
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [selectedType, setSelectedType] = useState('');
+
+  // Custom report params
+  const [year, setYear] = useState('2025');
+  const [upto, setUpto] = useState('');
+  const [fy, setFy] = useState('2025-2026');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [summaryCards, setSummaryCards] = useState([]);
   const [reportRows, setReportRows] = useState([]);
@@ -115,7 +133,33 @@ export default function Reports() {
       return;
     }
 
-    const url = buildUrl(exp.url, { userId, departmentId: deptIdNumber });
+    // Custom param validations
+    if (needs.includes('year') && !year) {
+      alert('Please select a year.');
+      return;
+    }
+    if (needs.includes('fy') && !fy) {
+      alert('Please select a financial year (FY).');
+      return;
+    }
+    if (needs.includes('start') && !startDate) {
+      alert('Please select a start date.');
+      return;
+    }
+    if (needs.includes('end') && !endDate) {
+      alert('Please select an end date.');
+      return;
+    }
+
+    const url = buildUrl(exp.url, {
+      userId,
+      departmentId: deptIdNumber,
+      year,
+      upto,
+      fy,
+      start: startDate,
+      end: endDate,
+    });
 
     // Use API base URL so file downloads work even if axios baseURL is different
     const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -150,6 +194,47 @@ export default function Reports() {
               </option>
             ))}
           </select>
+
+          {/* Custom report params (used only by some exports) */}
+          <input
+            className="report-input"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            placeholder="Year (e.g. 2025)"
+            title="Year (used for Annexure exports)"
+          />
+
+          <input
+            className="report-input"
+            value={upto}
+            onChange={(e) => setUpto(e.target.value)}
+            placeholder="Upto (YYYY-MM-DD)"
+            title="Upto date (optional)"
+          />
+
+          <input
+            className="report-input"
+            value={fy}
+            onChange={(e) => setFy(e.target.value)}
+            placeholder="FY (e.g. 2025-2026)"
+            title="Financial year (used for master record export)"
+          />
+
+          <input
+            className="report-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            placeholder="Start (YYYY-MM-DD)"
+            title="Start date (optional override)"
+          />
+
+          <input
+            className="report-input"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            placeholder="End (YYYY-MM-DD)"
+            title="End date (optional override)"
+          />
         </div>
       </div>
 
