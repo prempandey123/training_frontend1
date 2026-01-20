@@ -1,0 +1,147 @@
+.atc-page {
+  padding: 16px;
+}
+
+.atc-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.atc-help-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.atc-help ul {
+  margin: 0 0 12px 18px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.field span {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+}
+
+.btn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+  cursor: pointer;
+}
+
+.btn.primary {
+  border: 1px solid #1f3fff;
+  background: #1f3fff;
+  color: white;
+}
+
+.atc-error {
+  margin-top: 10px;
+  color: #b00020;
+  font-weight: 600;
+}
+
+.atc-result {
+  margin-top: 10px;
+  background: #f6fbff;
+  border: 1px solid #d6ecff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.atc-table-wrap {
+  margin-top: 18px;
+}
+
+.atc-table-scroll {
+  overflow: auto;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  max-height: 65vh;
+}
+
+.atc-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+.atc-table th,
+.atc-table td {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.atc-table th {
+  position: sticky;
+  top: 0;
+  background: #fafafa;
+  z-index: 1;
+}
+
+/* Sticky first columns so calendar doesn't look "aadha" on smaller screens */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+.sticky-1 { left: 0; min-width: 64px; }
+.sticky-2 { left: 64px; min-width: 90px; }
+.sticky-3 { left: 154px; min-width: 260px; }
+
+.month-col {
+  text-align: center;
+}
+
+.cell-clickable {
+  text-align: center;
+}
+
+.cell-btn {
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.cell-btn:hover {
+  border-color: #1f3fff;
+}
+
+.atc-empty {
+  text-align: center;
+  padding: 16px;
+  opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+  .atc-card {
+    grid-template-columns: 1fr;
+  }
+}

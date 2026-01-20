@@ -32,6 +32,7 @@ import UpdateUserPassword from './pages/UpdateUserPassword/UpdateUserPassword';
 import OrgSkillMatrix from './pages/SkillMatrix/OrgSkillMatrix';
 import OrgCompetencyMatrix from './pages/SkillMatrix/OrgCompetencyMatrix';
 import AuditLogs from './pages/AuditLogs/AuditLogs';
+import AnnualTrainingCalendar from './pages/AnnualTrainingCalendar/AnnualTrainingCalendar';
 
 
 export default function App() {
@@ -221,6 +222,16 @@ export default function App() {
             </RoleRoute>
           }
         />
+
+        <Route
+          path="annual-training-calendar"
+          element={
+            <RoleRoute allow={["ADMIN", "HR"]}>
+              <AnnualTrainingCalendar />
+            </RoleRoute>
+          }
+        />
+
         <Route
           path="attendance"
           element={

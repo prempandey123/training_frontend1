@@ -54,9 +54,30 @@ export default function AddTraining() {
   useEffect(() => {
     const params = new URLSearchParams(location.search || '');
     const date = (params.get('date') || '').trim();
-    // accept only YYYY-MM-DD
+    const topicParam = (params.get('topic') || '').trim();
+    const monthParam = (params.get('month') || '').trim(); // YYYY-MM
+    const trainerParam = (params.get('trainer') || '').trim();
+
+    // topic (from annual calendar click)
+    if (topicParam) {
+      // URLSearchParams already returns decoded values
+      setTopic(topicParam);
+    }
+
+    // trainer (from annual calendar click) - editable before save
+    if (trainerParam) {
+      setTrainer((prev) => (prev ? prev : trainerParam));
+    }
+
+    // date (from day-calendar click)
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       setTrainingDate(date);
+      return;
+    }
+
+    // month (from annual calendar month click) -> default to 1st of that month
+    if (/^\d{4}-\d{2}$/.test(monthParam)) {
+      setTrainingDate(`${monthParam}-01`);
     }
   }, [location.search]);
 

@@ -63,6 +63,7 @@ export default function Sidebar() {
     ? []
     : [
         { to: '/calendar', label: 'Training Calendar' },
+        { to: '/annual-training-calendar', label: 'Annual Training Calendar' },
         { to: '/training', label: 'Training' },
         { to: '/attendance', label: 'Attendance' },
         { to: '/training-requirements', label: 'Training Requirements' },
