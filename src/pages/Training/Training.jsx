@@ -95,6 +95,8 @@ export default function Training() {
   const [editVenue, setEditVenue] = useState('');
   // trainingType values come from backend enum: 'Internal' | 'External' | 'Online' | 'Internal In house'
   const [editTrainingType, setEditTrainingType] = useState('Internal');
+  const [editCategory, setEditCategory] = useState('Both');
+  const [editType, setEditType] = useState('Mandatory');
   const [editAttendees, setEditAttendees] = useState([]);
 
   // Smart employee search (typeahead) for edit participants
@@ -267,6 +269,10 @@ const exportExcel = async () => {
       (ttype || 'Internal');
     setEditTrainingType(normalizedType);
 
+    // New fields
+    setEditCategory(training?.category || 'Both');
+    setEditType(training?.type || 'Mandatory');
+
     const parts = splitTimeRange(training?.time || '');
     setEditFrom(parts.from || '');
     setEditTo(parts.to || '');
@@ -310,6 +316,8 @@ const exportExcel = async () => {
     setEditTrainer('');
     setEditVenue('');
     setEditTrainingType('Internal');
+    setEditCategory('Both');
+    setEditType('Mandatory');
     setEditAttendees([]);
     setSelectedTraining(null);
   };
@@ -355,7 +363,9 @@ const exportExcel = async () => {
         trainingDate: date,
         trainingTime: time,
         trainer: (editTrainer || '').trim(),
-        trainingType: editTrainingType,
+        trainingType: editTrainingType, // UI label: Mode
+        category: editCategory,
+        type: editType,
         attendees,
       });
       await loadTrainings();
@@ -510,7 +520,9 @@ const exportExcel = async () => {
           <thead>
             <tr>
               <th>Topic</th>
-              <th>Training Type</th>
+              <th>Mode</th>
+              <th>Category</th>
+              <th>Type</th>
               <th>Venue</th>
               <th>Date</th>
               <th>Time</th>
@@ -524,13 +536,15 @@ const exportExcel = async () => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="10" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="12" className="no-data">Loading trainings...</td></tr>
             ) : upcomingTrainings.length === 0 ? (
-              <tr><td colSpan="10" className="no-data">No upcoming trainings</td></tr>
+              <tr><td colSpan="12" className="no-data">No upcoming trainings</td></tr>
             ) : upcomingTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
-                <td>{t.trainingType || "—"}</td>
+                <td>{t.mode || t.trainingType || "—"}</td>
+                <td>{t.category || "—"}</td>
+                <td>{t.type || "—"}</td>
                 <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{formatTimeRangeIST(t.time)}</td>
@@ -578,7 +592,9 @@ const exportExcel = async () => {
           <thead>
             <tr>
               <th>Topic</th>
-              <th>Training Type</th>
+              <th>Mode</th>
+              <th>Category</th>
+              <th>Type</th>
               <th>Venue</th>
               <th>Date</th>
               <th>Time</th>
@@ -592,13 +608,15 @@ const exportExcel = async () => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="10" className="no-data">Loading trainings...</td></tr>
+              <tr><td colSpan="12" className="no-data">Loading trainings...</td></tr>
             ) : previousTrainings.length === 0 ? (
-              <tr><td colSpan="10" className="no-data">No previous trainings</td></tr>
+              <tr><td colSpan="12" className="no-data">No previous trainings</td></tr>
             ) : previousTrainings.map((t) => (
               <tr key={t.id} className="row-hover">
                 <td className="training-name">{t.topic}</td>
-                <td>{t.trainingType || "—"}</td>
+                <td>{t.mode || t.trainingType || "—"}</td>
+                <td>{t.category || "—"}</td>
+                <td>{t.type || "—"}</td>
                 <td>{t.venue || "—"}</td>
                 <td>{formatDate(t.date)}</td>
                 <td>{formatTimeRangeIST(t.time)}</td>
@@ -837,19 +855,36 @@ const exportExcel = async () => {
               </div>
             </div>
 
-            <div className="form-row two">
+            <div className="form-row">
               <div className="form-group">
                 <label>Venue</label>
                 <input value={editVenue} onChange={(e) => setEditVenue(e.target.value)} placeholder="e.g. Training Room 2 / Auditorium / Online (Teams)" />
               </div>
 
               <div className="form-group">
-                <label>Training Type</label>
+                <label>Mode</label>
                 <select value={editTrainingType} onChange={(e) => setEditTrainingType(e.target.value)}>
                   <option value="Internal">Internal</option>
                   <option value="External">External</option>
                   <option value="Online">Online</option>
                   <option value="Internal In house">Internal In house</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)}>
+                  <option value="Worker">Worker</option>
+                  <option value="Staff">Staff</option>
+                  <option value="Both">Both</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Type</label>
+                <select value={editType} onChange={(e) => setEditType(e.target.value)}>
+                  <option value="Mandatory">Mandatory</option>
+                  <option value="Optional">Optional</option>
                 </select>
               </div>
             </div>

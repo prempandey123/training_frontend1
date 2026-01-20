@@ -161,9 +161,33 @@ export default function Reports() {
       end: endDate,
     });
 
-    // Use API base URL so file downloads work even if axios baseURL is different
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    window.open(`${base}${url}`, '_blank');
+    // ✅ Download using authenticated axios (window.open would miss Authorization header)
+    (async () => {
+      try {
+        const res = await api.get(url, { responseType: 'blob' });
+        const blob = new Blob([res.data]);
+
+        // Try to infer extension from URL
+        const ext = String(url).includes('/pdf') ? 'pdf' : 'xlsx';
+        const safeName = String(report?.name || 'report')
+          .replace(/[^a-z0-9\-\s_]/gi, '')
+          .trim()
+          .replace(/\s+/g, '_');
+        const fileName = `${safeName}.${ext}`;
+
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        const msg = e?.response?.data?.message || 'Export failed';
+        alert(msg);
+      }
+    })();
   };
 
   return (

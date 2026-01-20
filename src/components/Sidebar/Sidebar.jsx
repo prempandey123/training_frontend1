@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import './sidebar.css';
-import { getAuthUser } from '../../utils/auth';
+import { getAuthUser, logout } from '../../utils/auth';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -26,70 +26,58 @@ export default function Sidebar() {
   const showStaffMatrix = isAdmin || isStaff || (!isWorker && !isStaff);
 
   const handleLogout = () => {
-    // auth clear
-    localStorage.clear();
-    sessionStorage.clear();
-
+    logout();
     navigate('/login');
   };
 
-  // For HOD: show only Skills & Designations (per requirement)
-  const coreLinks = isHOD
-    ? []
-    : [
-        { to: '/', label: 'Dashboard', end: true },
-        { to: '/my-profile', label: 'My Profile' },
-      ];
+  // helper: sidebar should not show links user can't access (Route guards will block anyway)
+  const canAccess = (allow = []) => {
+    if (!allow?.length) return true;
+    return allow.some((r) => role === String(r).toUpperCase() || role.includes(String(r).toUpperCase()));
+  };
 
-  const managementLinks = [
-    ...(isAdmin || isHR
-      ? [
-          { to: '/users', label: 'User Management' },
-          { to: '/users/update-password', label: 'Update User Password' },
-          { to: '/departments', label: 'Department Management' },
-        ]
-      : []),
-    ...(isHOD ? [{ to: '/users', label: 'Users (My Dept)' }] : []),
-    // HOD requirement: instead of Designations/Skills in sidebar, show matrices.
-    ...(isAdmin || isHR
-      ? [
-          { to: '/designations', label: 'Designations' },
-          { to: '/skills', label: 'Skills' },
-        ]
-      : []),
+  // 
+  // ✅ Sidebar information architecture
+  // - Keep it consistent with route guards in App.jsx
+  // - Don't remove any existing feature, just rearrange + hide inaccessible links
+  //
+
+  const coreLinks = [
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/', label: 'Dashboard', end: true }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/my-profile', label: 'My Profile' }] : []),
   ];
 
-  const trainingLinks = isHOD
-    ? []
-    : [
-        { to: '/calendar', label: 'Training Calendar' },
-        { to: '/annual-training-calendar', label: 'Annual Training Calendar' },
-        { to: '/training', label: 'Training' },
-        { to: '/attendance', label: 'Attendance' },
-        { to: '/training-requirements', label: 'Training Requirements' },
-      ];
+  const peopleOrgLinks = [
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) ? [{ to: '/users', label: isHOD ? 'Users (My Dept)' : 'Users' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/users/update-password', label: 'Update User Password' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/departments', label: 'Departments' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) ? [{ to: '/designations', label: 'Designations' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) ? [{ to: '/skills', label: 'Skills' }] : []),
+  ];
 
-  const matrixLinks = isHOD
-    ? [
-        // ✅ HOD requirement: manage ONLY own department, SINGLE view only
-        { to: '/skill-matrix', label: 'Skill Matrix' },
-        { to: '/competency-matrix', label: 'Competency Matrix' },
-      ]
-    : [
-        ...(showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix' }] : []),
-        ...(showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix' }] : []),
-        ...(showWorkerMatrix ? [{ to: '/skill-matrix/org', label: 'SKILL MATRIX (ORG)' }] : []),
-        ...(showStaffMatrix ? [{ to: '/competency-matrix/org', label: 'COMPETENCY MATRIX (ORG)' }] : []),
-      ];
+  const trainingLinks = [
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/calendar', label: 'Training Calendar' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/annual-training-calendar', label: 'Annual Training Calendar' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training', label: 'Trainings' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/attendance', label: 'Attendance' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training-requirements', label: 'Training Requirements' }] : []),
+  ];
 
-  const insightsLinks = isHOD
-    ? []
-    : [
-        { to: '/skill-gap', label: 'Skill Gap' },
-        { to: '/reports', label: 'Reports' },
-      ];
+  const matrixLinks = [
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) && showWorkerMatrix ? [{ to: '/skill-matrix/org', label: 'Skill Matrix (Org)' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) && showStaffMatrix ? [{ to: '/competency-matrix/org', label: 'Competency Matrix (Org)' }] : []),
+  ];
 
-  const systemLinks = isHOD ? [] : [{ to: '/audit-logs', label: 'Audit Logs' }];
+  const insightsLinks = [
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/skill-gap', label: 'Skill Gap' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/reports', label: 'Reports' }] : []),
+  ];
+
+  const systemLinks = [
+    ...(canAccess(['ADMIN']) ? [{ to: '/audit-logs', label: 'Audit Logs' }] : []),
+  ];
 
   const Section = ({ title, links }) => {
     if (!links?.length) return null;
@@ -118,7 +106,7 @@ export default function Sidebar() {
 
       <div className="sidebar-scroll">
         <Section title="Core" links={coreLinks} />
-        <Section title="Management" links={managementLinks} />
+        <Section title="People & Org" links={peopleOrgLinks} />
         <Section title="Training" links={trainingLinks} />
         <Section title="Matrices" links={matrixLinks} />
         <Section title="Insights" links={insightsLinks} />

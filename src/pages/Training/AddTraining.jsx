@@ -46,7 +46,10 @@ export default function AddTraining() {
     if (v) setToTime(v);
   }, [toHH, toMM, toMeridiem]);
   const [status, setStatus] = useState('PENDING');
+  // UI label: Mode (kept as trainingType key for backward compatibility)
   const [trainingType, setTrainingType] = useState('Internal');
+  const [category, setCategory] = useState('Both');
+  const [type, setType] = useState('Mandatory');
   const [trainer, setTrainer] = useState('');
   const [venue, setVenue] = useState('');
 
@@ -270,7 +273,10 @@ export default function AddTraining() {
       skills: selectedSkill?.name ? [selectedSkill.name] : [],
       assignedEmployees,
       status,
+      // Backend stores this as trainingType but UI calls it Mode
       trainingType,
+      category,
+      type,
       trainer: (trainer || "").trim() || undefined,
     };
 
@@ -304,6 +310,8 @@ export default function AddTraining() {
         assignedEmployees,
         status,
         trainingType,
+        category,
+        type,
         trainer: (trainer || "").trim() || undefined,
       };
 
@@ -374,7 +382,7 @@ export default function AddTraining() {
               </div>
 
               <div className="form-group">
-                <label>Training Type *</label>
+                <label>Mode *</label>
                 <select value={trainingType} onChange={(e) => setTrainingType(e.target.value)} required>
                   <option value="Internal">Internal</option>
                   <option value="External">External</option>
@@ -383,6 +391,25 @@ export default function AddTraining() {
                 </select>
               </div>
 
+              <div className="form-group">
+                <label>Category *</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+                  <option value="Worker">Worker</option>
+                  <option value="Staff">Staff</option>
+                  <option value="Both">Both</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Type *</label>
+                <select value={type} onChange={(e) => setType(e.target.value)} required>
+                  <option value="Mandatory">Mandatory</option>
+                  <option value="Optional">Optional</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row two">
               <div className="form-group">
                 <label>From *</label>
                 <div className="time12">

@@ -9,12 +9,12 @@ export default function Header() {
   const wrapperRef = useRef(null);
   const navigate = useNavigate();
 
-    const [user, setUser] = useState({ name: 'User', designation: '', department: '' });
+  const [user, setUser] = useState({ name: 'User', role: 'ADMIN', designation: '', department: '' });
 
   useEffect(() => {
     const u = getAuthUser();
     if (u?.email) {
-      setUser((prev) => ({ ...prev, name: u.email }));
+      setUser((prev) => ({ ...prev, name: u.email, role: String(u.role || prev.role) }));
     }
   }, []);
 
@@ -67,7 +67,7 @@ export default function Header() {
           className="profile-wrapper"
           onClick={() => setOpen(!open)}
         >
-          <span className="user-name">Admin ▾</span>
+          <span className="user-name">{String(user.role || 'Admin')} ▾</span>
 
           {open && (
             <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
