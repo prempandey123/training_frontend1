@@ -18,6 +18,12 @@ export default function UserList() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
+  // Bulk Upload
+  const [bulkFile, setBulkFile] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState('');
+  const [bulkErr, setBulkErr] = useState('');
+
   const formatDate = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('en-IN', {
@@ -27,27 +33,72 @@ export default function UserList() {
     });
   };
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/users');
+      let data = res.data || [];
+      if (isHOD && deptId) {
+        data = data.filter((u) => Number(u?.department?.id) === deptId);
+      }
+      setEmployees(data);
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load employees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 🔹 FETCH USERS FROM BACKEND
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await api.get('/users');
-        let data = res.data || [];
-        // Extra frontend safety: filter to my department for HOD
-        if (isHOD && deptId) {
-          data = data.filter((u) => Number(u?.department?.id) === deptId);
-        }
-        setEmployees(data);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load employees');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHOD, deptId]);
+
+  const handleBulkUpload = async () => {
+    setBulkMsg('');
+    setBulkErr('');
+    if (!bulkFile) {
+      setBulkErr('Please select an Excel file (.xlsx)');
+      return;
+    }
+
+    const name = String(bulkFile?.name || '').toLowerCase();
+    if (!name.endsWith('.xlsx') && !name.endsWith('.xlsm')) {
+      setBulkErr('Only .xlsx/.xlsm files are supported');
+      return;
+    }
+
+    try {
+      setBulkUploading(true);
+      const formData = new FormData();
+      formData.append('file', bulkFile);
+
+      const res = await api.post('/users/bulk-upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const d = res.data || {};
+      setBulkMsg(
+        `Upload done. Total rows: ${d.totalRows || 0}, Created: ${d.created || 0}, Skipped: ${d.skipped || 0}, Errors: ${d.errors || 0}`,
+      );
+      setBulkFile(null);
+
+      // Refresh list
+      await fetchUsers();
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Bulk upload failed';
+      setBulkErr(Array.isArray(msg) ? msg.join(', ') : String(msg));
+    } finally {
+      setBulkUploading(false);
+    }
+  };
 
   // 🔍 SEARCH FILTER (Name / Employee ID)
   const filteredEmployees = employees.filter((emp) => {
@@ -88,6 +139,38 @@ export default function UserList() {
           )}
         </div>
       </div>
+
+      {/* BULK UPLOAD (ADMIN/HR only) */}
+      {!isHOD && (
+        <div className="bulk-upload-card">
+          <div className="bulk-upload-left">
+            <h3>Bulk Upload (Excel)</h3>
+            <p>
+              Upload .xlsx file with columns like: name, email, employeeId, mobile,
+              password (optional), departmentId/department, designationId/designation,
+              role, employeeType, dateOfJoining, isActive, biometricLinked.
+            </p>
+          </div>
+
+          <div className="bulk-upload-right">
+            <input
+              type="file"
+              accept=".xlsx,.xlsm"
+              onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+            />
+            <button
+              className="bulk-upload-btn"
+              onClick={handleBulkUpload}
+              disabled={bulkUploading}
+            >
+              {bulkUploading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+
+          {bulkMsg && <p className="bulk-msg">{bulkMsg}</p>}
+          {bulkErr && <p className="bulk-err">{bulkErr}</p>}
+        </div>
+      )}
 
       {/* STATES */}
       {loading && <p className="loading-text">Loading employees...</p>}

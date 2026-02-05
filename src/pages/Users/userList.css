@@ -27,6 +27,68 @@
   justify-content: flex-end;
 }
 
+/* Bulk Upload */
+.bulk-upload-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.bulk-upload-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.bulk-upload-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.bulk-upload-left {
+  margin-bottom: 10px;
+}
+
+.bulk-upload-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bulk-upload-btn {
+  background: linear-gradient(135deg, #0f172a, #111827);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bulk-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bulk-msg {
+  margin-top: 10px;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.bulk-err {
+  margin-top: 10px;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 /* Primary actions */
 .create-btn {
   background: linear-gradient(135deg, var(--accent-strong), var(--accent));
