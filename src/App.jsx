@@ -13,6 +13,7 @@ import SkillMatrix from './pages/SkillMatrix/SkillMatrix';
 import CompetencyMatrix from './pages/SkillMatrix/CompetencyMatrix';
 import Reports from './pages/Reports/Reports';
 import CreateUser from './pages/Users/CreateUser';
+import EditUser from './pages/Users/EditUser';
 import AddDesignation from './pages/Designations/AddDesignation';
 import DesignationList from './pages/Designations/DesignationList';
 import SkillList from './pages/Skills/SkillList';
@@ -76,6 +77,15 @@ export default function App() {
           element={
             <RoleRoute allow={["ADMIN", "HR", "HOD"]}>
               <UserProfileView />
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="users/edit/:id"
+          element={
+            <RoleRoute allow={["ADMIN", "HR", "HOD"]}>
+              <EditUser />
             </RoleRoute>
           }
         />
