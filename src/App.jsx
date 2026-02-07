@@ -24,7 +24,7 @@ import TrainingCalendar from './pages/Calendar/TrainingCalendar';
 import SkillGap from './pages/SkillGap/SkillGap';
 import TrainingRequirements from './pages/TrainingRequirements/TrainingRequirements';
 import EditSkill from './pages/Skills/EditSkill';
-import EditUser from './pages/Users/EditUser';
+import UserProfileView from './pages/Users/UserProfileView';
 import MapDesignationSkills from './pages/Designations/MapDesignationSkills';
 import DepartmentList from './pages/Departments/DepartmentList';
 import AddDepartment from './pages/Departments/AddDepartment';
@@ -72,10 +72,10 @@ export default function App() {
           }
         />
         <Route
-          path="users/edit/:id"
+          path="users/view/:id"
           element={
             <RoleRoute allow={["ADMIN", "HR", "HOD"]}>
-              <EditUser />
+              <UserProfileView />
             </RoleRoute>
           }
         />

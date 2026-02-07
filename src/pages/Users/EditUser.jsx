@@ -57,22 +57,25 @@ export default function EditUser() {
           navigate('/users');
           return;
         }
+
         setDepartments(deptData);
         setDesignations(desigData);
         setAllSkills(skillsData || []);
 
-        setForm({
-          name: user.name,
-          email: user.email,
-          employeeId: user.employeeId,
-          mobile: user.mobile,
-          departmentId: user.department?.id || '',
-          designationId: user.designation?.id || '',
-          role: user.role,
-          employeeType: user.employeeType || '',
-          isActive: user.isActive,
-          dateOfJoining: user.dateOfJoining?.slice(0, 10) || '',
-        });
+        setForm((prev) => ({
+          ...prev,
+          name: user?.name ?? '',
+          email: user?.email ?? '',
+          employeeId: user?.employeeId ?? '',
+          mobile: user?.mobile ?? '',
+          departmentId: user?.department?.id || '',
+          designationId: user?.designation?.id || '',
+          role: user?.role ?? 'EMPLOYEE',
+          employeeType: user?.employeeType || '',
+          isActive: !!user?.isActive,
+          dateOfJoining: user?.dateOfJoining?.slice(0, 10) || '',
+          password: '',
+        }));
 
         // ✅ Load user-specific required skills (requiredLevel != null)
         const userLevels = await getUserSkillLevels(id);
@@ -83,11 +86,15 @@ export default function EditUser() {
             const sname = u.skill?.name ?? u.skillName;
             return {
               skillId: sid,
-              skillName: sname || (skillsData || []).find((s) => s.id === sid)?.name || 'Skill',
+              skillName:
+                sname ||
+                (skillsData || []).find((s) => s.id === sid)?.name ||
+                'Skill',
               requiredLevel: Number(u.requiredLevel),
             };
           })
           .filter((r) => r.skillId);
+
         setRequiredLevels(rows);
       } catch (err) {
         alert('Failed to load employee data');
@@ -97,12 +104,14 @@ export default function EditUser() {
     }
 
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const addRequiredSkill = () => {
     const sid = Number(skillToAdd);
     if (!Number.isInteger(sid)) return;
     if (requiredLevels.some((r) => r.skillId === sid)) return;
+
     const skill = allSkills.find((s) => s.id === sid);
     setRequiredLevels((prev) => [
       ...prev,
@@ -147,23 +156,28 @@ export default function EditUser() {
       return;
     }
 
+    // ✅ IMPORTANT: Do NOT send empty string IDs to backend
     const payload = {
       name: form.name,
       mobile: form.mobile,
-      designationId: form.designationId,
       employeeType: form.employeeType,
       isActive: form.isActive,
-      dateOfJoining: form.dateOfJoining,
     };
+
+    // only send if selected
+    if (form.designationId) payload.designationId = Number(form.designationId);
+
+    // send date only if provided
+    if (form.dateOfJoining) payload.dateOfJoining = form.dateOfJoining;
 
     // HOD: department/role are fixed; backend also enforces this
     if (!isHOD) {
-      payload.departmentId = form.departmentId;
-      payload.role = form.role;
+      if (form.departmentId) payload.departmentId = Number(form.departmentId);
+      if (form.role) payload.role = form.role;
     }
 
     if (form.password?.trim()) {
-      payload.password = form.password;
+      payload.password = form.password.trim();
     }
 
     try {
@@ -178,7 +192,9 @@ export default function EditUser() {
             .filter((r) => Number.isInteger(Number(r.skillId)))
             .map((r) => ({
               skillId: Number(r.skillId),
-              requiredLevel: Number.isInteger(Number(r.requiredLevel)) ? Number(r.requiredLevel) : 4,
+              requiredLevel: Number.isInteger(Number(r.requiredLevel))
+                ? Number(r.requiredLevel)
+                : 4,
             })),
         );
       }
@@ -186,10 +202,10 @@ export default function EditUser() {
       alert('Employee updated successfully');
       navigate('/users');
     } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-          'Error while updating employee'
-      );
+      // helpful debug (keep or remove later)
+      console.log('UPDATE ERROR:', err?.response?.data || err);
+
+      alert(err?.response?.data?.message || 'Error while updating employee');
     }
   };
 
@@ -212,11 +228,7 @@ export default function EditUser() {
           <div className="form-grid">
             <div>
               <label>Name</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-              />
+              <input name="name" value={form.name} onChange={handleChange} />
             </div>
 
             <div>
@@ -231,11 +243,7 @@ export default function EditUser() {
 
             <div>
               <label>Mobile</label>
-              <input
-                name="mobile"
-                value={form.mobile}
-                onChange={handleChange}
-              />
+              <input name="mobile" value={form.mobile} onChange={handleChange} />
             </div>
           </div>
         </div>
@@ -290,11 +298,7 @@ export default function EditUser() {
             {!isHOD ? (
               <div>
                 <label>Role</label>
-                <select
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                >
+                <select name="role" value={form.role} onChange={handleChange}>
                   <option value="EMPLOYEE">Employee</option>
                   <option value="HOD">HOD</option>
                   <option value="HRD">HR</option>
@@ -356,7 +360,15 @@ export default function EditUser() {
               Add the skills required for this employee. Default required level is 4, and you can change it.
             </p>
 
-            <div style={{ display: 'flex', gap: 10, alignItems: 'end', marginBottom: 12, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'end',
+                marginBottom: 12,
+                flexWrap: 'wrap',
+              }}
+            >
               <div style={{ minWidth: 260 }}>
                 <label style={{ display: 'block', marginBottom: 6 }}>Add Skill</label>
                 <select value={skillToAdd} onChange={(e) => setSkillToAdd(e.target.value)}>
@@ -370,7 +382,12 @@ export default function EditUser() {
                     ))}
                 </select>
               </div>
-              <button type="button" className="primary-btn" onClick={addRequiredSkill} disabled={!skillToAdd}>
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={addRequiredSkill}
+                disabled={!skillToAdd}
+              >
                 + Add
               </button>
             </div>
@@ -379,8 +396,12 @@ export default function EditUser() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Skill</th>
-                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>Required Level</th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>
+                      Skill
+                    </th>
+                    <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}>
+                      Required Level
+                    </th>
                     <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #eee' }}></th>
                   </tr>
                 </thead>
@@ -391,32 +412,34 @@ export default function EditUser() {
                         No required skills added.
                       </td>
                     </tr>
-                  ) : requiredLevels.map((r) => (
-                    <tr key={r.skillId}>
-                      <td style={{ padding: 8 }}>{r.skillName}</td>
-                      <td style={{ padding: 8 }}>
-                        <select
-                          value={String(r.requiredLevel ?? 4)}
-                          onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
-                        >
-                          <option value="0">0</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
-                        </select>
-                      </td>
-                      <td style={{ padding: 8 }}>
-                        <button
-                          type="button"
-                          className="back-btn"
-                          onClick={() => removeRequiredSkill(r.skillId)}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  ) : (
+                    requiredLevels.map((r) => (
+                      <tr key={r.skillId}>
+                        <td style={{ padding: 8 }}>{r.skillName}</td>
+                        <td style={{ padding: 8 }}>
+                          <select
+                            value={String(r.requiredLevel ?? 4)}
+                            onChange={(e) => updateRequiredLevel(r.skillId, e.target.value)}
+                          >
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <button
+                            type="button"
+                            className="back-btn"
+                            onClick={() => removeRequiredSkill(r.skillId)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

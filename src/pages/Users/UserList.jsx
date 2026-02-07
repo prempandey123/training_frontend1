@@ -260,6 +260,13 @@ export default function UserList() {
                   <td>
                     <button
                       className="action-btn"
+                      onClick={() => navigate(`/users/view/${emp.id}`)}
+                    >
+                      View
+                    </button>
+
+                    <button
+                      className="action-btn"
                       onClick={() =>
                         navigate(`/users/edit/${emp.id}`)
                       }

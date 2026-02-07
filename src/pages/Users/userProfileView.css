@@ -1,0 +1,24 @@
+.status-text{
+  margin: 18px 0;
+  font-size: 14px;
+  color: #111827;
+}
+.status-text.error{ color:#b91c1c; }
+
+.profile-actions{
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+  margin-top: 18px;
+}
+
+.primary-btn{
+  background: #111827;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.primary-btn:hover{ opacity: .9; }
