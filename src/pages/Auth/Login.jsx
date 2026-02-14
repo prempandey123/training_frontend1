@@ -60,18 +60,8 @@ export default function Login() {
               <div className="ring ring-1" />
               <div className="ring ring-2" />
               <div className="ring ring-3" />
-              <div className="card-float card-a">
-                <div className="card-title">Completion</div>
-                <div className="card-metric">92%</div>
-              </div>
-              <div className="card-float card-b">
-                <div className="card-title">Upcoming</div>
-                <div className="card-metric">06</div>
-              </div>
-              <div className="card-float card-c">
-                <div className="card-title">Skill Gap</div>
-                <div className="card-metric">Low</div>
-              </div>
+              {/* Decorative sparkle only (removed: Upcoming / Skill Gap / Completion tiles) */}
+              <div className="hero-spark" aria-hidden="true" />
             </div>
           </div>
 

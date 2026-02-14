@@ -4,7 +4,7 @@ import './skillMatrix.css';
 import { getUsers } from '../../api/user.api';
 import { getSkillMatrixForUser, getMySkillMatrix } from '../../api/skillMatrix.api';
 import { getAuthUser } from '../../utils/auth';
-import { upsertMySkillLevel, upsertUserSkillLevel } from '../../api/userSkillLevel.api';
+import { upsertMySkillLevel, upsertUserSkillLevel, upsertUserSkillLevelByEmployeeId } from '../../api/userSkillLevel.api';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
 import { clampLevel, getLevelColor } from '../../utils/skillColor';
@@ -27,6 +27,7 @@ export default function CompetencyMatrix() {
   // Employee dropdown search (explicit apply)
   const [userSearch, setUserSearch] = useState('');
   const [appliedUserSearch, setAppliedUserSearch] = useState('');
+  const [quickEmpId, setQuickEmpId] = useState('');
 
   const authUser = getAuthUser();
   const canEditMine = Boolean(authUser?.id);
@@ -134,7 +135,13 @@ export default function CompetencyMatrix() {
       const isMyView = !selectedUserId || String(targetUserId) === String(authUser?.id);
 
       if (canEditAll && !isMyView) {
-        await upsertUserSkillLevel(targetUserId, skillId, Number(nextLevel));
+        const selectedUser = users.find((u) => String(u.id) === String(targetUserId));
+        const empId = String(selectedUser?.employeeId || '').trim();
+        if (empId) {
+          await upsertUserSkillLevelByEmployeeId(empId, skillId, Number(nextLevel));
+        } else {
+          await upsertUserSkillLevel(targetUserId, skillId, Number(nextLevel));
+        }
         await loadMatrix(String(targetUserId));
       } else {
         await upsertMySkillLevel(skillId, Number(nextLevel));
@@ -179,6 +186,34 @@ export default function CompetencyMatrix() {
       <div className="matrix-filters">
         <div className="filter-item">
           <label>Employee</label>
+
+          {canEditAll ? (
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+              <input
+                value={quickEmpId}
+                onChange={(e) => setQuickEmpId(e.target.value)}
+                placeholder="Enter Employee ID (quick select)"
+                style={{ minWidth: 220 }}
+              />
+              <button
+                type="button"
+                className="add-btn"
+                onClick={() => {
+                  const term = String(quickEmpId || '').trim().toLowerCase();
+                  if (!term) return;
+                  const u = users.find((x) => String(x?.employeeId || '').trim().toLowerCase() === term);
+                  if (!u) {
+                    alert('Employee ID not found');
+                    return;
+                  }
+                  setSelectedUserId(String(u.id));
+                  loadMatrix(String(u.id));
+                }}
+              >
+                Go
+              </button>
+            </div>
+          ) : null}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
             <input

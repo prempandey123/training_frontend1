@@ -150,6 +150,24 @@
   overflow: hidden;
 }
 
+/* Decorative spark (replaces metric tiles) */
+.hero-spark {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(260px 180px at 25% 65%, rgba(246, 201, 69, 0.22), transparent 60%),
+    radial-gradient(220px 160px at 72% 35%, rgba(255, 183, 3, 0.18), transparent 62%),
+    radial-gradient(520px 320px at 50% 55%, rgba(255, 255, 255, 0.08), transparent 70%);
+  filter: saturate(1.1);
+  animation: sparkMove 10s ease-in-out infinite;
+}
+
+@keyframes sparkMove {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -6px, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
 .ring {
   position: absolute;
   border-radius: 999px;
@@ -231,11 +249,25 @@
 
 /* ---------- FORM (RIGHT) ---------- */
 .login-card {
-  background: var(--panel);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
   padding: 34px 32px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 16px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent-strong), var(--accent), transparent);
+  opacity: 0.95;
 }
 
 /* ✅ New: top logo container */
@@ -296,6 +328,7 @@
   outline: none;
   border-color: rgba(246, 201, 69, 0.85);
   box-shadow: 0 0 0 5px rgba(246, 201, 69, 0.22);
+  transform: translateY(-1px);
 }
 
 .login-select {

@@ -11,6 +11,13 @@ export async function upsertUserSkillLevel(userId, skillId, currentLevel) {
   return data;
 }
 
+// ✅ ADMIN: update any user's current level by employeeId
+export async function upsertUserSkillLevelByEmployeeId(employeeId, skillId, currentLevel) {
+  const empId = String(employeeId || '').trim();
+  const { data } = await api.put(`/user-skill-levels/employee/${encodeURIComponent(empId)}/${skillId}`, { currentLevel });
+  return data;
+}
+
 export async function getUserSkillLevels(userId) {
   const { data } = await api.get(`/user-skill-levels/user/${userId}`);
   return data;
