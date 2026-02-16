@@ -8,6 +8,7 @@ import { upsertMySkillLevel, upsertUserSkillLevel, upsertUserSkillLevelByEmploye
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
 import { clampLevel, clampPercent, getLevelColor, getPercentColor } from '../../utils/skillColor';
+import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 
 export default function SkillMatrix() {
   const navigate = useNavigate();
@@ -183,6 +184,8 @@ export default function SkillMatrix() {
           </button>
         </div>
       </div>
+
+      <SkillLevelRating />
 
       <div className="matrix-filters">
         <div className="filter-item">

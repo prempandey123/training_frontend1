@@ -8,6 +8,7 @@ import { upsertMySkillLevel, upsertUserSkillLevel, upsertUserSkillLevelByEmploye
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
 import { clampLevel, getLevelColor } from '../../utils/skillColor';
+import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 
 /**
  * Competency Matrix
@@ -182,6 +183,8 @@ export default function CompetencyMatrix() {
           </button>
         </div>
       </div>
+
+      <SkillLevelRating />
 
       <div className="matrix-filters">
         <div className="filter-item">

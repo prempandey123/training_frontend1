@@ -4,6 +4,7 @@ import { getDepartments } from '../../api/departmentApi';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
+import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 import './orgSkillMatrix.css';
 
 /**
@@ -162,6 +163,8 @@ export default function OrgCompetencyMatrix() {
           Compact
         </button>
       </div>
+
+      <SkillLevelRating />
 
       {/* ONLY DEPARTMENT FILTER */}
       <div className="org-filters">

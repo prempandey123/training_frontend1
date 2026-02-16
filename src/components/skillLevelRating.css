@@ -1,0 +1,42 @@
+.rating-wrapper.corner {
+  width: 300px;
+  border: 2px solid #000;
+  background: #fff;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.rating-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.rating-table th,
+.rating-table td {
+  border: 2px solid #000;
+  padding: 5px;
+  font-size: 11px;
+}
+
+.rating-table .title {
+  color: red;
+  font-weight: bold;
+  text-align: left;
+  font-size: 12px;
+}
+
+.circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #000;
+}
+
+.upto40 { background: conic-gradient(#00ff00 0% 25%, #fff 25% 100%); }
+.upto55 { background: conic-gradient(#00ff00 0% 50%, #fff 50% 100%); }
+.upto65 { background: conic-gradient(#00ff00 0% 65%, #fff 65% 100%); }
+.above65 { background: #00ff00; }
