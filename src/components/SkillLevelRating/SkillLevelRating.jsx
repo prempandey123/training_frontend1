@@ -1,12 +1,12 @@
 import "./skillLevelRating.css";
 
-export default function SkillLevelRating() {
+export default function SkillLevelRating({ title = "Skill Level Rating" }) {
   return (
     <div className="rating-wrapper">
       <table className="rating-table">
         <thead>
           <tr>
-            <th className="title">Skill Level Rating</th>
+            <th className="title">{title}</th>
             <th className="levelHead">% Level</th>
           </tr>
         </thead>
@@ -34,7 +34,7 @@ export default function SkillLevelRating() {
           </tr>
           <tr>
             <td>
-              Can train subordinates <span className="sub">(On the Job or Off the Job)</span>
+              Can train others <span className="sub">(On the Job or Off the Job)</span>
             </td>
             <td className="levelCell">
               <div className="circle above65" aria-label="Above 65%" />

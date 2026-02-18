@@ -164,7 +164,7 @@ export default function OrgCompetencyMatrix() {
         </button>
       </div>
 
-      <SkillLevelRating />
+      <SkillLevelRating title="Competency Level Rating" />
 
       {/* ONLY DEPARTMENT FILTER */}
       <div className="org-filters">
