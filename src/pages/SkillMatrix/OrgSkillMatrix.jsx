@@ -38,7 +38,8 @@ export default function OrgSkillMatrix() {
   const [err, setErr] = useState('');
 
   const tableWrapRef = useRef(null);
-  const [compact, setCompact] = useState(false);
+  // Requested: keep Org matrices compact by default
+  const [compact, setCompact] = useState(true);
   const [printFriendly, setPrintFriendly] = useState(true);
 
   const [departments, setDepartments] = useState([]);

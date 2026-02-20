@@ -1,10 +1,40 @@
-/* Screenshot-style rating box (thick borders + red title + green level circles) */
+/* Rating legend (Skill/Competency) */
 
 .rating-wrapper {
   margin: 0 0 14px 0;
-  border: 1px solid #000;
-  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.9);
   overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.10);
+  backdrop-filter: blur(8px);
+}
+
+/* Requested: keep it on the right half */
+.rating-wrapper.right {
+  width: min(520px, 50%);
+  margin-left: auto;
+}
+
+/* Ultra-compact density */
+.rating-wrapper.ultra .rating-table th,
+.rating-wrapper.ultra .rating-table td {
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
+.rating-wrapper.ultra .rating-table .title {
+  font-size: 11px;
+}
+
+.rating-wrapper.ultra .levelHead {
+  width: 78px;
+}
+
+.rating-wrapper.ultra .levelCell span,
+.rating-wrapper.ultra .sub {
+  font-size: 9px;
+  margin-top: 2px;
 }
 
 .rating-table {
@@ -15,17 +45,18 @@
 
 .rating-table th,
 .rating-table td {
-  border: 1px solid #000;
+  border: 1px solid rgba(15, 23, 42, 0.16);
   padding: 6px 8px;
   font-size: 12px;
-  color: #111;
+  color: rgba(15, 23, 42, 0.92);
 }
 
 .rating-table .title {
-  color: #d10000;
-  font-weight: 800;
+  color: #111;
+  font-weight: 900;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
+  background: linear-gradient(135deg, rgba(246, 201, 69, 0.55), rgba(255, 183, 3, 0.22));
 }
 
 .levelHead {
@@ -35,7 +66,7 @@
 }
 
 .levelCell {
-  text-align: center;
+  text-align: right;
   vertical-align: middle;
 }
 
@@ -53,13 +84,20 @@
 
 /* Circle base */
 .circle {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 1px solid #000;
-  margin: 0 auto;
+  border: 1px solid rgba(15, 23, 42, 0.7);
+  margin: 0 0 0 auto;
   position: relative;
   background: #fff;
+}
+
+/* Ultra compact circle */
+.rating-wrapper.ultra .circle {
+  width: 16px;
+  height: 16px;
+  border-width: 1px;
 }
 
 /* quadrant lines */
@@ -67,7 +105,7 @@
 .circle::after {
   content: "";
   position: absolute;
-  background: #000;
+  background: rgba(15, 23, 42, 0.75);
 }
 
 .circle::before {

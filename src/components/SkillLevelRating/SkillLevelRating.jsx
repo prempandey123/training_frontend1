@@ -1,8 +1,16 @@
 import "./skillLevelRating.css";
 
-export default function SkillLevelRating({ title = "Skill Level Rating" }) {
+/**
+ * Rating legend used in Org Skill/Competency matrices.
+ * UI: ultra-compact and aligned to the right half.
+ */
+export default function SkillLevelRating({
+  title = "Skill Level Rating",
+  variant = "ultra",
+  align = "right",
+}) {
   return (
-    <div className="rating-wrapper">
+    <div className={`rating-wrapper ${variant} ${align}`}>
       <table className="rating-table">
         <thead>
           <tr>
