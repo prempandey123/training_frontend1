@@ -30,6 +30,8 @@ export default function EditUser() {
     email: '',
     employeeId: '',
     mobile: '',
+    experience: '',
+    qualificationName: '',
     departmentId: '',
     designationId: '',
     employeeType: '',
@@ -68,6 +70,8 @@ export default function EditUser() {
           email: user?.email ?? '',
           employeeId: user?.employeeId ?? '',
           mobile: user?.mobile ?? '',
+          experience: user?.experience ?? '',
+          qualificationName: user?.qualificationName ?? '',
           departmentId: user?.department?.id || '',
           designationId: user?.designation?.id || '',
           role: user?.role ?? 'EMPLOYEE',
@@ -164,6 +168,15 @@ export default function EditUser() {
       isActive: form.isActive,
     };
 
+    if (form.experience?.toString().trim()) {
+      payload.experience = form.experience.toString().trim();
+    }
+    if (form.qualificationName?.toString().trim()) {
+      payload.qualificationName = form.qualificationName.toString().trim();
+    }
+
+
+
     // only send if selected
     if (form.designationId) payload.designationId = Number(form.designationId);
 
@@ -245,6 +258,27 @@ export default function EditUser() {
               <label>Mobile</label>
               <input name="mobile" value={form.mobile} onChange={handleChange} />
             </div>
+
+            <div>
+              <label>Experience</label>
+              <input
+                name="experience"
+                value={form.experience}
+                onChange={handleChange}
+                placeholder="e.g., 3 Years"
+              />
+            </div>
+
+            <div>
+              <label>Qualification</label>
+              <input
+                name="qualificationName"
+                value={form.qualificationName}
+                onChange={handleChange}
+                placeholder="e.g., B.Tech"
+              />
+            </div>
+
           </div>
         </div>
 

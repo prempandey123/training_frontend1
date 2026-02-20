@@ -22,6 +22,8 @@ export default function CreateUser() {
     email: '',
     employeeId: '',
     mobile: '',
+    experience: '',
+    qualificationName: '',
     departmentId: '',
     designationId: '',
     employeeType: '',
@@ -184,6 +186,27 @@ export default function CreateUser() {
                 required
               />
             </div>
+
+            <div>
+              <label>Experience</label>
+              <input
+                name="experience"
+                value={form.experience}
+                onChange={handleChange}
+                placeholder="e.g., 3 Years"
+              />
+            </div>
+
+            <div>
+              <label>Qualification</label>
+              <input
+                name="qualificationName"
+                value={form.qualificationName}
+                onChange={handleChange}
+                placeholder="e.g., B.Tech"
+              />
+            </div>
+
 
             <div>
               <label>Password *</label>
