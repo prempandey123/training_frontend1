@@ -23,7 +23,7 @@ export default function CreateUser() {
     employeeId: '',
     mobile: '',
     experience: '',
-    qualificationName: '',
+    qualification: '',
     departmentId: '',
     designationId: '',
     employeeType: '',
@@ -200,8 +200,8 @@ export default function CreateUser() {
             <div>
               <label>Qualification</label>
               <input
-                name="qualificationName"
-                value={form.qualificationName}
+                name="qualification"
+                value={form.qualification}
                 onChange={handleChange}
                 placeholder="e.g., B.Tech"
               />

@@ -31,7 +31,7 @@ export default function EditUser() {
     employeeId: '',
     mobile: '',
     experience: '',
-    qualificationName: '',
+    qualification: '',
     departmentId: '',
     designationId: '',
     employeeType: '',
@@ -71,7 +71,7 @@ export default function EditUser() {
           employeeId: user?.employeeId ?? '',
           mobile: user?.mobile ?? '',
           experience: user?.experience ?? '',
-          qualificationName: user?.qualificationName ?? '',
+          qualification: user?.qualification ?? '',
           departmentId: user?.department?.id || '',
           designationId: user?.designation?.id || '',
           role: user?.role ?? 'EMPLOYEE',
@@ -171,8 +171,8 @@ export default function EditUser() {
     if (form.experience?.toString().trim()) {
       payload.experience = form.experience.toString().trim();
     }
-    if (form.qualificationName?.toString().trim()) {
-      payload.qualificationName = form.qualificationName.toString().trim();
+    if (form.qualification?.toString().trim()) {
+      payload.qualification = form.qualification.toString().trim();
     }
 
 
@@ -272,8 +272,8 @@ export default function EditUser() {
             <div>
               <label>Qualification</label>
               <input
-                name="qualificationName"
-                value={form.qualificationName}
+                name="qualification"
+                value={form.qualification}
                 onChange={handleChange}
                 placeholder="e.g., B.Tech"
               />

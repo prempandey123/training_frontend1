@@ -148,7 +148,7 @@ export default function UserList() {
             <p>
               Upload .xlsx file with columns like: name, email, employeeId, mobile,
               password (optional), departmentId/department, designationId/designation,
-              role, employeeType, dateOfJoining, isActive, biometricLinked.
+              role, employeeType, dateOfJoining, isActive, biometricLinked, qualification, experience.
             </p>
           </div>
 
@@ -218,7 +218,7 @@ export default function UserList() {
                   <td>{emp.department?.name || '-'}</td>
                   <td>{emp.designation?.designationName || '-'}</td>
                   <td>{emp.experience || '-'}</td>
-                  <td>{emp.qualificationName || '-'}</td>
+                  <td>{emp.qualification || '-'}</td>
 
                   {/* WORKER / STAFF */}
                   <td>{emp.employeeType || '-'}</td>
