@@ -35,6 +35,11 @@ function buildUrl(template, params) {
 }
 
 export default function Reports() {
+  const normalizeText = (value) => {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/\bTRG\b/gi, 'Training');
+  };
+
   const authUser = getAuthUser();
   const userId = authUser?.id;
 
@@ -213,8 +218,8 @@ export default function Reports() {
           <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
             <option value="">All Report Types</option>
             {reportTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
+              <option key={normalizeText(t)} value={normalizeText(t)}>
+                {normalizeText(t)}
               </option>
             ))}
           </select>
@@ -289,10 +294,10 @@ export default function Reports() {
           <tbody>
             {filteredRows.map((report) => (
               <tr key={report.id}>
-                <td className="report-name">{report.name}</td>
-                <td>{report.description}</td>
+                <td className="report-name">{normalizeText(report.name)}</td>
+                <td>{normalizeText(report.description)}</td>
                 <td>
-                  <span className="report-tag">{report.type}</span>
+                  <span className="report-tag">{normalizeText(report.type)}</span>
                 </td>
                 <td>
                   <button className="action-btn" onClick={() => handleExport(report)}>

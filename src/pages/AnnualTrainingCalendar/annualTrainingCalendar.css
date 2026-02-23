@@ -73,16 +73,47 @@
 }
 
 .atc-table-scroll {
-  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  /* Force a visible horizontal scrollbar (users were unable to scroll months/weeks) */
+  overflow-x: scroll;
+  overflow-y: auto;
   border: 1px solid #e6e6e6;
   border-radius: 10px;
   max-height: 65vh;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+  scrollbar-gutter: stable both-edges;
+
+  /* Header stacking heights (so 2 header rows can be sticky without overlapping) */
+  --atc-head-row-1: 36px;
+}
+
+/* Make the horizontal scrollbar clearly visible (Chrome/Edge/Safari) */
+.atc-table-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+
+.atc-table-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 999px;
+}
+
+.atc-table-scroll::-webkit-scrollbar-thumb {
+  background: #c7cbd1;
+  border-radius: 999px;
+}
+
+.atc-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #aeb4bd;
 }
 
 .atc-table {
-  width: 100%;
+  width: max-content;
   border-collapse: collapse;
-  min-width: 1100px;
+  /* Ensure horizontal scrolling is available when weeks/months extend beyond viewport */
+  min-width: 1400px;
 }
 
 .atc-table th,
@@ -93,11 +124,21 @@
   white-space: nowrap;
 }
 
-.atc-table th {
+/* Sticky headers (both rows) */
+.atc-table thead th {
   position: sticky;
-  top: 0;
   background: #fafafa;
-  z-index: 1;
+  z-index: 3;
+}
+
+.atc-table thead tr:nth-child(1) th {
+  top: 0;
+  z-index: 5;
+}
+
+.atc-table thead tr:nth-child(2) th {
+  top: var(--atc-head-row-1);
+  z-index: 4;
 }
 
 /* Sticky first columns so calendar doesn't look "aadha" on smaller screens */
@@ -108,12 +149,43 @@
   z-index: 2;
 }
 
+/* Sticky header + sticky columns need to be above everything */
+.atc-table thead .sticky-col {
+  z-index: 7;
+  background: #fafafa;
+}
+
 .sticky-1 { left: 0; min-width: 64px; }
 .sticky-2 { left: 64px; min-width: 90px; }
 .sticky-3 { left: 154px; min-width: 260px; }
 
 .month-col {
   text-align: center;
+}
+
+.atc-subhead {
+  background: #fafafa;
+  height: 28px;
+}
+
+.week-col {
+  text-align: center;
+  min-width: 34px;
+  padding: 6px 4px;
+  border-left: 1px dashed #d9d9d9;
+}
+
+/* Week column hover highlight */
+.week-hover {
+  background: #fff7d6;
+}
+
+.atc-table tbody td.week-hover {
+  background: #fff7d6;
+}
+
+.month-start {
+  border-left: 2px solid #bdbdbd;
 }
 
 .cell-clickable {
@@ -128,6 +200,13 @@
   background: #f7f7f7;
   cursor: pointer;
   font-size: 12px;
+}
+
+.cell-btn--tiny {
+  width: 26px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 11px;
 }
 
 .cell-btn:hover {

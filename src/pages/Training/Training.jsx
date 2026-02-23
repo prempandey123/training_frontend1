@@ -165,17 +165,57 @@ const exportExcel = async () => {
     }
   }, [showAttendeeModal, showPostponeModal, showEditModal]);
 
-  const today = useMemo(() => new Date(), []);
+  const now = new Date();
 
-  const upcomingTrainings = useMemo(
-    () => trainings.filter((t) => new Date(t.date) >= today),
-    [trainings, today],
-  );
+/** Build local Date objects for start/end of a training (based on date + time range). */
+const getTrainingWindow = (t) => {
+  const dateStr = String(t?.date || '').trim();
+  if (!dateStr) return { start: null, end: null };
 
-  const previousTrainings = useMemo(
-    () => trainings.filter((t) => new Date(t.date) < today),
-    [trainings, today],
-  );
+  const { from, to } = splitTimeRange(t?.time);
+  const from24 = to24Time(from || '');
+  const to24 = to24Time(to || '');
+
+  // Fallbacks if time not present
+  const startIso = from24 ? `${dateStr}T${from24}:00` : `${dateStr}T00:00:00`;
+  const endIso = to24 ? `${dateStr}T${to24}:00` : `${dateStr}T23:59:59`;
+
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+
+  return { start: isNaN(start.getTime()) ? null : start, end: isNaN(end.getTime()) ? null : end };
+};
+
+const isAttendanceMarked = (t) => {
+  const attendees = Array.isArray(t?.attendees) ? t.attendees : [];
+  // When attendance is saved from Attendance screen, attendee rows carry at least a "status" (ATTENDED/ABSENT) or in/out time.
+  return attendees.some((a) => !!(a?.status || a?.inTime || a?.outTime));
+};
+
+const pendingTrainings = useMemo(() => {
+  return trainings.filter((t) => {
+    const { end } = getTrainingWindow(t);
+    if (!end) return false;
+    return end < now && !isAttendanceMarked(t);
+  });
+}, [trainings]);
+
+const previousTrainings = useMemo(() => {
+  return trainings.filter((t) => {
+    const { end } = getTrainingWindow(t);
+    if (!end) return false;
+    return end < now && isAttendanceMarked(t);
+  });
+}, [trainings]);
+
+const upcomingTrainings = useMemo(() => {
+  return trainings.filter((t) => {
+    const { end } = getTrainingWindow(t);
+    // If window can't be parsed, keep old behavior (date-based)
+    if (!end) return new Date(t.date) >= now;
+    return end >= now;
+  });
+}, [trainings]);
 
   const openAttendees = (training) => {
     setSelectedTraining(training);
@@ -589,7 +629,7 @@ const exportExcel = async () => {
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
-              <th>Trainer</th>
+              <th>Faculty</th>
               <th>Participants</th>
               <th>Status</th>
               <th className="th-right">Action</th>
@@ -643,6 +683,75 @@ const exportExcel = async () => {
         </table>
       </div>
 
+      {/* PENDING TRAININGS */}
+      <div className="training-section">
+        <div className="section-head">
+          <h3>Pending Trainings <span className="badge">{pendingTrainings.length}</span></h3>
+          <div className="muted small">Date/time is over, but attendance is not marked.</div>
+        </div>
+
+        <table className="training-table pretty">
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Mode</th>
+              <th>Category</th>
+              <th>Type</th>
+              <th>Venue</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Department</th>
+              <th>Faculty</th>
+              <th>Participants</th>
+              <th>Status</th>
+              <th className="th-right">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="12" className="no-data">Loading trainings...</td></tr>
+            ) : pendingTrainings.length === 0 ? (
+              <tr><td colSpan="12" className="no-data">No pending trainings</td></tr>
+            ) : pendingTrainings.map((t) => (
+              <tr key={t.id} className="row-hover pending-row">
+                <td className="training-name">{t.topic}</td>
+                <td>{t.mode || t.trainingType || "—"}</td>
+                <td>{t.category || "—"}</td>
+                <td>{t.type || "—"}</td>
+                <td>{t.venue || "—"}</td>
+                <td>{formatDate(t.date)}</td>
+                <td>{formatTimeRangeIST(t.time)}</td>
+                <td>{t.department || '—'}</td>
+                <td>{t.trainer || '—'}</td>
+                <td>
+                  <span
+                    className="people-count"
+                    onClick={() => openAttendees(t)}
+                    title="View attendance"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') openAttendees(t);
+                    }}
+                  >
+                    {Array.isArray(t.attendees) ? t.attendees.length : 0}
+                  </span>
+                </td>
+                <td>{renderStatus(t)}</td>
+                <td className="td-right">
+                  <button className="secondary-btn" onClick={() => openEdit(t)}>
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      
+
       {/* PREVIOUS TRAININGS */}
       <div className="training-section">
         <div className="section-head">
@@ -661,7 +770,7 @@ const exportExcel = async () => {
               <th>Date</th>
               <th>Time</th>
               <th>Department</th>
-              <th>Trainer</th>
+              <th>Faculty</th>
               <th>Participants</th>
               <th>Status</th>
               <th className="th-right">Action</th>
@@ -873,8 +982,8 @@ const exportExcel = async () => {
               </div>
 
               <div className="form-group">
-                <label>Trainer</label>
-                <input value={editTrainer} onChange={(e) => setEditTrainer(e.target.value)} placeholder="Trainer name" />
+                <label>Faculty</label>
+                <input value={editTrainer} onChange={(e) => setEditTrainer(e.target.value)} placeholder="Faculty name" />
               </div>
             </div>
 

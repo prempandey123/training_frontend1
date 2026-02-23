@@ -1,7 +1,41 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAnnualTrainingCalendar, uploadAnnualTrainingCalendar } from '../../api/annualTrainingCalendar.api';
 import './annualTrainingCalendar.css';
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function startOfWeekMonday(date) {
+  const d = new Date(date);
+  // JS: 0=Sun..6=Sat. We want Monday as start.
+  const day = d.getDay();
+  const diff = (day + 6) % 7; // Mon->0 ... Sun->6
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeeksForMonth(ym) {
+  // Returns an array of week start dates (Monday) that intersect the month.
+  // Example: 2025-04 -> [Mon of week containing Apr 1, ..., last week intersecting Apr]
+  const [y, m] = ym.split('-').map((x) => Number(x));
+  const monthStart = new Date(y, m - 1, 1);
+  const nextMonthStart = new Date(y, m, 1);
+  let cursor = startOfWeekMonday(monthStart);
+
+  const weeks = [];
+  while (cursor < nextMonthStart) {
+    weeks.push(new Date(cursor));
+    cursor = addDays(cursor, 7);
+    // safety
+    if (weeks.length > 6) break;
+  }
+  return weeks;
+}
 
 const EXPECTED_HEADERS = [
   'Sr. No.',
@@ -44,12 +78,14 @@ function buildTemplateCsv() {
 
 export default function AnnualTrainingCalendar() {
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
   const [file, setFile] = useState(null);
   const [academicYear, setAcademicYear] = useState('2025-26');
   const [importRes, setImportRes] = useState(null);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [hoverWeek, setHoverWeek] = useState(null);
 
   const months = useMemo(
     () => [
@@ -67,6 +103,14 @@ export default function AnnualTrainingCalendar() {
       { key: 'mar26', label: 'Mar', ym: '2026-03' },
     ],
     [],
+  );
+
+  // Build a weekly partition for each month (visual grid like the PDF).
+  const monthsWithWeeks = useMemo(() => months.map((m) => ({ ...m, weeks: getWeeksForMonth(m.ym) })), [months]);
+
+  const totalWeekCols = useMemo(
+    () => monthsWithWeeks.reduce((acc, m) => acc + (m.weeks?.length || 0), 0),
+    [monthsWithWeeks],
   );
 
   const goToAddTraining = (row, ym) => {
@@ -127,6 +171,22 @@ export default function AnnualTrainingCalendar() {
     }
   };
 
+  // Some layouts (or OS/browser scrollbar settings) make horizontal scrolling feel “not working”.
+  // Convert vertical wheel gestures into horizontal scroll when the calendar is wider than the viewport.
+  const handleWheel = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const canScrollX = el.scrollWidth > el.clientWidth;
+    if (!canScrollX) return;
+
+    // If the user is already doing horizontal scrolling (trackpad deltaX), don't interfere.
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+    // Convert vertical wheel to horizontal movement.
+    el.scrollLeft += e.deltaY;
+    e.preventDefault();
+  };
+
   return (
     <div className="atc-page">
       <h2>Annual Training Calendar Upload</h2>
@@ -183,7 +243,7 @@ export default function AnnualTrainingCalendar() {
 
       <div className="atc-table-wrap">
         <h3>Uploaded Records</h3>
-        <div className="atc-table-scroll">
+        <div className="atc-table-scroll" ref={scrollRef} onWheel={handleWheel}>
           <table className="atc-table">
             <thead>
               <tr>
@@ -194,11 +254,42 @@ export default function AnnualTrainingCalendar() {
                 <th>Faculty</th>
                 <th>Participants</th>
                 <th>Department</th>
-                {months.map((m) => (
-                  <th key={m.key} className="month-col">{m.label}</th>
+                {monthsWithWeeks.map((m) => (
+                  <th key={m.key} className="month-col" colSpan={m.weeks.length}>{m.label}</th>
                 ))}
                 <th>Total</th>
                 <th>Overall</th>
+              </tr>
+              <tr>
+                <th className="sticky-col sticky-1 atc-subhead" />
+                <th className="sticky-col sticky-2 atc-subhead" />
+                <th className="sticky-col sticky-3 atc-subhead" />
+                <th className="atc-subhead" />
+                <th className="atc-subhead" />
+                <th className="atc-subhead" />
+                <th className="atc-subhead" />
+                {(() => {
+                  let g = 0;
+                  return monthsWithWeeks.flatMap((m) =>
+                    m.weeks.map((_, idx) => {
+                      const gi = g++;
+                      const isHovered = hoverWeek === gi;
+                      return (
+                        <th
+                          key={`${m.key}-w${idx + 1}`}
+                          className={`week-col ${idx === 0 ? 'month-start' : ''} ${isHovered ? 'week-hover' : ''}`}
+                          title={`${m.label} - Week ${idx + 1}`}
+                          onMouseEnter={() => setHoverWeek(gi)}
+                          onMouseLeave={() => setHoverWeek(null)}
+                        >
+                          W{idx + 1}
+                        </th>
+                      );
+                    }),
+                  );
+                })()}
+                <th className="atc-subhead" />
+                <th className="atc-subhead" />
               </tr>
             </thead>
             <tbody>
@@ -211,33 +302,45 @@ export default function AnnualTrainingCalendar() {
                   <td>{r.facultyName || ''}</td>
                   <td>{r.participants || ''}</td>
                   <td>{r.department || ''}</td>
-                  {months.map((m) => {
-                    const val = Number(r?.[m.key] ?? 0) || 0;
-                    const clickable = val > 0;
-                    return (
-                      <td key={m.key} className={clickable ? 'cell-clickable' : ''}>
-                        {clickable ? (
-                          <button
-                            type="button"
-                            className="cell-btn"
-                            title={`Add Training for ${m.label} (Topic: ${r.programmeName})`}
-                            onClick={() => goToAddTraining(r, m.ym)}
+                  {(() => {
+                    let g = 0;
+                    return monthsWithWeeks.flatMap((m) => {
+                      const planned = Math.max(0, Number(r?.[m.key] ?? 0) || 0);
+                      return m.weeks.map((_, idx) => {
+                        const gi = g++;
+                        const isHovered = hoverWeek === gi;
+                        const isPlannedCell = idx < planned;
+                        return (
+                          <td
+                            key={`${r.id}-${m.key}-w${idx + 1}`}
+                            className={`week-col ${idx === 0 ? 'month-start' : ''} ${isPlannedCell ? 'cell-clickable' : ''} ${isHovered ? 'week-hover' : ''}`}
+                            onMouseEnter={() => setHoverWeek(gi)}
+                            onMouseLeave={() => setHoverWeek(null)}
                           >
-                            {val}
-                          </button>
-                        ) : (
-                          val || ''
-                        )}
-                      </td>
-                    );
-                  })}
+                            {isPlannedCell ? (
+                              <button
+                                type="button"
+                                className="cell-btn cell-btn--tiny"
+                                title={`Add Training for ${m.label} (Topic: ${r.programmeName})`}
+                                onClick={() => goToAddTraining(r, m.ym)}
+                              >
+                                1
+                              </button>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                        );
+                      });
+                    });
+                  })()}
                   <td>{r.totalSessions}</td>
                   <td>{r.overallSessions}</td>
                 </tr>
               ))}
               {!rows.length && (
                 <tr>
-                  <td colSpan={22} className="atc-empty">No records uploaded yet.</td>
+                  <td colSpan={7 + totalWeekCols + 2} className="atc-empty">No records uploaded yet.</td>
                 </tr>
               )}
             </tbody>
