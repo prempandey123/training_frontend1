@@ -46,6 +46,7 @@ export default function AddTraining() {
     if (v) setToTime(v);
   }, [toHH, toMM, toMeridiem]);
   const [status, setStatus] = useState('PENDING');
+  const [cancelRemark, setCancelRemark] = useState('');
   // UI label: Mode (kept as trainingType key for backward compatibility)
   const [trainingType, setTrainingType] = useState('Internal');
   const [category, setCategory] = useState('Both');
@@ -254,6 +255,10 @@ export default function AddTraining() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (status === 'CANCELLED' && !(cancelRemark || '').trim()) {
+      return alert('Please enter cancel remarks');
+    }
+
     const assignedEmployees = assignedUsers.map((u) => ({
       empId: u.employeeId,
       name: u.name,
@@ -273,6 +278,7 @@ export default function AddTraining() {
       skills: selectedSkill?.name ? [selectedSkill.name] : [],
       assignedEmployees,
       status,
+      cancelRemark: (cancelRemark || '').trim() || undefined,
       // Backend stores this as trainingType but UI calls it Mode
       trainingType,
       category,
@@ -292,6 +298,9 @@ export default function AddTraining() {
 
   const handleSendMail = async () => {
     try {
+      if (status === 'CANCELLED' && !(cancelRemark || '').trim()) {
+        return alert('Please enter cancel remarks');
+      }
       const assignedEmployees = assignedUsers.map((u) => ({
         empId: u.employeeId,
         name: u.name,
@@ -309,6 +318,7 @@ export default function AddTraining() {
         skills: selectedSkill?.name ? [selectedSkill.name] : [],
         assignedEmployees,
         status,
+        cancelRemark: (cancelRemark || '').trim() || undefined,
         trainingType,
         category,
         type,
@@ -455,13 +465,33 @@ export default function AddTraining() {
             <div className="form-row two">
               <div className="form-group">
                 <label>Status *</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setStatus(v);
+                    if (v !== 'CANCELLED') setCancelRemark('');
+                  }}
+                >
                   <option value="PENDING">Pending</option>
                   <option value="ACTIVE">Active</option>
                   <option value="COMPLETED">Completed</option>
                   <option value="POSTPONED">Postponed</option>
+                  <option value="CANCELLED">Cancelled (with remarks)</option>
                 </select>
               </div>
+              {status === 'CANCELLED' && (
+                <div className="form-group">
+                  <label>Cancel remarks *</label>
+                  <input
+                    type="text"
+                    value={cancelRemark}
+                    onChange={(e) => setCancelRemark(e.target.value)}
+                    placeholder="Reason / remark for cancelling"
+                    required
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label>Selected skill</label>
                 <div className="pill">

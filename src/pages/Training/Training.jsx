@@ -20,6 +20,7 @@ const statusMeta = (status) => {
   if (s === 'COMPLETED') return { label: 'Completed', cls: 'completed' };
   if (s === 'ACTIVE') return { label: 'Active', cls: 'active' };
   if (s === 'POSTPONED') return { label: 'Postponed', cls: 'postponed' };
+  if (s === 'CANCELLED') return { label: 'Cancelled', cls: 'cancelled' };
   return { label: 'Pending', cls: 'pending' };
 };
 
@@ -93,6 +94,10 @@ export default function Training() {
   }, [editToHH, editToMM, editToMeridiem]);
   const [editTrainer, setEditTrainer] = useState('');
   const [editVenue, setEditVenue] = useState('');
+  // Status editing (business rules: ACTIVE + COMPLETED are system-driven)
+  const [editStatus, setEditStatus] = useState('PENDING');
+  const [editCancelRemark, setEditCancelRemark] = useState('');
+  const [editPostponeReason, setEditPostponeReason] = useState('');
   // trainingType values come from backend enum: 'Internal' | 'External' | 'Online' | 'Internal In house'
   const [editTrainingType, setEditTrainingType] = useState('Internal');
   const [editCategory, setEditCategory] = useState('Both');
@@ -259,6 +264,10 @@ const exportExcel = async () => {
     setEditDate(training?.date || '');
     setEditTrainer(training?.trainer || '');
     setEditVenue(training?.venue || '');
+    // Status (UI shows option to change. ACTIVE & COMPLETED are system-driven)
+    setEditStatus((training?.status || 'PENDING').toUpperCase());
+    setEditCancelRemark(training?.cancelRemark || '');
+    setEditPostponeReason(training?.postponeReason || '');
     // Backend stores enum values like 'Internal', 'External', ...
     const ttype = training?.trainingType;
     const normalizedType =
@@ -315,6 +324,9 @@ const exportExcel = async () => {
     setEditToMeridiem('AM');
     setEditTrainer('');
     setEditVenue('');
+    setEditStatus('PENDING');
+    setEditCancelRemark('');
+    setEditPostponeReason('');
     setEditTrainingType('Internal');
     setEditCategory('Both');
     setEditType('Mandatory');
@@ -347,6 +359,15 @@ const exportExcel = async () => {
     if (!date) return alert('Please select date');
     if (!time) return alert('Please select From & To time');
 
+    // Status validations
+    const s = (editStatus || 'PENDING').toUpperCase();
+    if (s === 'CANCELLED' && !(editCancelRemark || '').trim()) {
+      return alert('Cancel remark is required');
+    }
+    if (s === 'POSTPONED' && !(editPostponeReason || '').trim()) {
+      return alert('Postpone reason is required');
+    }
+
     const attendees = (editAttendees || [])
       .map((a) => ({
         empId: String(a.empId || '').trim(),
@@ -357,7 +378,7 @@ const exportExcel = async () => {
 
     try {
       setEditSaving(true);
-      await updateTraining(selectedTraining.id, {
+      const payload = {
         topic,
         venue: (editVenue || '').trim(),
         trainingDate: date,
@@ -367,7 +388,13 @@ const exportExcel = async () => {
         category: editCategory,
         type: editType,
         attendees,
-      });
+        // Only these are meant to be set manually.
+        ...(s === 'PENDING' ? { status: 'PENDING' } : {}),
+        ...(s === 'POSTPONED' ? { status: 'POSTPONED', postponeReason: (editPostponeReason || '').trim() } : {}),
+        ...(s === 'CANCELLED' ? { status: 'CANCELLED', cancelRemark: (editCancelRemark || '').trim() } : {}),
+      };
+
+      await updateTraining(selectedTraining.id, payload);
       await loadTrainings();
       closeEdit();
     } catch (e) {
@@ -381,18 +408,53 @@ const exportExcel = async () => {
   const renderStatus = (t) => {
     const meta = statusMeta(t?.status);
     const reason = (t?.postponeReason || '').trim();
-    const tooltip = meta.cls === 'postponed' && reason ? `Reason: ${reason}` : '';
+    const cancel = (t?.cancelRemark || '').trim();
+
+    const getLastLine = (txt) => {
+      const lines = String(txt || '')
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return lines.length ? lines[lines.length - 1] : '';
+    };
+
+    const tooltip =
+      meta.cls === 'postponed' && reason
+        ? `Latest postpone: ${getLastLine(reason)}`
+        : meta.cls === 'cancelled' && cancel
+          ? `Latest cancel: ${getLastLine(cancel)}`
+          : '';
+
+    const hasRemarks = !!reason || !!cancel;
+
+    const openRemarks = () => {
+      if (!hasRemarks) return;
+      setRemarksTraining(t);
+      setShowRemarks(true);
+    };
 
     return (
       <span
         className={`status-pill ${meta.cls}`}
         title={tooltip}
         data-tooltip={tooltip}
+        onClick={openRemarks}
+        style={hasRemarks ? { cursor: 'pointer' } : undefined}
       >
         {meta.label}
       </span>
     );
   };
+
+  // 📌 Remarks modal (postpone + cancel history)
+  const [showRemarks, setShowRemarks] = useState(false);
+  const [remarksTraining, setRemarksTraining] = useState(null);
+
+  const parseLines = (txt) =>
+    String(txt || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
 
   // ✅ Inline styles to FORCE overlay to open on top (even if CSS is wrong)
   const overlayStyle = {
@@ -857,6 +919,44 @@ const exportExcel = async () => {
 
             <div className="form-row">
               <div className="form-group">
+                <label>Status</label>
+                <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                  <option value="PENDING">Pending</option>
+                  <option value="POSTPONED">Postponed</option>
+                  <option value="CANCELLED">Cancelled (with remarks)</option>
+                  <option value="ACTIVE" disabled>Active (auto)</option>
+                  <option value="COMPLETED" disabled>Completed (auto)</option>
+                </select>
+                <div className="muted small" style={{ marginTop: 6 }}>
+                  Active is auto during the scheduled time. Completed becomes auto when any attendance is marked present.
+                </div>
+              </div>
+
+              {String(editStatus || '').toUpperCase() === 'POSTPONED' && (
+                <div className="form-group">
+                  <label>Postpone Reason *</label>
+                  <input
+                    value={editPostponeReason}
+                    onChange={(e) => setEditPostponeReason(e.target.value)}
+                    placeholder="Reason for postponing"
+                  />
+                </div>
+              )}
+
+              {String(editStatus || '').toUpperCase() === 'CANCELLED' && (
+                <div className="form-group">
+                  <label>Cancel Remark *</label>
+                  <input
+                    value={editCancelRemark}
+                    onChange={(e) => setEditCancelRemark(e.target.value)}
+                    placeholder="Remark is required"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
                 <label>Venue</label>
                 <input value={editVenue} onChange={(e) => setEditVenue(e.target.value)} placeholder="e.g. Training Room 2 / Auditorium / Online (Teams)" />
               </div>
@@ -945,6 +1045,71 @@ const exportExcel = async () => {
             <button className="primary-btn full" onClick={saveEdit} disabled={editSaving}>
               {editSaving ? 'Saving…' : 'Save Changes'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* REMARKS MODAL (shows full history: postponed + cancelled) */}
+      {showRemarks && remarksTraining && (
+        <div
+          className="modal-overlay"
+          style={overlayStyle}
+          onClick={() => {
+            setShowRemarks(false);
+            setRemarksTraining(null);
+          }}
+        >
+          <div
+            className="modal"
+            style={{ ...modalStyle, width: 'min(720px, 100%)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Training Remarks</h3>
+              <button
+                onClick={() => {
+                  setShowRemarks(false);
+                  setRemarksTraining(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="postpone-meta">
+              <div className="muted small"><b>Topic:</b> {remarksTraining.topic || remarksTraining.title}</div>
+              <div className="muted small"><b>Date:</b> {formatDate(remarksTraining.date)} • {formatTimeRangeIST(remarksTraining.time)}</div>
+              <div className="muted small"><b>Status:</b> {statusMeta(remarksTraining.status).label}</div>
+            </div>
+
+            <div style={{ padding: '12px 16px 4px' }}>
+              {parseLines(remarksTraining.postponeReason).length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>Postponed Remarks</div>
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {parseLines(remarksTraining.postponeReason).map((line, idx) => (
+                      <li key={`p-${idx}`} style={{ marginBottom: 6 }}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {parseLines(remarksTraining.cancelRemark).length > 0 && (
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>Cancelled Remarks</div>
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {parseLines(remarksTraining.cancelRemark).map((line, idx) => (
+                      <li key={`c-${idx}`} style={{ marginBottom: 6 }}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {parseLines(remarksTraining.postponeReason).length === 0 &&
+                parseLines(remarksTraining.cancelRemark).length === 0 && (
+                  <div className="muted">No remarks found.</div>
+                )}
+            </div>
           </div>
         </div>
       )}

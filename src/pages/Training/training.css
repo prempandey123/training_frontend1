@@ -672,6 +672,12 @@ input.mini {
   color: #9a3412;
 }
 
+.status-pill.cancelled {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
 /* Tooltip (hover reason) */
 .status-pill.postponed[data-tooltip]:hover::after {
   content: attr(data-tooltip);
@@ -691,6 +697,34 @@ input.mini {
 }
 
 .status-pill.postponed[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #111827;
+}
+
+/* Tooltip for cancelled remarks */
+.status-pill.cancelled[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  background: #111827;
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  z-index: 2000;
+}
+
+.status-pill.cancelled[data-tooltip]:hover::before {
   content: '';
   position: absolute;
   left: 50%;

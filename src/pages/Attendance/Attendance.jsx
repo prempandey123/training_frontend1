@@ -36,6 +36,13 @@ export default function Attendance() {
   const today = useMemo(() => getLocalISODate(), []);
   const isLocked = !!(selectedTraining?.date && selectedTraining.date > today);
 
+  const scheduledRange = useMemo(() => {
+    const raw = String(selectedTraining?.time || '').trim();
+    const parts = raw.split('-').map((p) => p.trim());
+    if (parts.length < 2) return { start: '', end: '' };
+    return { start: parts[0], end: parts[1] };
+  }, [selectedTraining?.time]);
+
   const filteredTrainings = useMemo(() => {
     const query = (q || '').trim().toLowerCase();
     return trainings.filter((t) => {
@@ -99,7 +106,15 @@ export default function Attendance() {
     setRows((prev) =>
       prev.map((r) =>
         r.empId === empId
-          ? { ...r, status: r.status === 'ATTENDED' ? 'ABSENT' : 'ATTENDED' }
+          ? (r.status === 'ATTENDED'
+              ? { ...r, status: 'ABSENT', inTime: undefined, outTime: undefined }
+              : {
+                  ...r,
+                  status: 'ATTENDED',
+                  // default timing to scheduled range
+                  inTime: r.inTime || scheduledRange.start || undefined,
+                  outTime: r.outTime || scheduledRange.end || undefined,
+                })
           : r,
       ),
     );
@@ -232,17 +247,18 @@ export default function Attendance() {
               <th>Department</th>
               <th>Biometric</th>
               <th>Status</th>
+              <th>Timing</th>
               <th>Manual</th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="no-data">Loading…</td></tr>
+              <tr><td colSpan="7" className="no-data">Loading…</td></tr>
             ) : !selectedTraining ? (
-              <tr><td colSpan="6" className="no-data">Select a training</td></tr>
+              <tr><td colSpan="7" className="no-data">Select a training</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan="6" className="no-data">No attendees found for this training</td></tr>
+              <tr><td colSpan="7" className="no-data">No attendees found for this training</td></tr>
             ) : (
               rows.map((r) => (
                 <tr key={r.empId} className="row-hover">
@@ -260,6 +276,16 @@ export default function Attendance() {
                     <span className={`status-pill ${r.status === 'ATTENDED' ? 'att' : 'abs'}`}>
                       {r.status}
                     </span>
+                  </td>
+
+                  <td>
+                    {r.status === 'ATTENDED' ? (
+                      <span className="timing-pill" title="Present timing">
+                        {(r.inTime || scheduledRange.start || '—')} - {(r.outTime || scheduledRange.end || '—')}
+                      </span>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
                   </td>
 
                   <td>

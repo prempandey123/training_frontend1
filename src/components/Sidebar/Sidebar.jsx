@@ -56,16 +56,17 @@ export default function Sidebar() {
   ];
 
   const trainingLinks = [
-    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/calendar', label: 'Training Calendar' }] : []),
+    // Annual should appear above Monthly (per requirement)
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/annual-training-calendar', label: 'Annual Training Calendar' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/calendar', label: 'Monthly Training Plan' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training', label: 'Trainings' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/attendance', label: 'Attendance' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training-requirements', label: 'Training Requirements' }] : []),
   ];
 
   const matrixLinks = [
-    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix' }] : []),
-    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix (Individual)' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix (Individual)' }] : []),
     ...(canAccess(['ADMIN', 'HR']) && showWorkerMatrix ? [{ to: '/skill-matrix/org', label: 'Skill Matrix (Org)' }] : []),
     ...(canAccess(['ADMIN', 'HR']) && showStaffMatrix ? [{ to: '/competency-matrix/org', label: 'Competency Matrix (Org)' }] : []),
   ];
