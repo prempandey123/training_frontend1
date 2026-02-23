@@ -38,7 +38,7 @@ export function buildUserMatrixPrintHtml({
   const summaryHtml = summary
     ? `<div class="meta">
         Skills: <b>${esc(summary.totalSkills)}</b> • Required Score: <b>${esc(summary.totalRequiredScore)}</b>
-        • Current Score: <b>${esc(summary.totalCurrentScore)}</b> • Completion: <b>${esc(summary.completionPercentage)}%</b>
+        • Current Score: <b>${esc(summary.totalCurrentScore)}</b> • Completion: <b>${(Number(esc(summary.completionPercentage)) || 0).toFixed(2)}%</b>
       </div>`
     : '';
 

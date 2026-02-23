@@ -395,5 +395,5 @@ function CompletionPill({ percent, printFriendly }) {
     fontWeight: 800,
   };
 
-  return <span style={style}>{Math.round(p)}%</span>;
+  return <span style={style}>{(Number(Math.round(p)) || 0).toFixed(2)}%</span>;
 }

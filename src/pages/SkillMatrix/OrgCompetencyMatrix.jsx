@@ -235,7 +235,7 @@ export default function OrgCompetencyMatrix() {
                     </td>
 
                     <td className="sticky-left-3 col-score">
-                      <div className={`score-ring ${pctClass}`}>{pct}%</div>
+                      <div className={`score-ring ${pctClass}`}>{(Number(pct) || 0).toFixed(2)}%</div>
                     </td>
 
                     {/* ✅ Render per competency so missing mapping stays blank */}

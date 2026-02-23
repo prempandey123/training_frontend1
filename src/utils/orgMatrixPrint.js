@@ -67,7 +67,7 @@ export function buildOrgMatrixPrintHtml({
           const derived = calcCompletionFromCells(emp?.cells || [], 4);
           const pct = derived.completionPercentage;
           const pctC = getPercentColor(pct, { printFriendly });
-          const pctCell = `<td class="center" style="background:${pctC.bg};color:${pctC.text};font-weight:700;">${pct}%</td>`;
+          const pctCell = `<td class="center" style="background:${pctC.bg};color:${pctC.text};font-weight:700;">${(Number(pct) || 0).toFixed(2)}%</td>`;
 
           const rowCells = skillChunk
             .map((s) => {

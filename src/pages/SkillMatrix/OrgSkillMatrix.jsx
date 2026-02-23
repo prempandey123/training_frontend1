@@ -280,8 +280,8 @@ export default function OrgSkillMatrix() {
                       </td>
 
                       <td className="sticky-left-3 col-score">
-                        <div className={`score-ring ${pctClass}`} title={`${pct}% completion`}>
-                          {pct}%
+                        <div className={`score-ring ${pctClass}`} title={`${(Number(pct) || 0).toFixed(2)}% completion`}>
+                          {(Number(pct) || 0).toFixed(2)}%
                         </div>
                       </td>
 

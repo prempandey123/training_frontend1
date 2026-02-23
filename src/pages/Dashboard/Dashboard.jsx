@@ -545,7 +545,7 @@ export default function Dashboard() {
                 <div
                   key={t.id ?? `${t.topic}-${idx}`}
                   className={`today-slide ${active ? 'active' : ''}`}
-                  style={{ transform: `translateX(${(idx - todayIdx) * 100}%)` }}
+                  style={{ transform: `translateX(${(Number((idx - todayIdx) * 100) || 0).toFixed(2)}%)` }}
                 >
                   <div className="today-slide-inner">
                     <div className="today-kicker">{t.status || 'PENDING'}</div>
@@ -725,7 +725,7 @@ export default function Dashboard() {
                   const pct = Math.max(0, Math.min(100, (Number(b.value || 0) / max) * 100));
                   return (
                     <div key={`${b.label}-${idx}`} className="bar-col" title={`${b.label}: ${b.value} hrs`}>
-                      <div className="bar" style={{ height: `${pct}%` }} />
+                      <div className="bar" style={{ height: `${(Number(pct) || 0).toFixed(2)}%` }} />
                       <div className="bar-label">{b.label}</div>
                       <div className="bar-value">{b.value}</div>
                     </div>

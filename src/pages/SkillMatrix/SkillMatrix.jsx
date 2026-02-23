@@ -404,9 +404,9 @@ function CompletionPill({ percent, printFriendly }) {
         color: c.text,
         border: '1px solid rgba(0,0,0,0.18)',
       }}
-      title={`${p}% completion`}
+      title={`${(Number(p) || 0).toFixed(2)}% completion`}
     >
-      {p}%
+      {(Number(p) || 0).toFixed(2)}%
     </span>
   );
 }
