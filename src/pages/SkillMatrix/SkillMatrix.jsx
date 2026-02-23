@@ -8,6 +8,7 @@ import { upsertMySkillLevel, upsertUserSkillLevel, upsertUserSkillLevelByEmploye
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildUserMatrixPrintHtml } from '../../utils/userMatrixPrint';
 import { clampLevel, clampPercent, getLevelColor, getPercentColor } from '../../utils/skillColor';
+import { calcCompletionFromRows } from '../../utils/matrixMath';
 import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 
 export default function SkillMatrix() {
@@ -107,6 +108,17 @@ export default function SkillMatrix() {
 
   const headerTitle = matrix?.user?.name || matrix?.user?.email || 'Skill Matrix';
 
+  // ✅ Derived summary: count only mapped skills (rows)
+  const derivedSummary = useMemo(() => {
+    const s = calcCompletionFromRows(skillRows, 4);
+    return {
+      totalSkills: s.totalSkills,
+      totalRequiredScore: s.totalRequiredScore,
+      totalCurrentScore: s.totalCurrentScore,
+      completionPercentage: s.completionPercentage,
+    };
+  }, [skillRows]);
+
   const exportPdf = () => {
     const userTitle = headerTitle;
     const metaParts = [];
@@ -117,7 +129,7 @@ export default function SkillMatrix() {
       title: 'Skill Matrix',
       userTitle,
       userMeta: metaParts.join(' • '),
-      summary: matrix?.summary || null,
+      summary: derivedSummary,
       rows: skillRows,
       printFriendly,
     });
@@ -284,12 +296,12 @@ export default function SkillMatrix() {
                 {matrix.user.department ? <span> • {matrix.user.department}</span> : null}
               </div>
             ) : null}
-            {matrix?.summary ? (
+            {matrix ? (
               <div style={{ marginTop: 8, opacity: 0.9 }}>
-                Skills: <b>{matrix.summary.totalSkills}</b> • Required Score:{' '}
-                <b>{matrix.summary.totalRequiredScore}</b> • Current Score:{' '}
-                <b>{matrix.summary.totalCurrentScore}</b> • Completion:{' '}
-                <CompletionPill percent={matrix.summary.completionPercentage} printFriendly={printFriendly} />
+                Skills: <b>{derivedSummary.totalSkills}</b> • Required Score:{' '}
+                <b>{derivedSummary.totalRequiredScore}</b> • Current Score:{' '}
+                <b>{derivedSummary.totalCurrentScore}</b> • Completion:{' '}
+                <CompletionPill percent={derivedSummary.completionPercentage} printFriendly={printFriendly} />
               </div>
             ) : null}
           </div>

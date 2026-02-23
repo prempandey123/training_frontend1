@@ -4,6 +4,7 @@ import { getDepartments } from '../../api/departmentApi';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
+import { calcCompletionFromCells } from '../../utils/matrixMath';
 import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 import './orgSkillMatrix.css';
 
@@ -97,8 +98,21 @@ export default function OrgSkillMatrix() {
   const skills = useMemo(() => (Array.isArray(data?.skills) ? data.skills : []), [data]);
   const employees = useMemo(() => (Array.isArray(data?.employees) ? data.employees : []), [data]);
 
+  // ✅ Show ONLY those skills that actually exist for employees in the selected department.
+  // If nobody has a mapping for a skill, it won't appear in the header.
+  const visibleSkills = useMemo(() => {
+    if (!skills.length || !employees.length) return [];
+    const used = new Set();
+    for (const emp of employees) {
+      for (const c of emp?.cells || []) {
+        if (c?.skillId !== null && c?.skillId !== undefined) used.add(String(c.skillId));
+      }
+    }
+    return skills.filter((s) => used.has(String(s.id)));
+  }, [skills, employees]);
+
   const employeeCount = employees.length;
-  const skillCount = skills.length;
+  const skillCount = visibleSkills.length;
 
   const canScrollX = skillCount > 10;
   const scrollByX = (dx) => {
@@ -111,7 +125,7 @@ export default function OrgSkillMatrix() {
     const html = buildOrgMatrixPrintHtml({
       title: 'Organization Skill Matrix',
       subtitle: `${employeeCount} employees • ${skillCount} skills`,
-      skills,
+      skills: visibleSkills,
       employees,
       columnsPerPage: compact ? 14 : 12,
       printFriendly,
@@ -237,7 +251,7 @@ export default function OrgSkillMatrix() {
                 <th className="sticky-left col-emp">Employee</th>
                 <th className="sticky-left-2 col-meta">Dept / Role</th>
                 <th className="sticky-left-3 col-score">%</th>
-                {skills.map((s) => (
+                {visibleSkills.map((s) => (
                   <th key={s.id} className="col-skill" title={s.name}>
                     <span className="skill-header">{s.name}</span>
                   </th>
@@ -248,7 +262,9 @@ export default function OrgSkillMatrix() {
             <tbody>
               {employees.length ? (
                 employees.map((emp) => {
-                  const pct = clampPercent(emp.completionPercentage);
+                  // ✅ % must be based ONLY on mapped skills (same logic as blank cells)
+                  const derived = calcCompletionFromCells(emp?.cells || [], 4);
+                  const pct = clampPercent(derived.completionPercentage);
                   const pctClass = percentTone(pct);
 
                   return (
@@ -269,13 +285,35 @@ export default function OrgSkillMatrix() {
                         </div>
                       </td>
 
-                      {emp.cells.map((c) => {
-                        const tone = cellTone(4, c.currentLevel);
-                        const cur = clampLevel(c.currentLevel);
+                      {/* ✅ Render per skill so missing mapping stays blank */}
+                      {visibleSkills.map((s) => {
+                        const c = (emp.cells || []).find((x) => String(x.skillId) === String(s.id));
+
+                        // Not mapped => blank cell
+                        if (!c) {
+                          return (
+                            <td key={s.id} className="col-skill">
+                              <div className="cell cell-empty" title="Not mapped" />
+                            </td>
+                          );
+                        }
+
+                        // Mapped but level not set => blank (still counts as 0 in %)
+                        const raw = c.currentLevel;
+                        if (raw === null || raw === undefined) {
+                          return (
+                            <td key={s.id} className="col-skill">
+                              <div className="cell cell-empty" title="Level not set" />
+                            </td>
+                          );
+                        }
+
+                        const tone = cellTone(4, raw);
+                        const cur = clampLevel(raw);
                         const req = 4;
 
                         return (
-                          <td key={c.skillId} className="col-skill">
+                          <td key={s.id} className="col-skill">
                             <div className={`cell ${tone}`} title={`Current ${cur} / Required ${req}`}>
                               <span className="cell-main">{cur}</span>
                               <span className="cell-sep">/</span>
@@ -289,7 +327,7 @@ export default function OrgSkillMatrix() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={3 + skills.length} className="empty">
+                  <td colSpan={3 + visibleSkills.length} className="empty">
                     No employees found for current filters.
                   </td>
                 </tr>

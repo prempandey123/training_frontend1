@@ -337,6 +337,14 @@
     0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
+/* Blank cell (skill not mapped / not set) */
+.cell-empty {
+  background: transparent;
+  color: transparent;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: none;
+}
+
 /* Stacked cell layout (used in Competency org matrix) */
 .cell.stack {
   flex-direction: column;

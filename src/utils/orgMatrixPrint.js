@@ -1,4 +1,5 @@
-import { clampLevel, clampPercent, getLevelColor, getNaColor, getPercentColor } from './skillColor';
+import { clampLevel, getLevelColor, getNaColor, getPercentColor } from './skillColor';
+import { calcCompletionFromCells } from './matrixMath';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -62,13 +63,20 @@ export function buildOrgMatrixPrintHtml({
 
       const body = employees
         .map((emp) => {
-          const pct = clampPercent(emp.completionPercentage);
+          // ✅ % based only on mapped skills (same logic as blank cells)
+          const derived = calcCompletionFromCells(emp?.cells || [], 4);
+          const pct = derived.completionPercentage;
           const pctC = getPercentColor(pct, { printFriendly });
           const pctCell = `<td class="center" style="background:${pctC.bg};color:${pctC.text};font-weight:700;">${pct}%</td>`;
 
           const rowCells = skillChunk
             .map((s) => {
               const c = (emp.cells || []).find((x) => String(x.skillId) === String(s.id));
+              // Not mapped or not set => blank
+              if (!c || c.currentLevel === null || c.currentLevel === undefined) {
+                return `<td class="center">&nbsp;</td>`;
+              }
+
               const cur = clampLevel(c?.currentLevel);
               const req = 4;
 
