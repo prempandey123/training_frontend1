@@ -86,7 +86,7 @@ export default function TrainingRequirements() {
   return (
     <div className="training-req-page">
       <div className="req-header">
-        <h2>Training Requirements</h2>
+        <h2>Training Requirement (Individual)</h2>
         <button className="secondary-btn" onClick={() => navigate(-1)}>
           ← Back
         </button>

@@ -36,7 +36,7 @@ export default function Sidebar() {
     return allow.some((r) => role === String(r).toUpperCase() || role.includes(String(r).toUpperCase()));
   };
 
-  // 
+  //
   // ✅ Sidebar information architecture
   // - Keep it consistent with route guards in App.jsx
   // - Don't remove any existing feature, just rearrange + hide inaccessible links
@@ -61,18 +61,24 @@ export default function Sidebar() {
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/calendar', label: 'Monthly Training Plan' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training', label: 'Trainings' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/attendance', label: 'Attendance' }] : []),
-    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training-requirements', label: 'Training Requirements' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/training-requirements', label: 'Training Requirement (Individual)' }] : []),
   ];
 
   const matrixLinks = [
-    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showWorkerMatrix ? [{ to: '/skill-matrix', label: 'Skill Matrix (Individual)' }] : []),
-    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showStaffMatrix ? [{ to: '/competency-matrix', label: 'Competency Matrix (Individual)' }] : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showWorkerMatrix
+      ? [{ to: '/skill-matrix', label: 'Skill Matrix (Individual)' }]
+      : []),
+    ...(canAccess(['ADMIN', 'HR', 'HOD']) && showStaffMatrix
+      ? [{ to: '/competency-matrix', label: 'Competency Matrix (Individual)' }]
+      : []),
     ...(canAccess(['ADMIN', 'HR']) && showWorkerMatrix ? [{ to: '/skill-matrix/org', label: 'Skill Matrix (Org)' }] : []),
-    ...(canAccess(['ADMIN', 'HR']) && showStaffMatrix ? [{ to: '/competency-matrix/org', label: 'Competency Matrix (Org)' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) && showStaffMatrix
+      ? [{ to: '/competency-matrix/org', label: 'Competency Matrix (Org)' }]
+      : []),
   ];
 
   const insightsLinks = [
-    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/skill-gap', label: 'Skill Gap' }] : []),
+    ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/skill-gap', label: 'Skill Gap (Individual)' }] : []),
     ...(canAccess(['ADMIN', 'HR']) ? [{ to: '/reports', label: 'Reports' }] : []),
   ];
 

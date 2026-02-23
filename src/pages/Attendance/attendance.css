@@ -257,6 +257,35 @@
   color: #7c2d12;
 }
 
+.timing-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(245, 158, 11, 0.10);
+}
+
+.timing-edit .dash {
+  font-weight: 900;
+  color: rgba(124, 45, 18, 0.85);
+}
+
+.time-input {
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.9);
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #7c2d12;
+}
+
+.time-input:disabled {
+  opacity: 0.7;
+}
+
 .muted {
   color: rgba(15, 23, 42, 0.55);
 }

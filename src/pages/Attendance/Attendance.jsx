@@ -120,11 +120,40 @@ export default function Attendance() {
     );
   };
 
+  const updateTiming = (empId, key, value) => {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.empId === empId
+          ? {
+              ...r,
+              [key]: value || undefined,
+            }
+          : r,
+      ),
+    );
+  };
+
   const saveAttendance = async () => {
     if (!selectedTraining) return;
     try {
       setSaving(true);
       setError('');
+
+      // Basic timing validation (only for present entries)
+      const bad = rows.find((r) => {
+        if (r.status !== 'ATTENDED') return false;
+        const inT = String(r.inTime || '').trim();
+        const outT = String(r.outTime || '').trim();
+        if (!inT || !outT) return true;
+        // compare HH:mm strings
+        return inT > outT;
+      });
+      if (bad) {
+        setError(`Invalid timing for ${bad.name || bad.empId}. Please ensure In Time is before Out Time.`);
+        setSaving(false);
+        return;
+      }
+
       await updateTraining(selectedTraining.id, { attendees: rows });
       setToast('Attendance saved');
       await loadTrainings();
@@ -280,9 +309,23 @@ export default function Attendance() {
 
                   <td>
                     {r.status === 'ATTENDED' ? (
-                      <span className="timing-pill" title="Present timing">
-                        {(r.inTime || scheduledRange.start || '—')} - {(r.outTime || scheduledRange.end || '—')}
-                      </span>
+                      <div className="timing-edit" title="Present timing (editable before save)">
+                        <input
+                          type="time"
+                          className="time-input"
+                          value={(r.inTime || scheduledRange.start || '')}
+                          onChange={(e) => updateTiming(r.empId, 'inTime', e.target.value)}
+                          disabled={isLocked}
+                        />
+                        <span className="dash">—</span>
+                        <input
+                          type="time"
+                          className="time-input"
+                          value={(r.outTime || scheduledRange.end || '')}
+                          onChange={(e) => updateTiming(r.empId, 'outTime', e.target.value)}
+                          disabled={isLocked}
+                        />
+                      </div>
                     ) : (
                       <span className="muted">—</span>
                     )}
