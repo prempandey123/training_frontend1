@@ -368,37 +368,37 @@
 /* ===== LEVEL TONES (Current Level) ===== */
 /* 0 - Red */
 .tone-0 {
-  background: rgba(220, 38, 38, 0.30);
-  color: #7f1d1d;
-  border-color: rgba(220, 38, 38, 0.55);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.72), rgba(220, 38, 38, 0.38));
+  color: #4c0519;
+  border-color: rgba(220, 38, 38, 0.75);
 }
 
 /* 1 - Yellow */
 .tone-1 {
-  background: rgba(250, 204, 21, 0.34);
-  color: #713f12;
-  border-color: rgba(250, 204, 21, 0.62);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.78), rgba(250, 204, 21, 0.42));
+  color: #4e3b0b;
+  border-color: rgba(250, 204, 21, 0.85);
 }
 
 /* 2 - Orange */
 .tone-2 {
-  background: rgba(249, 115, 22, 0.32);
-  color: #7c2d12;
-  border-color: rgba(249, 115, 22, 0.62);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.76), rgba(249, 115, 22, 0.40));
+  color: #4a1d0b;
+  border-color: rgba(249, 115, 22, 0.82);
 }
 
 /* 3 - Light Green */
 .tone-3 {
-  background: rgba(34, 197, 94, 0.22);
-  color: #14532d;
-  border-color: rgba(34, 197, 94, 0.52);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.68), rgba(34, 197, 94, 0.32));
+  color: #052e16;
+  border-color: rgba(34, 197, 94, 0.70);
 }
 
 /* 4 - Green */
 .tone-4 {
-  background: rgba(22, 163, 74, 0.30);
-  color: #14532d;
-  border-color: rgba(22, 163, 74, 0.62);
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.78), rgba(22, 163, 74, 0.40));
+  color: #052e16;
+  border-color: rgba(22, 163, 74, 0.82);
 }
 
 /* N/A (required = 0) */
@@ -462,4 +462,46 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* --- Inline editing (Org matrices): click cell to edit level --- */
+.org-cell-btn {
+  width: 100%;
+  padding: 0;
+  cursor: pointer;
+
+  /* remove default button chrome WITHOUT overriding .cell/.tone-* */
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: inherit;
+  font: inherit;
+  color: inherit;
+}
+
+.org-cell-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 12px;
+}
+
+/* Make select look like the same pill. Tone classes provide background/color. */
+.cell-select {
+  width: 62px;
+  height: 34px;
+  border-radius: 12px;
+  font-weight: 900;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  box-shadow:
+    inset 0 -2px 0 rgba(15, 23, 42, 0.10),
+    0 6px 14px rgba(15, 23, 42, 0.08);
+  padding: 0 8px;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+}
+
+.org-skill-matrix-page.compact .cell-select {
+  width: 56px;
+  height: 30px;
+  border-radius: 10px;
 }

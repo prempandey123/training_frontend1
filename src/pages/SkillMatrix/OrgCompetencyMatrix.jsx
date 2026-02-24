@@ -5,6 +5,7 @@ import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
 import { calcCompletionFromCells, isAssignedCell } from '../../utils/matrixMath';
+import { upsertUserSkillLevel } from '../../api/userSkillLevel.api';
 import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 import './orgSkillMatrix.css';
 
@@ -33,6 +34,9 @@ function percentTone(percent) {
 export default function OrgCompetencyMatrix() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+
+  const [editing, setEditing] = useState(null); // { userId, skillId }
+  const [savingKey, setSavingKey] = useState('');
 
   const tableWrapRef = useRef(null);
   // Requested: keep Org matrices compact by default
@@ -89,6 +93,42 @@ export default function OrgCompetencyMatrix() {
 
   const skills = useMemo(() => (Array.isArray(data?.skills) ? data.skills : []), [data]);
   const employees = useMemo(() => (Array.isArray(data?.employees) ? data.employees : []), [data]);
+
+  const updateLocalCell = (userId, skillId, newLevel) => {
+    setData((prev) => {
+      const next = {
+        ...(prev || {}),
+        skills: Array.isArray(prev?.skills) ? prev.skills : [],
+        employees: Array.isArray(prev?.employees) ? prev.employees : [],
+      };
+
+      next.employees = next.employees.map((emp) => {
+        if (String(emp?.id) !== String(userId)) return emp;
+        const cells = Array.isArray(emp?.cells) ? emp.cells : [];
+        const updated = cells.map((c) =>
+          String(c?.skillId) === String(skillId) ? { ...c, currentLevel: newLevel } : c,
+        );
+        return { ...emp, cells: updated };
+      });
+
+      return next;
+    });
+  };
+
+  const saveLevel = async (userId, skillId, level) => {
+    const key = `${userId}:${skillId}`;
+    setSavingKey(key);
+    setErr('');
+    try {
+      await upsertUserSkillLevel(userId, skillId, level);
+      updateLocalCell(userId, skillId, level);
+    } catch (e) {
+      setErr(e?.response?.data?.message || e?.message || 'Failed to update level');
+    } finally {
+      setSavingKey('');
+      setEditing(null);
+    }
+  };
 
   // ✅ Show ONLY competencies that are present for employees in the selected department.
   const visibleSkills = useMemo(() => {
@@ -254,10 +294,47 @@ export default function OrgCompetencyMatrix() {
 
                       // Mapped but level not set => blank
                       const raw = c.currentLevel;
+                      const isEditing =
+                        editing &&
+                        String(editing.userId) === String(emp.id) &&
+                        String(editing.skillId) === String(s.id);
+
                       if (raw === null || raw === undefined) {
                         return (
                           <td key={s.id} className="col-skill">
-                            <div className="cell cell-empty" title="Level not set">_</div>
+                            {isEditing ? (
+                              <select
+                                className="cell-select"
+                                autoFocus
+                                defaultValue=""
+                                onBlur={() => setEditing(null)}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '') return;
+                                  saveLevel(emp.id, s.id, Number(v));
+                                }}
+                                disabled={savingKey === `${emp.id}:${s.id}`}
+                                aria-label={`Set level for ${emp.name} - ${s.name}`}
+                              >
+                                <option value="" disabled>
+                                  Select
+                                </option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                              </select>
+                            ) : (
+                              <button
+                                type="button"
+                                className="cell cell-empty org-org-cell-btn"
+                                title="Click to set level"
+                                onClick={() => setEditing({ userId: emp.id, skillId: s.id })}
+                              >
+                                _
+                              </button>
+                            )}
                           </td>
                         );
                       }
@@ -268,11 +345,34 @@ export default function OrgCompetencyMatrix() {
 
                       return (
                         <td key={s.id} className="col-skill">
-                          <div className={`cell ${tone}`} title={`Current ${cur} / Required ${req}`}>
-                            <span className="cell-main">{cur}</span>
-                            <span className="cell-sep">/</span>
-                            <span className="cell-sub">{req}</span>
-                          </div>
+                          {isEditing ? (
+                            <select
+                              className={`cell-select ${tone}`}
+                              autoFocus
+                              value={String(cur)}
+                              onBlur={() => setEditing(null)}
+                              onChange={(e) => saveLevel(emp.id, s.id, Number(e.target.value))}
+                              disabled={savingKey === `${emp.id}:${s.id}`}
+                              aria-label={`Set level for ${emp.name} - ${s.name}`}
+                            >
+                              <option value="0">0</option>
+                              <option value="1">1</option>
+                              <option value="2">2</option>
+                              <option value="3">3</option>
+                              <option value="4">4</option>
+                            </select>
+                          ) : (
+                            <button
+                              type="button"
+                              className={`cell ${tone} org-org-cell-btn`}
+                              title="Click to change level"
+                              onClick={() => setEditing({ userId: emp.id, skillId: s.id })}
+                            >
+                              <span className="cell-main">{cur}</span>
+                              <span className="cell-sep">/</span>
+                              <span className="cell-sub">{req}</span>
+                            </button>
+                          )}
                         </td>
                       );
                     })}
