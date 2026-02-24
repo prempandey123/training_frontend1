@@ -4,7 +4,7 @@ import { getDepartments } from '../../api/departmentApi';
 import { openPrintWindow } from '../../utils/printPdf';
 import { buildOrgMatrixPrintHtml } from '../../utils/orgMatrixPrint';
 import { clampPercent, clampLevel, getPercentColor } from '../../utils/skillColor';
-import { calcCompletionFromCells } from '../../utils/matrixMath';
+import { calcCompletionFromCells, isAssignedCell } from '../../utils/matrixMath';
 import SkillLevelRating from '../../components/SkillLevelRating/SkillLevelRating';
 import './orgSkillMatrix.css';
 
@@ -96,6 +96,7 @@ export default function OrgCompetencyMatrix() {
     const used = new Set();
     for (const emp of employees) {
       for (const c of emp?.cells || []) {
+        if (!isAssignedCell(c)) continue;
         if (c?.skillId !== null && c?.skillId !== undefined) used.add(String(c.skillId));
       }
     }
@@ -242,11 +243,11 @@ export default function OrgCompetencyMatrix() {
                     {visibleSkills.map((s) => {
                       const c = (emp.cells || []).find((x) => String(x.skillId) === String(s.id));
 
-                      // Not mapped => blank cell
-                      if (!c) {
+                      // Not mapped/unassigned => blank cell
+                      if (!c || !isAssignedCell(c)) {
                         return (
                           <td key={s.id} className="col-skill">
-                            <div className="cell cell-empty" title="Not mapped" />
+                            <div className="cell cell-empty" title="Not assigned">_</div>
                           </td>
                         );
                       }
@@ -256,7 +257,7 @@ export default function OrgCompetencyMatrix() {
                       if (raw === null || raw === undefined) {
                         return (
                           <td key={s.id} className="col-skill">
-                            <div className="cell cell-empty" title="Level not set" />
+                            <div className="cell cell-empty" title="Level not set">_</div>
                           </td>
                         );
                       }

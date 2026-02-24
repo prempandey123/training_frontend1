@@ -106,11 +106,86 @@ export default function SkillMatrix() {
     return Array.isArray(rows) ? rows : [];
   }, [matrix]);
 
+  // Decide whether a row is actually ASSIGNED/MAPPED to this employee.
+  // Backend implementations vary, so we use a set of safe heuristics.
+  const isAssignedRow = (r) => {
+    if (!r) return false;
+
+    // If backend explicitly marks unassigned, hide it
+    const flagFalse =
+      r?.isMapped === false
+      || r?.mapped === false
+      || r?.isAssigned === false
+      || r?.assigned === false
+      || r?.is_mapped === false
+      || r?.is_assigned === false
+      || r?.isMappedToUser === false
+      || r?.mappedToUser === false;
+    if (flagFalse) return false;
+
+    // If backend explicitly marks assigned, keep it
+    const flagTrue =
+      r?.isMapped === true
+      || r?.mapped === true
+      || r?.isAssigned === true
+      || r?.assigned === true
+      || r?.is_mapped === true
+      || r?.is_assigned === true
+      || r?.isMappedToUser === true
+      || r?.mappedToUser === true;
+    if (flagTrue) return true;
+
+    // If mapping id exists, it's assigned
+    const mappingId =
+      r?.mappingId
+      ?? r?.mapId
+      ?? r?.userSkillId
+      ?? r?.user_skill_id
+      ?? r?.userSkillLevelId
+      ?? r?.user_skill_level_id
+      ?? r?.userSkillMappingId
+      ?? r?.user_skill_mapping_id
+      ?? r?.employeeSkillId
+      ?? r?.employee_skill_id
+      ?? r?.cellId
+      ?? r?.cell_id;
+    if (mappingId !== null && mappingId !== undefined) return true;
+
+    // Some APIs include required/target level per employee-skill. If it's 0/empty => not assigned.
+    const reqRaw =
+      r?.requiredLevel
+      ?? r?.required_level
+      ?? r?.required
+      ?? r?.targetLevel
+      ?? r?.target_level
+      ?? r?.target;
+    if (reqRaw !== null && reqRaw !== undefined) {
+      return Number(reqRaw) > 0;
+    }
+
+    // If we can't prove it's assigned, treat it as NOT assigned.
+    // This prevents showing the whole skill catalog for an employee.
+    return false;
+  };
+
+
+  // ✅ Only show & calculate on skills/competencies that are actually ASSIGNED/MAPPED to the user.
+  // Backend may send full catalog with flags like mapped/assigned/isMapped. We hide unassigned rows.
+  const mappedSkillRows = useMemo(() => {
+    const rows = Array.isArray(skillRows) ? skillRows : [];
+
+    return rows.filter((r) => {
+      const sid = r?.skillId ?? r?.skill?.id ?? r?.skill_id ?? r?.id;
+      if (sid === null || sid === undefined) return false;
+      return isAssignedRow(r);
+    });
+  }, [skillRows]);
+
   const headerTitle = matrix?.user?.name || matrix?.user?.email || 'Skill Matrix';
 
   // ✅ Derived summary: count only mapped skills (rows)
   const derivedSummary = useMemo(() => {
-    const s = calcCompletionFromRows(skillRows, 4);
+    const s = calcCompletionFromRows(mappedSkillRows, 4);
     return {
       totalSkills: s.totalSkills,
       totalRequiredScore: s.totalRequiredScore,
@@ -130,7 +205,7 @@ export default function SkillMatrix() {
       userTitle,
       userMeta: metaParts.join(' • '),
       summary: derivedSummary,
-      rows: skillRows,
+      rows: mappedSkillRows,
       printFriendly,
     });
 
@@ -316,16 +391,17 @@ export default function SkillMatrix() {
               </tr>
             </thead>
             <tbody>
-              {skillRows.length ? (
-                skillRows.map((s) => {
+              {mappedSkillRows.length ? (
+                mappedSkillRows.map((s) => {
                   const skillId = s.skillId ?? s.skill?.id ?? s.id;
                   const skillName = s.skillName ?? s.skill?.name ?? s.name ?? 'Skill';
                   const required = 4; // 🔒 fixed required level
-                  const current = s.currentLevel ?? s.current_level ?? s.current ?? 0;
+                  const curRaw = s.currentLevel ?? s.current_level ?? s.current;
+                  const current = curRaw === null || curRaw === undefined ? null : curRaw;
                   const gap = s.gap ?? (Number(required) - Number(current));
 
                   const reqLevel = clampLevel(required);
-                  const curLevel = clampLevel(current);
+                  const curLevel = current === null ? 0 : clampLevel(current);
                   const reqC = getLevelColor(reqLevel, { printFriendly: false });
                   const curC = getLevelColor(curLevel, { printFriendly: false });
 
@@ -346,7 +422,7 @@ export default function SkillMatrix() {
                       >
                         {editable ? (
                           <select
-                            value={curLevel}
+                            value={current === null ? '' : curLevel}
                             disabled={savingSkillId === skillId}
                             onChange={(e) => handleLevelChange(skillId, e.target.value)}
                             style={{
@@ -357,6 +433,9 @@ export default function SkillMatrix() {
                               fontWeight: 800,
                             }}
                           >
+                            <option value="" style={{ color: '#000' }}>
+                              —
+                            </option>
                             {[0, 1, 2, 3, 4].map((lvl) => (
                               <option key={lvl} value={lvl} style={{ color: '#000' }}>
                                 {lvl}
@@ -364,7 +443,7 @@ export default function SkillMatrix() {
                             ))}
                           </select>
                         ) : (
-                          curLevel
+                          current === null ? '' : curLevel
                         )}
                       </td>
 
@@ -375,7 +454,7 @@ export default function SkillMatrix() {
               ) : (
                 <tr>
                   <td colSpan={4} style={{ textAlign: 'center', opacity: 0.75 }}>
-                    No skills mapped for this designation yet.
+                    No skills assigned for this employee yet.
                   </td>
                 </tr>
               )}

@@ -29,7 +29,7 @@ export default function SkillLevelRating({ type = "skill" }) {
             <td><div className="circle upto65"></div></td>
           </tr>
           <tr>
-            <td>Above 65% can train others</td>
+            <td>66% &amp; above can train others</td>
             <td><div className="circle above65"></div></td>
           </tr>
         </tbody>
